@@ -15,7 +15,7 @@ const footer = () => {
           />
         </Link>
 
-        <p>2024 Exper. Check out the Github here: dsfsfdfdsfsdfdsfdsf</p>
+        <p>2024 Exper. Check out the Github here: </p>
       </div>
     </footer>
   )
