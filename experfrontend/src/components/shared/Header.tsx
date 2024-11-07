@@ -23,13 +23,13 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <SignedIn>
-          <nav className="hidden md:flex max-w-xs">
+          <nav className="md:flex-between hidden w-full max-w-xs">
             <NavItems />
           </nav>
         </SignedIn>
 
         {/* Auth Buttons */}
-        <div className="flex justify-end gap-3">
+        <div className="flex w-32 justify-end gap-3">
           <SignedIn>
             <UserButton />
             <MobileNav />

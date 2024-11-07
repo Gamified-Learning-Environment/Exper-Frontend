@@ -5,12 +5,26 @@ import { Button } from '../ui/button'; // Button component
 import { Card } from '../ui/card'; // Card component
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'; // Radio Form components from shadcn-ui
 
+interface QuizQuestion {
+    id: string;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+}
+
+interface Quiz {
+    id: string;
+    title: string;
+    questions: QuizQuestion[];
+}
+
 
 export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in types/quiz.ts
     // State variables to keep track of current question, selected answers and show results
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
     const [showResults, setShowResults] = useState(false);
+    const [score, setScore] = useState(0);
 
     // handle answer selection, update selectedAnswers state
     const handleAnswer = (answer: string) => {
@@ -24,8 +38,21 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
         if (currentQuestion < quiz.questions.length - 1) {
             setCurrentQuestion(currentQuestion + 1);
         } else {
-            setShowResults(true);
+            calculateResults();
         }
+    };
+
+    // calculate score
+    const calculateResults = () => {
+        let newScore = 0; // initialize score
+        // loop through questions and compare selected answers with correct answers
+        quiz.questions.forEach((question, index) => { 
+            if (selectedAnswers[index] === question.correctAnswer) { // if selected answer is correct
+                newScore++;
+            }
+        });
+        setScore(newScore);
+        setShowResults(true);
     };
 
     return (
@@ -54,19 +81,25 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                     </Button>
                 </div>
             ) : (
-                <div>
+                <div className='space-y-4'>
                     <h2 className='text-xl font-bold mb-4'> Quiz Results</h2>
-                    <ul>
-                        {quiz.questions.map((question, index) => (
-                            <li key={index} className='mb-4'>
-                                <p className='font-bold'>{question.question}</p>
-                                <p>Your answer: {selectedAnswers[index]}</p>
-                                <p>Correct answer: {question.answer}</p>
-                            </li>
-                        ))}
-                    </ul>
+                    <p>Your score: {score} / {quiz.questions.length}</p>
+                    
+                    {quiz.questions.map((question, index) => (
+                        <div key={index} className="border p-4 rounded">
+                            <p className="font-semibold">{question.question}</p>
+                            <p className="text-green-600">Correct answer: {question.correctAnswer}</p>
+                            <p className={`${
+                                selectedAnswers[index] === question.correctAnswer 
+                                    ? 'text-green-600' 
+                                    : 'text-red-600'
+                            }`}>
+                                Your answer: {selectedAnswers[index]}
+                            </p>
+                        </div>
+                    ))}
                 </div>
-                )}
+            )}
         </Card>
     );
-} 
+}
