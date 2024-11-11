@@ -10,7 +10,7 @@ import { SignInButton } from "@clerk/nextjs";
 const Header = () => {
   return (
     <header className="w-full border-b">
-      <div className="wrapper flex items-center justify-between">
+      <div className="wrapper flex items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="w-36">
           <Image 
@@ -23,13 +23,13 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <SignedIn>
-          <nav className="md:flex-between hidden w-full max-w-xs">
+            <nav className="hidden md:flex md:items-center md:space-x-6">
             <NavItems />
-          </nav>
+            </nav>
         </SignedIn>
 
         {/* Auth Buttons */}
-        <div className="flex w-32 justify-end gap-3">
+        <div className="flex items-center space-x-4">
           <SignedIn>
             <UserButton />
             <MobileNav />
