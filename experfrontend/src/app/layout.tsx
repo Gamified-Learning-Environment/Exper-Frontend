@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ClerkProvider, SignedOut, SignedIn, SignInButton, UserButton } from "@clerk/nextjs";
 import Header from "../components/shared/Header";
 import Footer from "../components/shared/Footer";
 import { Poppins } from "next/font/google";
+import { createUser } from "@/lib/actions/user.actions";
+import { AuthProvider } from "@/contexts/auth.context";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -22,16 +23,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode; }) {
   return (
-    <ClerkProvider>
     <html lang="en">
       <body className={poppins.variable}>
+        <AuthProvider>
           <div className="flex h-screen flex-col"> 
             <Header />
                 <main className="flex-1">{children}</main>
             <Footer />
           </div>
+        </AuthProvider>
       </body>
     </html>
-    </ClerkProvider>
   );
 }
