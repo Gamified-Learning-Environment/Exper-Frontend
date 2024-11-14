@@ -2,16 +2,18 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import React from 'react'
+import React, { useState} from 'react'
 //import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { Button } from '../ui/button'
 import NavItems from './NavItems'
 import MobileNav from './MobileNav'
 import { useAuth } from '@/contexts/auth.context';
-
+import UserButton from './UserButton';
+import RegisterForm from './RegisterForm';
 
 const Header = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   
   return (
     <header className="w-full border-b">
@@ -35,14 +37,14 @@ const Header = () => {
         <div className="flex items-center space-x-4">
             <MobileNav />
             <div className="flex items-center gap-4">
-        {isAuthenticated ? (
-          // Show user button when authenticated
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-muted-foreground">Welcome</span>
-            <Button onClick={() => {/* handle logout */}}>Logout</Button>
-          </div>
+            {isAuthenticated ? (
+          <>
+            <UserButton 
+              user={user!}
+              onSignOut={logout}
+            />
+          </>
         ) : (
-          // Show login/signup buttons when not authenticated  
           <>
             <Link 
               href="/login"
@@ -50,17 +52,32 @@ const Header = () => {
             >
               Sign In
             </Link>
-            <Link
-              href="/register" 
+            <button
+              onClick={() => setIsRegisterOpen(true)}
               className="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
             >
               Sign Up
-            </Link>
+            </button>
           </>
         )}
       </div>
         </div>
       </div>
+
+      {/* Register Modal */}
+      {isRegisterOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={() => setIsRegisterOpen(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              &times;
+            </button>
+            <RegisterForm />
+          </div>
+        </div>
+      )}
     </header>
   );
 }

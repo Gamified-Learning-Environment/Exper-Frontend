@@ -3,11 +3,12 @@
 'use client';
 
 import { useState } from 'react';
-import { createUser } from '@/lib/actions/user.actions';
+import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterForm() {
   const router = useRouter();
+  const { register } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -28,8 +29,8 @@ export default function RegisterForm() {
         imageUrl: formData.get('imageUrl') as string || undefined,
       };
 
-      await createUser(userData);
-      router.push('/login'); // Redirect to login page after successful registration
+      await register(userData);
+      router.push('/'); // Redirect to home page after successful registration
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to create account');
     } finally {
