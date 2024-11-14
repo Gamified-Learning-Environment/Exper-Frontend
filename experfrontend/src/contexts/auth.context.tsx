@@ -16,7 +16,7 @@ interface User {
 // Auth context type handles user login, registration, and logout
 interface AuthContextType { 
   user: User | null; 
-  login: (email: string, password: string) => Promise<void>; 
+  login: (email: string, password: string, rememberMe: boolean) => Promise<void>; 
   register: (userData: Omit<User, 'id'> & { password: string }) => Promise<void>; // Omit id from User type
   logout: () => void; 
   // isAuthenticated boolean to check user is authenticated
@@ -31,9 +31,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const login = async (email: string, password: string) => {
+  useEffect(() => {
+    // Check for existing user data in local storage / session storage
+    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const login = async (email: string, password: string, rememberMe: boolean) => {
     try {
-      const data = await loginUser(email, password);
+      const data = await loginUser(email, password, rememberMe);
       setUser(data.user);
       setIsAuthenticated(true);
     } catch (error) {
@@ -52,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    logoutUser();
     setUser(null);
     setIsAuthenticated(false);
   };

@@ -9,10 +9,12 @@ import MobileNav from './MobileNav'
 import { useAuth } from '@/contexts/auth.context';
 import UserButton from './UserButton';
 import RegisterForm from './RegisterForm';
+import LoginForm from './LoginForm';
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   
   return (
     <header className="w-full border-b">
@@ -45,12 +47,12 @@ const Header = () => {
           </>
         ) : (
           <>
-            <Link 
-              href="/login"
+            <button
+              onClick={() => setIsLoginOpen(true)}
               className="text-sm font-medium text-muted-foreground hover:text-primary"
             >
               Sign In
-            </Link>
+            </button>
             <button
               onClick={() => setIsRegisterOpen(true)}
               className="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
@@ -64,6 +66,21 @@ const Header = () => {
       </div>
 
       {/* Register Modal */}
+
+      {isLoginOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <button
+              onClick={() => setIsLoginOpen(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              &times;
+            </button>
+            <LoginForm onClose={() => setIsLoginOpen(false)} />
+          </div>
+        </div>
+      )}
+
       {isRegisterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-md shadow-lg">

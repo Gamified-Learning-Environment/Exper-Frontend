@@ -34,7 +34,7 @@ export async function createUser(userData: UserData) {
 }
 
 // Login user with provided email and password
-export async function loginUser(email: string, password: string) {
+export async function loginUser(email: string, password: string, rememberMe: boolean) {
   try {
     const response = await fetch('http://localhost:8080/api/auth/login', { // fetch user data from API
       method: 'POST',
@@ -50,9 +50,20 @@ export async function loginUser(email: string, password: string) {
       throw new Error(error.message);
     }
 
-    return response.json();
+    const data = await response.json();
+
+    // Store user data in local storage / sessionStorage if rememberMe is true
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem('user', JSON.stringify(data.user));
+
+    return data.user;
   } catch (error) {
     console.error('Error logging in:', error);
     throw error;
   }
+}
+
+export function logoutUser() {
+  localStorage.removeItem('user');
+  sessionStorage.removeItem('user');
 }
