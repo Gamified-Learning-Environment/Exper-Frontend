@@ -25,7 +25,7 @@ export default function UserButton({ user, onSignOut }: UserButtonProps) {
       >
         <div className="w-8 h-8 rounded-full overflow-hidden">
           <img
-            src={user.imageUrl || '/default-avatar.png'} 
+            src={user.imageUrl || '/assets/images/default-avatar.png'}
             alt={user.username}
             className="w-full h-full object-cover"
           />

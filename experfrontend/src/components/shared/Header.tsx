@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import React, { useState} from 'react'
-//import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { Button } from '../ui/button'
 import NavItems from './NavItems'
 import MobileNav from './MobileNav'
@@ -74,7 +73,7 @@ const Header = () => {
             >
               &times;
             </button>
-            <RegisterForm />
+            <RegisterForm onClose={() => setIsRegisterOpen(false)} />
           </div>
         </div>
       )}
