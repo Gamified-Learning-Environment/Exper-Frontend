@@ -42,6 +42,7 @@ export async function loginUser(email: string, password: string, rememberMe: boo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
+      credentials: 'include', // Send cookies with request
     });
 
     // Check for errors in response
@@ -63,7 +64,23 @@ export async function loginUser(email: string, password: string, rememberMe: boo
   }
 }
 
-export function logoutUser() {
-  localStorage.removeItem('user');
-  sessionStorage.removeItem('user');
+// Logout user by removing user data from local storage / sessionStorage
+export async function logoutUser() {
+  try {
+    const response = await fetch('http://localhost:8080/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',  // Include cookies in the request
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message);
+    }
+
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+  } catch (error) {
+    console.error('Error logging out:', error);
+    throw error;
+  }
 }

@@ -43,8 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Login function to authenticate user
   const login = async (email: string, password: string, rememberMe: boolean) => {
     try {
-      const data = await loginUser(email, password, rememberMe);
-      setUser(data.user);
+      const user = await loginUser(email, password, rememberMe);
+      setUser(user);
       setIsAuthenticated(true);
     } catch (error) {
       throw error;
@@ -62,10 +62,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    logoutUser();
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      await logoutUser();
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (
