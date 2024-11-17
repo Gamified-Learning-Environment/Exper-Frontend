@@ -2,7 +2,7 @@
 
 // imports
 import { createContext, useContext, useState, useEffect } from 'react';
-import { createUser, loginUser } from '@/lib/actions/user.actions';
+import { createUser, loginUser, logoutUser } from '@/lib/actions/user.actions';
 
 interface User {
   id: string;
@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Login function to authenticate user
   const login = async (email: string, password: string, rememberMe: boolean) => {
     try {
       const data = await loginUser(email, password, rememberMe);
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Register function to create new user
   const register = async (userData: Omit<User, 'id'> & { password: string }) => {
     try {
       const data = await createUser(userData);

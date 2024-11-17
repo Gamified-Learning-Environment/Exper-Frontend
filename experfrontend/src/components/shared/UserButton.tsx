@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth.context';
 
+// User button props for user data and sign out function
 interface UserButtonProps {
   user: {
     id: string;
