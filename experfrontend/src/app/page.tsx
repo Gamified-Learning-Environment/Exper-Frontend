@@ -18,6 +18,12 @@ export default function Home() {
                 >
                   Get Started
                 </a>
+                <a
+                  href="/quiz"
+                  className="inline-block rounded-md bg-green-600 px-6 py-3 text-lg font-medium text-white hover:bg-green-700 ml-4"
+                >
+                  Example Button
+                </a>
               </div>
             </div>
             <div className="flex items-center justify-center">
