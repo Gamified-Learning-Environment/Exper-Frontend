@@ -22,6 +22,7 @@ interface QuizQuestion {
     const router = useRouter();
     const { user } = useAuth();
     const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
     const [questions, setQuestions] = useState<QuizQuestion[]>([{
       id: '1',
       question: '',
@@ -67,6 +68,7 @@ interface QuizQuestion {
         try {
           const quizData = {
             title,
+            description,
             questions,
             userId: user?.id // Add user ID to connect quiz to its creator
           };
@@ -128,6 +130,19 @@ interface QuizQuestion {
                 required
             />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium">
+                Quiz Description
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-2 border rounded"
+                required
+              />
+          </div>
 
             {questions.map((question, qIndex) => (
             <div key={question.id} className="border p-4 rounded space-y-4">

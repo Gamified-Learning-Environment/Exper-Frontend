@@ -18,6 +18,7 @@ export default async function QuizPage({ params }: {params: { id: string }}) {
         return (
           <div className='container mx-auto py-8'>
             <h1 className='text-2xl font-bold mb-4'>{quiz.title}</h1>
+            <p className="mb-4">{quiz.description}</p>
             <Quiz quiz={quiz} />
           </div>
         );

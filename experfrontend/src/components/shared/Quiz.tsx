@@ -15,6 +15,7 @@ interface QuizQuestion {
 interface Quiz {
     id: string;
     title: string;
+    description: string;
     questions: QuizQuestion[];
 }
 
