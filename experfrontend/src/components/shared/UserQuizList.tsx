@@ -71,10 +71,25 @@ export default function UserQuizList() {
     setSelectedQuiz(null);
   };
 
+  const handleDelete = async (quizId: string) => {
+    try {
+      const response = await fetch(`http://localhost:9090/api/quiz/${quizId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete quiz');
+      }
+      setIsModalOpen(false);
+      setQuizzes(quizzes.filter((quiz) => quiz.id !== quizId));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete quiz');
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {quizzes.map((quiz) => (
-        <Card key={quiz.id || `quiz-${Math.random()}`} className="p-4">
+        <Card key={quiz._id} className="p-4">
           <CardHeader>
             <CardTitle>{quiz.title}</CardTitle>
           </CardHeader>
@@ -83,7 +98,7 @@ export default function UserQuizList() {
           </CardContent>
           <CardFooter className='flex justify-between'>
             <Button onClick={() => handlePreview(quiz)} >Preview</Button>
-            <Button onClick={() => router.push(`/quiz/${quiz.id}`)}>View Quiz</Button>
+            <Button onClick={() => router.push(`/quiz/${quiz._id}`)}>View Quiz</Button>
           </CardFooter>
         </Card>
       ))}
@@ -93,7 +108,7 @@ export default function UserQuizList() {
             <h2 className='text-xl font-bold mb-4'>{selectedQuiz.title}</h2>
             <p className='mb-4'>{selectedQuiz.description}</p>
             <ul className='mb-4 space-y-2'>
-              {selectedQuiz.questions.slice(0,3).map((question) => (
+              {selectedQuiz.questions?.slice(0,3).map((question) => (
                 <li key={question.id} className='mb-2'>
                   <strong>{question.question}</strong>
                   <ul className='list-disc list-inside pl-4'>
@@ -105,8 +120,10 @@ export default function UserQuizList() {
               ))}
             </ul>
               <div className='flex justify-end space-x-2'>
-                <Button onClick={() => router.push(`/quiz/${selectedQuiz.id}`)}>View Quiz</Button>
+                <Button onClick={() => router.push(`/quiz/${selectedQuiz._id}`)}>View Quiz</Button>
                 <Button onClick={handleCloseModal}>Close</Button>
+                <Button onClick={() => router.push(`/quiz/edit/${selectedQuiz._id}`)}>Edit</Button>
+                <Button onClick={() => handleDelete(selectedQuiz._id)}>Delete</Button>
               </div>
         </div>
         </Modal>

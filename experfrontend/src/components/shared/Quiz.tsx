@@ -19,7 +19,6 @@ interface Quiz {
     questions: QuizQuestion[];
 }
 
-
 export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in types/quiz.ts
     // State variables to keep track of current question, selected answers and show results
     const [currentQuestion, setCurrentQuestion] = useState(0);

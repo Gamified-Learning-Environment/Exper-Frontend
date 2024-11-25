@@ -49,7 +49,7 @@ export default function QuizList() {
   return ( 
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {quizzes.map((quiz) => (
-        <Card key={quiz.id || `quiz-${Math.random()}`} className="p-4">
+        <Card key={quiz._id} className="p-4">
           <CardHeader>
             <CardTitle>{quiz.title}</CardTitle>
           </CardHeader>
@@ -57,7 +57,7 @@ export default function QuizList() {
             <CardDescription>{quiz.description}</CardDescription>
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.push(`/quiz/${quiz.id}`)}>View Quiz</Button>
+            <Button onClick={() => router.push(`/quiz/${quiz._id}`)}>View Quiz</Button>
           </CardFooter>
         </Card>
       ))}

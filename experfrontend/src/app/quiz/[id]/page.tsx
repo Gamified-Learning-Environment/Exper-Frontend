@@ -11,9 +11,10 @@ async function getQuiz(id: string) {
     return res.json();
 }
 
-export default async function QuizPage({ params }: {params: { id: string }}) {
+export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
     try {
-        const quiz = await getQuiz(params.id);
+        const { id } = await params;
+        const quiz = await getQuiz(id);
         
         return (
           <div className='container mx-auto py-8'>
