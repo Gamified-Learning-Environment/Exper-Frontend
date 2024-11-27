@@ -23,14 +23,14 @@ interface QuizQuestion {
     const { user } = useAuth();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [questions, setQuestions] = useState<QuizQuestion[]>([{
-      id: '1',
-      question: '',
-      options: ['', '', '', ''],
-      correctAnswer: ''
-    }]);
+    const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // ai integration
+    const [useAI, setUseAI] = useState(false); // toggle AI use on/off
+    const [notes, setNotes] = useState('');  // notes for AI
+    const [parameters, setParameters] = useState(''); // parameters for AI
   
     const handleAddQuestion = () => {
       setQuestions([...questions, {
@@ -43,10 +43,6 @@ interface QuizQuestion {
 
     const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: string) => {
         const updatedQuestions = [...questions];
-        if (field === 'options') {
-          // Handle options array updates separately
-          return;
-        }
         updatedQuestions[index] = {
           ...updatedQuestions[index],
           [field]: value
@@ -59,6 +55,27 @@ interface QuizQuestion {
         updatedQuestions[questionIndex].options[optionIndex] = value;
         setQuestions(updatedQuestions);
       };
+
+      const generateQuizWithAI = async () => {
+        try {
+          const response = await fetch('http://localhost:9090/api/generate-quiz', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ notes, parameters })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to generate quiz with AI');
+          }
+
+          const data = await response.json();
+          setQuestions(data.questions);
+        } catch (error) {
+          setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
+        }
+      }
     
       const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault(); // Prevent default form submission
@@ -70,7 +87,7 @@ interface QuizQuestion {
             title,
             description,
             questions,
-            userId: user?.id // Add user ID to connect quiz to its creator
+            userId: user?.id // user ID to connect quiz to its creator
           };
     
           const response = await fetch('http://localhost:9090/api/quiz', {
@@ -105,7 +122,7 @@ interface QuizQuestion {
       };
     
     return (
-    <Card className="w-full max-w-4xl mx-auto p-6">
+      <Card className="w-full max-w-4xl mx-auto p-6">
         <form onSubmit={handleSubmit}>
         <CardHeader>
             <h2 className="text-2xl font-bold">Create New Quiz</h2>
@@ -144,11 +161,56 @@ interface QuizQuestion {
               />
           </div>
 
-            {questions.map((question, qIndex) => (
+          <div className='space-y-2'>
+            <input
+              type="checkbox"
+              checked={useAI}
+              onChange={() => setUseAI(!useAI)}
+              className="mr-2"
+              title="Use AI to Generate Quiz"
+              placeholder="Use AI to Generate Quiz"
+            />
+            <label className='text-md font-medium'>Use AI to Generate Quiz </label>
+          </div>
+
+          {useAI && (
+            <>
+              <div className="space-y-2">
+                <label htmlFor="notes" className="text-sm font-medium">
+                  Notes
+                </label>
+                <textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="parameters" className="text-sm font-medium">
+                  Parameters
+                </label>
+                <input
+                  id="parameters"
+                  type="text"
+                  value={parameters}
+                  onChange={(e) => setParameters(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+
+              <Button type="button" onClick={generateQuizWithAI}>
+                Generate Quiz with AI
+              </Button>
+            </>
+          )}
+
+          {!useAI && questions.map((question, qIndex) => (
             <div key={question.id} className="border p-4 rounded space-y-4">
-                <h3 className="font-medium">Question {qIndex + 1}</h3>
-                
-                <div className="space-y-2">
+              <h3 className="font-medium">Question {qIndex + 1}</h3>
+              
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Question Text</label>
                 <input
                     type="text"
@@ -159,9 +221,9 @@ interface QuizQuestion {
                     title="Question Text"
                     placeholder="Enter the question text"
                 />
-                </div>
+              </div>
 
-                <div className="space-y-2">
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Options</label>
                 {question.options.map((option, oIndex) => (
                     <input
@@ -174,9 +236,9 @@ interface QuizQuestion {
                     required
                     />
                 ))}
-                </div>
+              </div>
 
-                <div className="space-y-2">
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Correct Answer</label>
                 <select
                     title="Correct Answer"
@@ -192,27 +254,20 @@ interface QuizQuestion {
                     </option>
                     ))}
                 </select>
-                </div>
+              </div>
             </div>
-            ))}
+          ))}
         </CardContent>
     
         <CardFooter className="flex justify-between">
-            <Button
-            type="button"
-            onClick={handleAddQuestion}
-            variant="outline"
-            >
-            Add Question
+            <Button type="button" onClick={handleAddQuestion} variant="outline">
+              Add Question
             </Button>
-            <Button
-            type="submit"
-            disabled={loading}
-            >
-            {loading ? 'Creating Quiz...' : 'Create Quiz'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Creating Quiz...' : 'Create Quiz'}
             </Button>
         </CardFooter>
         </form>
-    </Card>
+      </Card>
     );
-}
+  }
