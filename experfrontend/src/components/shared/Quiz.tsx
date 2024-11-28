@@ -4,6 +4,7 @@ import { useState } from 'react'; // React hooks
 import { Button } from '../ui/button'; // Button component
 import { Card } from '../ui/card'; // Card component
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'; // Radio Form components from shadcn-ui
+import { Progress } from '../ui/progress'; // Progress Bar component from shadcn-ui
 
 interface QuizQuestion {
     id: string;
@@ -58,20 +59,23 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     return (
         <Card className="p-6 max-w-2x1 mx-auto">
             {!showResults ? (
-                <div>
+                <div className='space-y-6'>
                     <h2 className='text-xl font-bold mb-4'>
                         Question {currentQuestion + 1} of {quiz.questions.length}
                     </h2>
+                    <Progress value={(currentQuestion + 1) / quiz.questions.length * 100} className='mb-4' />
+                    
                     <p className='mb-4'>{quiz.questions[currentQuestion].question}</p>
 
                     <RadioGroup
                         onValueChange={handleAnswer}
                         value={selectedAnswers[currentQuestion]}
+                        className='space-y-2'
                     >
                         {quiz.questions[currentQuestion].options.map((option, index) => (
                             <div key={index} className='flex items-center space-x-2'>
                                 <RadioGroupItem value={option} id={`option-${index}`} />
-                                <label htmlFor={`option-${index}`}>{option}</label>
+                                <label htmlFor={`option-${index}`} className='cursor-pointer'>{option}</label>
                             </div>
                         ))}
                     </RadioGroup>
@@ -86,7 +90,7 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                     <p>Your score: {score} / {quiz.questions.length}</p>
                     
                     {quiz.questions.map((question, index) => (
-                        <div key={index} className="border p-4 rounded">
+                        <div key={index} className={`border p-4 rounded${selectedAnswers[index] === question.correctAnswer ? 'bg-green-300' : 'bg-red-300'}`}>
                             <p className="font-semibold">{question.question}</p>
                             <p className="text-green-600">Correct answer: {question.correctAnswer}</p>
                             <p className={`${
