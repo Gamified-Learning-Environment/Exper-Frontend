@@ -31,6 +31,9 @@ interface QuizQuestion {
     const [useAI, setUseAI] = useState(false); // toggle AI use on/off
     const [notes, setNotes] = useState('');  // notes for AI
     const [parameters, setParameters] = useState(''); // parameters for AI
+
+    // preview generated questions
+    const [showPreview, setShowPreview] = useState(false);
   
     const handleAddQuestion = () => {
       setQuestions([...questions, {
@@ -139,6 +142,7 @@ interface QuizQuestion {
 
           const data = await response.json();
           setQuestions(data.questions);
+          setShowPreview(true);
         } catch (error) {
           setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
         }
@@ -324,6 +328,27 @@ interface QuizQuestion {
               </div>
             </div>
           ))}
+          
+          {showPreview && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold">Generated Questions</h3>
+              {questions.map((question, qIndex) => (
+                <div key={question.id} className="border p-4 rounded space-y-4">
+                  <h4 className="font-medium">Question {qIndex + 1}</h4>
+                  <p>{question.question}</p>
+                  <ul className="list-disc list-inside">
+                    {question.options.map((option, oIndex) => (
+                      <li key={oIndex}>{option}</li>
+                    ))}
+                  </ul>
+                  <p className="font-semibold">Correct Answer: {question.correctAnswer}</p>
+                </div>
+              ))}
+              <Button type="button" onClick={generateQuizWithAI}>
+                Regenerate Questions
+              </Button>
+            </div>
+          )}
         </CardContent>
     
         <CardFooter className="flex justify-between">
