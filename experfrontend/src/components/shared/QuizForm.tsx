@@ -63,7 +63,74 @@ interface QuizQuestion {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ notes, parameters })
+            body: JSON.stringify({
+               notes, 
+               parameters,
+               format: `
+               {
+                    "_id": "672cb629113b70876395c8f2",
+                    "title": "Database Management Quiz",
+                    "questions": [
+                        {
+                            "id": "1",
+                            "question": "What does the acronym CRUD stand for?",
+                            "options": [
+                                "Create, Read, Update, Delete",
+                                "Create, Restore, Undo, Delete",
+                                "Create, Read, Upload, Drop",
+                                "Compute, Replace, Undo, Delete"
+                            ],
+                            "correctAnswer": "Create, Read, Update, Delete"
+                        },
+                        {
+                            "id": "2",
+                            "question": "What percentage of the module grade is based on a project?",
+                            "options": [
+                                "30%",
+                                "10%",
+                                "50%",
+                                "60%"
+                            ],
+                            "correctAnswer": "30%"
+                        },
+                        {
+                            "id": "3",
+                            "question": "Which storage engine is typically used for memory-based temporary data?",
+                            "options": [
+                                "InnoDB",
+                                "MyISAM",
+                                "Memory",
+                                "BlackHole"
+                            ],
+                            "correctAnswer": "Memory"
+                        },
+                        {
+                            "id": "4",
+                            "question": "What does ACID in transaction management stand for?",
+                            "options": [
+                                "Access, Concurrency, Independence, Durability",
+                                "Atomicity, Consistency, Isolation, Durability",
+                                "Authentication, Confidentiality, Integrity, Distribution",
+                                "Accuracy, Currency, Isolation, Durability"
+                            ],
+                            "correctAnswer": "Atomicity, Consistency, Isolation, Durability"
+                        },
+                        {
+                            "id": "5",
+                            "question": "Which of the following is NOT a MySQL storage engine?",
+                            "options": [
+                                "InnoDB",
+                                "ISAM",
+                                "BLOB",
+                                "Memory"
+                            ],
+                            "correctAnswer": "BLOB"
+                        }
+                    ],
+                    "created_at": "2024-11-07T12:44:25.887+00:00"
+                }
+                `
+              }),
           });
 
           if (!response.ok) {
