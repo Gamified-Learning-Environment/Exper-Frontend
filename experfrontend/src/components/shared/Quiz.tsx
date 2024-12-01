@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react'; // React hooks
+import { useState, useEffect } from 'react'; // React hooks
 import { Button } from '../ui/button'; // Button component
 import { Card } from '../ui/card'; // Card component
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'; // Radio Form components from shadcn-ui
@@ -20,12 +20,56 @@ interface Quiz {
     questions: QuizQuestion[];
 }
 
+interface QuizState { // for quiz session storage
+    currentQuestion: number;
+    selectedAnswers: string[];
+    showResults: boolean;
+    score: number;
+}
+
 export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in types/quiz.ts
-    // State variables to keep track of current question, selected answers and show results
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
-    const [showResults, setShowResults] = useState(false);
-    const [score, setScore] = useState(0);
+    // State variables to keep track of current question, selected answers and show results, 
+    // usestate initialises state from localStorage / defaults
+    const [currentQuestion, setCurrentQuestion] = useState(() => {
+        const saved = localStorage.getItem(`quiz_${quiz.id}_current`);
+        return saved ? parseInt(saved) : 0;
+    });
+
+    const [selectedAnswers, setSelectedAnswers] = useState<string[]>(() => {
+        const saved = localStorage.getItem(`quiz_${quiz.id}_answers`);
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    const [showResults, setShowResults] = useState(() => {
+        const saved = localStorage.getItem(`quiz_${quiz.id}_results`);
+        return saved ? JSON.parse(saved) : false;
+    });
+
+    const [score, setScore] = useState(() => {
+        const saved = localStorage.getItem(`quiz_${quiz.id}_score`);
+        return saved ? parseInt(saved) : 0;
+    });
+
+    // Save state to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem(`quiz_${quiz.id}_current`, currentQuestion.toString());
+        localStorage.setItem(`quiz_${quiz.id}_answers`, JSON.stringify(selectedAnswers));
+        localStorage.setItem(`quiz_${quiz.id}_results`, JSON.stringify(showResults));
+        localStorage.setItem(`quiz_${quiz.id}_score`, score.toString());
+    }, [quiz.id, currentQuestion, selectedAnswers, showResults, score]);
+
+    // Reset quiz state
+    const resetQuiz = () => {
+        setCurrentQuestion(0);
+        setSelectedAnswers([]);
+        setShowResults(false);
+        setScore(0);
+        // Clear localStorage for this quiz
+        localStorage.removeItem(`quiz_${quiz.id}_current`);
+        localStorage.removeItem(`quiz_${quiz.id}_answers`);
+        localStorage.removeItem(`quiz_${quiz.id}_results`);
+        localStorage.removeItem(`quiz_${quiz.id}_score`);
+    };
 
     // handle answer selection, update selectedAnswers state
     const handleAnswer = (answer: string) => {
@@ -59,11 +103,19 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     return (
         <Card className="p-6 max-w-2x1 mx-auto">
             {!showResults ? (
-                <div className='space-y-6'>
-                    <h2 className='text-xl font-bold mb-4'>
-                        Question {currentQuestion + 1} of {quiz.questions.length}
-                    </h2>
-                    <Progress value={(currentQuestion + 1) / quiz.questions.length * 100} className='mb-4' />
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold mb-4">
+                            Question {currentQuestion + 1} of {quiz.questions.length}
+                        </h2>
+                        <Button onClick={resetQuiz} variant="outline" size="sm">
+                            Reset Quiz
+                        </Button>
+                    </div>
+                    <Progress 
+                        value={(currentQuestion + 1) / quiz.questions.length * 100} 
+                        className="mb-4" 
+                    />
                     
                     <p className='mb-4'>{quiz.questions[currentQuestion].question}</p>
 
@@ -85,8 +137,13 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                     </Button>
                 </div>
             ) : (
-                <div className='space-y-4'>
-                    <h2 className='text-xl font-bold mb-4'> Quiz Results</h2>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold mb-4">Quiz Results</h2>
+                        <Button onClick={resetQuiz} variant="outline" size="sm">
+                            Retake Quiz
+                        </Button>
+                    </div>
                     <p>Your score: {score} / {quiz.questions.length}</p>
                     
                     {quiz.questions.map((question, index) => (
