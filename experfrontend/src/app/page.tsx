@@ -2,7 +2,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-100 to-purple-100">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 py-12 md:py-16">
+      <section className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 py-12 md:py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div className="flex flex-col justify-center space-y-6">

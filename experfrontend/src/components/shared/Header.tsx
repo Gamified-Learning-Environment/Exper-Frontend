@@ -17,7 +17,7 @@ const Header = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   
   return (
-    <header className="w-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 shadow-lg">
+    <header className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 shadow-lg">
       <div className="wrapper flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="w-36 transform transition hover:scale-105">
@@ -67,13 +67,7 @@ const Header = () => {
       {/* Login Modal */}
       {isLoginOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 shadow-2xl transform transition hover:scale-[1.01]">
-            <button
-              onClick={() => setIsLoginOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              ×
-            </button>
+          <div className="relative bg-white rounded-2xl p-6 shadow-2xl transform transition hover:scale-[1.01]">
             <LoginForm onClose={() => setIsLoginOpen(false)} />
           </div>
         </div>
@@ -82,13 +76,7 @@ const Header = () => {
       {/* Register Modal */}
       {isRegisterOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 shadow-2xl transform transition hover:scale-[1.01]">
-            <button
-              onClick={() => setIsRegisterOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              ×
-            </button>
+          <div className="relative bg-white rounded-2xl p-6 shadow-2xl transform transition hover:scale-[1.01]">
             <RegisterForm onClose={() => setIsRegisterOpen(false)} />
           </div>
         </div>

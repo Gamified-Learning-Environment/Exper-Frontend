@@ -22,40 +22,40 @@ export default function UserButton({ user, onSignOut }: UserButtonProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full focus:outline-none"
+        className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-2 backdrop-blur-sm transition hover:bg-white/30"
       >
-        <div className="w-8 h-8 rounded-full overflow-hidden">
+        <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-yellow-300">
           <img
             src={user.imageUrl || '/assets/images/default-avatar.png'}
             alt={user.username}
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         </div>
-        <span className="text-sm font-medium hidden md:block">
+        <span className="hidden text-sm font-medium text-white md:block">
           {user.username}
         </span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-          <div className="py-1" role="menu">
+        <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white p-2 shadow-xl">
+          <div className="space-y-1" role="menu">
             <Link
               href="/profile"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="block rounded-lg px-4 py-2 text-sm font-medium text-purple-900 transition hover:bg-gradient-to-r hover:from-violet-500 hover:to-fuchsia-500 hover:text-white"
               role="menuitem"
               onClick={() => setIsOpen(false)}
             >
-              Profile
+              🎮 Profile
             </Link>
             <button
               onClick={() => {
                 onSignOut();
                 setIsOpen(false);
               }}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              className="block w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-purple-900 transition hover:bg-gradient-to-r hover:from-violet-500 hover:to-fuchsia-500 hover:text-white"
               role="menuitem"
             >
-              Sign out
+              🚪 Sign out
             </button>
           </div>
         </div>
