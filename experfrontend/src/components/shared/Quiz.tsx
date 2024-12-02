@@ -27,35 +27,50 @@ interface QuizState { // for quiz session storage
     score: number;
 }
 
+// utility function for safe localstorage access in SSR
+const getStorageValue = (key: string, defaultValue: any) => {
+    if (typeof window === 'undefined') {
+        return defaultValue;
+      }
+      try {
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultValue;
+      } catch (error) {
+        console.error('Error reading from localStorage:', error);
+        return defaultValue;
+      }
+  };
+
 export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in types/quiz.ts
     // State variables to keep track of current question, selected answers and show results, 
     // usestate initialises state from localStorage / defaults
-    const [currentQuestion, setCurrentQuestion] = useState(() => {
-        const saved = localStorage.getItem(`quiz_${quiz.id}_current`);
-        return saved ? parseInt(saved) : 0;
-    });
+    // Initial state with lazy initialization
+    const [currentQuestion, setCurrentQuestion] = useState<number>(0);
+    const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+    const [showResults, setShowResults] = useState<boolean>(false);
+    const [score, setScore] = useState<number>(0);
 
-    const [selectedAnswers, setSelectedAnswers] = useState<string[]>(() => {
-        const saved = localStorage.getItem(`quiz_${quiz.id}_answers`);
-        return saved ? JSON.parse(saved) : [];
-    });
+    // Load from localStorage after mount
+    useEffect(() => {
+        const storedQuestion = getStorageValue(`quiz_${quiz.id}_current`, 0);
+        const storedAnswers = getStorageValue(`quiz_${quiz.id}_answers`, []);
+        const storedResults = getStorageValue(`quiz_${quiz.id}_results`, false);
+        const storedScore = getStorageValue(`quiz_${quiz.id}_score`, 0);
 
-    const [showResults, setShowResults] = useState(() => {
-        const saved = localStorage.getItem(`quiz_${quiz.id}_results`);
-        return saved ? JSON.parse(saved) : false;
-    });
-
-    const [score, setScore] = useState(() => {
-        const saved = localStorage.getItem(`quiz_${quiz.id}_score`);
-        return saved ? parseInt(saved) : 0;
-    });
+        setCurrentQuestion(storedQuestion);
+        setSelectedAnswers(storedAnswers);
+        setShowResults(storedResults);
+        setScore(storedScore);
+    }, [quiz.id]);
 
     // Save state to localStorage whenever it changes
     useEffect(() => {
-        localStorage.setItem(`quiz_${quiz.id}_current`, currentQuestion.toString());
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(`quiz_${quiz.id}_current`, JSON.stringify(currentQuestion));
         localStorage.setItem(`quiz_${quiz.id}_answers`, JSON.stringify(selectedAnswers));
         localStorage.setItem(`quiz_${quiz.id}_results`, JSON.stringify(showResults));
-        localStorage.setItem(`quiz_${quiz.id}_score`, score.toString());
+        localStorage.setItem(`quiz_${quiz.id}_score`, JSON.stringify(score));
+    }
     }, [quiz.id, currentQuestion, selectedAnswers, showResults, score]);
 
     // Reset quiz state
