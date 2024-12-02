@@ -11,6 +11,67 @@ import UserButton from './UserButton';
 import RegisterForm from './RegisterForm';
 import LoginForm from './LoginForm';
 
+// level widget & achievements imports
+import { Progress } from '../ui/progress'; 
+import { Crown, Star, Target, Trophy, Flame, Zap } from 'lucide-react';
+
+// Add this new component above LevelWidget
+const AchievementBanner = () => {
+  // Hardcoded achievements for now
+  const achievements = [
+    { icon: Crown, label: 'Quiz Master', color: 'text-yellow-400' },
+    { icon: Star, label: '5 Day Streak', color: 'text-purple-400' },
+    { icon: Target, label: 'Perfect Score', color: 'text-green-400' },
+    { icon: Trophy, label: 'Champion', color: 'text-blue-400' },
+    { icon: Flame, label: 'On Fire', color: 'text-red-400' },
+  ];
+
+  return (
+    <div className="hidden md:flex items-center gap-6 rounded-full bg-white/20 px-6 py-3 backdrop-blur-sm">
+      {achievements.map((achievement, index) => (
+        <div
+          key={index}
+          className="group relative flex items-center justify-center"
+        >
+          <achievement.icon 
+            className={`h-7 w-7 ${achievement.color} transition-all hover:scale-110`} 
+          />
+          {/* Tooltip */}
+          <span className="absolute -bottom-10 scale-0 rounded bg-black/75 px-3 py-2 text-sm text-white transition-all group-hover:scale-100">
+            {achievement.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const LevelWidget = () => {
+  // Hardcoded values for now
+  const level = 5;
+  const progress = 65; // percentage to next level
+
+  return (
+    <div className="hidden md:flex items-center gap-3 rounded-full bg-white/20 px-6 py-3 backdrop-blur-sm">
+      {/* Level number */}
+      <span className="text-3xl font-bold text-white">
+        {level}
+      </span>
+      
+      {/* Progress container */}
+      <div className="flex flex-col justify-center min-w-[160px]">
+        <Progress 
+          value={progress}
+          className="h-1.5 w-full"
+        />
+        <span className="text-xs text-white/70 mt-1">
+          {progress}% to next level
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const Header = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -34,6 +95,12 @@ const Header = () => {
         <nav className="hidden md:flex md:items-center md:space-x-6">
           <NavItems />
         </nav>
+
+        {/* Achievements Banner */}
+        <AchievementBanner />
+        
+        {/* Add Level Widget here */}
+        <LevelWidget />
 
        {/* Auth Buttons */}
        <div className="flex items-center space-x-4">

@@ -4,12 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
+import Image from 'next/image';
 
 // Quiz interface
 interface Quiz {
   id: string;
   title: string;
   description: string;
+  creator: {
+    id: string;
+    username: string;
+    profilePicture?: string;
+  }
 }
 
 // QuizList component
