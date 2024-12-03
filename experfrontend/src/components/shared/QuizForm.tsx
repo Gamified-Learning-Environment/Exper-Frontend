@@ -6,6 +6,8 @@ import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
 import Quiz from './Quiz';
+import { Slider } from '../ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface QuizQuestion {
     id: string;
@@ -18,6 +20,8 @@ interface QuizQuestion {
     onClose?: () => void;
   }
 
+  type Difficulty = 'beginner' | 'intermediate' | 'expert';
+
   export default function QuizForm({ onClose }: QuizFormProps) {
     const router = useRouter();
     const { user } = useAuth();
@@ -26,6 +30,10 @@ interface QuizQuestion {
     const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // paramaters for AI
+    const [questionCount, setQuestionCount] = useState(5);
+    const [difficulty, setDifficulty] = useState<Difficulty>('intermediate');
 
     // ai integration
     const [useAI, setUseAI] = useState(false); // toggle AI use on/off
@@ -68,7 +76,10 @@ interface QuizQuestion {
             },
             body: JSON.stringify({
                notes, 
-               parameters,
+               parameters: {
+                  questionCount,
+                  difficulty,
+               },
                format: `
                {
                     "_id": "672cb629113b70876395c8f2",
@@ -245,7 +256,34 @@ interface QuizQuestion {
           </div>
 
           {useAI && (
-            <>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <label className="text-sm font-medium">Number of Questions</label>
+                <Slider
+                  value={[questionCount]}
+                  onValueChange={(value) => setQuestionCount(value[0])}
+                  min={1}
+                  max={20}
+                  step={1}
+                  className="w-full"
+                />
+                <span className="text-sm text-gray-500">{questionCount} questions</span>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Difficulty Level</label>
+                <Select value={difficulty} onValueChange={(value: Difficulty) => setDifficulty(value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="expert">Expert</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <label htmlFor="notes" className="text-sm font-medium">
                   Notes
@@ -255,26 +293,14 @@ interface QuizQuestion {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full p-2 border rounded"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="parameters" className="text-sm font-medium">
-                  Parameters
-                </label>
-                <input
-                  id="parameters"
-                  type="text"
-                  value={parameters}
-                  onChange={(e) => setParameters(e.target.value)}
-                  className="w-full p-2 border rounded"
+                  placeholder="Add any notes, topics, or keywords for the AI to generate questions from"
                 />
               </div>
 
               <Button type="button" onClick={generateQuizWithAI}>
                 Generate Quiz with AI
               </Button>
-            </>
+            </div>
           )}
 
           {!useAI && questions.map((question, qIndex) => (

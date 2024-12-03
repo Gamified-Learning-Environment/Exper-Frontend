@@ -34,10 +34,10 @@ const AchievementBanner = () => {
           className="group relative flex items-center justify-center"
         >
           <achievement.icon 
-            className={`h-7 w-7 ${achievement.color} transition-all hover:scale-110`} 
+            className={`h-7 w-7 ${achievement.color} transition-all hover:scale-150`}  
           />
           {/* Tooltip */}
-          <span className="absolute -bottom-10 scale-0 rounded bg-black/75 px-3 py-2 text-sm text-white transition-all group-hover:scale-100">
+          <span className="absolute -bottom-10 scale-0 rounded bg-black/75 px-3 py-2 text-sm text-white transition-all group-hover:scale-75">
             {achievement.label}
           </span>
         </div>

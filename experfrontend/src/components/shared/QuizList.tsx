@@ -11,11 +11,6 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
-  creator: {
-    id: string;
-    username: string;
-    profilePicture?: string;
-  }
 }
 
 // QuizList component
