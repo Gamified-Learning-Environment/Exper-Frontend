@@ -8,6 +8,7 @@ import Image from 'next/image';
 
 // Quiz interface
 interface Quiz {
+  _id: any;
   id: string;
   title: string;
   description: string;

@@ -1,8 +1,8 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
-import QuizForm from '@/components/shared/QuizForm';
+import QuizForm from '@/components/shared/QuizForm'; // Quiz Form component from components/shared folder
 
-export default function CreateQuizPage() {
+export default function CreateQuizPage() { // Create Quiz Page component
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Create New Quiz</h1>

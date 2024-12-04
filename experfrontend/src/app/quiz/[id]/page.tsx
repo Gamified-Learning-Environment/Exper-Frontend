@@ -1,26 +1,26 @@
-import Quiz from '@/components/shared/Quiz';
+import Quiz from '@/components/shared/Quiz'; // Quiz component from components/shared folder
 
-async function getQuiz(id: string) {
+async function getQuiz(id: string) { // Fetch quiz data from API
     const res = await fetch(`http://localhost:9090/api/quiz/${id}`, {
         cache: 'no-store', // Disable caching for this request to always get the latest data - Turn off later
-    }); // fetch quiz data from API
+    }); 
 
-    if (!res.ok) {
+    if (!res.ok) { // Check if response is ok
         throw new Error(`Quiz not found (${res.status})`);
     }
     return res.json();
 }
 
-export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) {
-    try {
+export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) { // QuizPage component taking in id as a parameter
+    try { // Try to fetch quiz data
         const { id } = await params;
         const quiz = await getQuiz(id);
         
-        return (
+        return ( // Return the quiz component
           <div className='container mx-auto py-8'>
             <h1 className='text-2xl font-bold mb-4'>{quiz.title}</h1>
             <p className="mb-4">{quiz.description}</p>
-            <Quiz quiz={quiz} />
+            <Quiz quiz={quiz} /> {/* Pass quiz data to component */}
           </div>
         );
       } catch (error) {

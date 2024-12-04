@@ -1,5 +1,6 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
+// imports
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '../ui/card';
@@ -9,6 +10,7 @@ import Modal from '@/components/ui/modal';
 
 // Quiz interface
 interface Quiz {
+  _id: any;
   id: string;
   title: string;
   description: string;
@@ -76,11 +78,19 @@ export default function UserQuizList() {
       const response = await fetch(`http://localhost:9090/api/quiz/${quizId}`, {
         method: 'DELETE',
       });
+
       if (!response.ok) {
         throw new Error('Failed to delete quiz');
       }
+
+      // Close the modal
       setIsModalOpen(false);
+
+      // Remove the deleted quiz from the list
       setQuizzes(quizzes.filter((quiz) => quiz.id !== quizId));
+
+      // Refresh the page
+      router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete quiz');
     }
@@ -88,6 +98,7 @@ export default function UserQuizList() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {/* Display user quizzes */}
       {quizzes.map((quiz) => (
         <Card key={quiz._id} className="p-4">
           <CardHeader>
@@ -102,6 +113,7 @@ export default function UserQuizList() {
           </CardFooter>
         </Card>
       ))}
+      {/* Modal to display quiz details */}
       {isModalOpen && selectedQuiz && (
         <Modal onClose={handleCloseModal}>
           <div className="space-y-4">

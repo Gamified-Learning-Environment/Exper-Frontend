@@ -1,12 +1,12 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
-import UserQuizList from "@/components/shared/UserQuizList";
+import UserQuizList from "@/components/shared/UserQuizList"; // UserQuizList component from components/shared folder
 
-export default function UserQuizzesPage() {
-  return (
+export default function UserQuizzesPage() { // UserQuizzesPage component for displaying user quizzes specific to the user
+  return ( 
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">My Quizzes</h1>
-        <UserQuizList />
+        <UserQuizList /> {/* Display the UserQuizList component */}
     </div>
   );
 }

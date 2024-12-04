@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/auth.context';
 
 // User button props for user data and sign out function
 interface UserButtonProps {
@@ -10,15 +9,15 @@ interface UserButtonProps {
     username: string;
     firstName: string;
     lastName: string;
-    imageUrl?: string;
+    imageUrl?: string; // Optional profile image URL
   };
   onSignOut: () => void;
 }
 
-export default function UserButton({ user, onSignOut }: UserButtonProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function UserButton({ user, onSignOut }: UserButtonProps) { // UserButton component, takes user and onSignOut as props
+  const [isOpen, setIsOpen] = useState(false); // State variable to keep track of dropdown menu open status
 
-  return (
+  return ( // Return user button
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -29,14 +28,14 @@ export default function UserButton({ user, onSignOut }: UserButtonProps) {
             src={user.imageUrl || '/assets/images/default-avatar.png'}
             alt={user.username}
             className="h-full w-full object-cover"
-          />
+          /> {/* Display user profile image or default avatar */}
         </div>
         <span className="hidden text-sm font-medium text-white md:block">
           {user.username}
         </span>
       </button>
 
-      {isOpen && (
+      {isOpen && ( // Display dropdown menu if open
         <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white p-2 shadow-xl">
           <div className="space-y-1" role="menu">
             <Link

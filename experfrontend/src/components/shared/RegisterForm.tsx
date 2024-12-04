@@ -1,14 +1,15 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
 
-interface RegisterFormProps {
+interface RegisterFormProps { // RegisterFormProps interface, defines props
   onClose: () => void;
 }
 
-export default function RegisterForm({ onClose }: RegisterFormProps) {
+export default function RegisterForm({ onClose }: RegisterFormProps) { // RegisterForm component, takes onClose as prop
+  // State variables to keep track of error, loading, showPassword, passwordMatch status, router, register function
   const router = useRouter();
   const { register } = useAuth();
   const [error, setError] = useState('');
@@ -16,13 +17,14 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordMatch, setPasswordMatch] = useState(true);
 
+  // Function to handle form submit, registers user
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(event.currentTarget); // Get form data
     const password = formData.get('password') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
+    const confirmPassword = formData.get('confirmPassword') as string; 
 
-    if (password !== confirmPassword) {
+    if (password !== confirmPassword) { // Check if password and confirm password match
       setPasswordMatch(false);
       return;
     }
@@ -31,17 +33,16 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
     setError('');
 
     
-    try {
+    try { // Try to register user
       const userData = {
         email: formData.get('email') as string,
         password: formData.get('password') as string,
         username: formData.get('username') as string,
         firstName: formData.get('firstName') as string,
         lastName: formData.get('lastName') as string,
-        imageUrl: formData.get('imageUrl') as string || undefined,
+        imageUrl: formData.get('imageUrl') as string || undefined, // Optional profile image URL
       };
-
-      await register(userData);
+      await register(userData); // Call register function from useAuth hook
       onClose();
       router.push('/'); // Redirect to home page after successful registration
     } catch (error) {
@@ -51,7 +52,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
     }
   }
 
-  return (
+  return ( // Return register form
     <div className="relative w-full max-w-md">
       <button
         onClick={onClose}
@@ -60,6 +61,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
         ×
       </button>
       
+      {/* Register form with fields */}
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold text-purple-900">Join the Game! 🎮</h2>
         <p className="text-sm text-gray-600">Create your player profile</p>
@@ -99,7 +101,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowPassword(!showPassword)} // Toggle showPassword state
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-purple-500"
                   >
                     {showPassword ? '👁️' : '👁️‍🗨️'}
@@ -107,6 +109,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
                 </div>
             </div>
 
+        { /* Confirm Password field */ }
         <div className="space-y-2">
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-purple-900">
               Confirm Password
@@ -123,12 +126,11 @@ export default function RegisterForm({ onClose }: RegisterFormProps) {
                   : 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
               }`}
             />
-            {!passwordMatch && (
+            {!passwordMatch && ( // Show error message if passwords do not match
               <p className="mt-1 text-sm text-red-500">Passwords do not match</p>
             )}
           </div>
         </div>
-
 
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-purple-900">Username</label>

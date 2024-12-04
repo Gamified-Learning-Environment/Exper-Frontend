@@ -1,33 +1,36 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
-import Quiz from './Quiz';
 import { Slider } from '../ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
+// QuizQuestion interface
 interface QuizQuestion {
     id: string;
     question: string;
-    options: string[];
+    options: string[]; // Array of options
     correctAnswer: string;
+    imageUrl?: string; // Optional image URL
   }
   
-  interface QuizFormProps {
+  interface QuizFormProps { // QuizFormProps interface, defines props
     onClose?: () => void;
   }
 
+  // Difficulty type parameter
   type Difficulty = 'beginner' | 'intermediate' | 'expert';
 
-  export default function QuizForm({ onClose }: QuizFormProps) {
+  export default function QuizForm({ onClose }: QuizFormProps) { // QuizForm component, takes onClose as prop
+    // State variables to keep track of title, description, questions, error, loading
     const router = useRouter();
     const { user } = useAuth();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]);
+    const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]); // Initialize with one empty question
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -38,11 +41,11 @@ interface QuizQuestion {
     // ai integration
     const [useAI, setUseAI] = useState(false); // toggle AI use on/off
     const [notes, setNotes] = useState('');  // notes for AI
-    const [parameters, setParameters] = useState(''); // parameters for AI
 
     // preview generated questions
     const [showPreview, setShowPreview] = useState(false);
-  
+
+    // Function to add a new question
     const handleAddQuestion = () => {
       setQuestions([...questions, {
         id: (questions.length + 1).toString(),
@@ -52,6 +55,7 @@ interface QuizQuestion {
       }]);
     };
 
+    // Function to handle question change
     const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: string) => {
         const updatedQuestions = [...questions];
         updatedQuestions[index] = {
@@ -61,26 +65,28 @@ interface QuizQuestion {
         setQuestions(updatedQuestions);
       };
     
+      // Function to handle option change
       const handleOptionChange = (questionIndex: number, optionIndex: number, value: string) => {
         const updatedQuestions = [...questions];
         updatedQuestions[questionIndex].options[optionIndex] = value;
         setQuestions(updatedQuestions);
       };
 
+      // Function to generate quiz with AI
       const generateQuizWithAI = async () => {
         try {
-          const response = await fetch('http://localhost:9090/api/generate-quiz', {
+          const response = await fetch('http://localhost:9090/api/generate-quiz', { // Fetch quiz from API
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
+            body: JSON.stringify({ // Send question count, difficulty, and notes along with response format
                notes, 
                parameters: {
                   questionCount,
                   difficulty,
                },
-               format: `
+               format: ` 
                {
                     "_id": "672cb629113b70876395c8f2",
                     "title": "Database Management Quiz",
@@ -147,24 +153,26 @@ interface QuizQuestion {
               }),
           });
 
-          if (!response.ok) {
+          if (!response.ok) { // If response is not ok, throw an error
             throw new Error('Failed to generate quiz with AI');
           }
 
+          // Parse response data, set questions, and show preview
           const data = await response.json();
           setQuestions(data.questions);
           setShowPreview(true);
-        } catch (error) {
+        } catch (error) { // Catch and handle error
           setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
         }
       }
     
+      // Function to handle form submission
       const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault(); // Prevent default form submission
         setLoading(true); // Set loading state to true
         setError(''); // Reset error state
     
-        try {
+        try { // Try to create quiz
           const quizData = {
             title,
             description,
@@ -177,7 +185,7 @@ interface QuizQuestion {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(quizData)
+            body: JSON.stringify(quizData) // Send quiz data to API
           });
     
           if (!response.ok) {
@@ -185,25 +193,26 @@ interface QuizQuestion {
           }
 
           const data = await response.json();
-          console.log('Server response:', data); // Add this debug log
+          
+          // Debugging server response and quiz ID
+          console.log('Server response:', data); 
+          console.log('Quiz ID:', data.quizid); 
 
-          console.log('Quiz ID:', data.quizid); // Add this debug log
-
-          if (!data.quizid) {
+          if (!data.quizid) { // Throw an error if no quiz ID is returned
             throw new Error('No quiz ID returned from server');
           }
 
           // Redirect to the quiz page with the new ID
           router.push(`/quiz/${data.quizid}`);
 
-        } catch (error) {
+        } catch (error) { // Catch and handle error
           setError(error instanceof Error ? error.message : 'Failed to create quiz');
         } finally {
           setLoading(false);
         }
       };
     
-    return (
+    return ( // Return quiz form
       <Card className="w-full max-w-4xl mx-auto p-6">
         <form onSubmit={handleSubmit}>
         <CardHeader>
@@ -215,6 +224,7 @@ interface QuizQuestion {
             )}
         </CardHeader>
 
+        {/* Quiz form fields */}
         <CardContent className="space-y-6">
             <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-medium">
@@ -243,11 +253,12 @@ interface QuizQuestion {
               />
           </div>
 
+          {/* AI integration */}
           <div className='space-y-2'>
             <input
               type="checkbox"
               checked={useAI}
-              onChange={() => setUseAI(!useAI)}
+              onChange={() => setUseAI(!useAI)} // Toggle AI use on/off
               className="mr-2"
               title="Use AI to Generate Quiz"
               placeholder="Use AI to Generate Quiz"
@@ -255,6 +266,7 @@ interface QuizQuestion {
             <label className='text-md font-medium'>Use AI to Generate Quiz </label>
           </div>
 
+          {/* AI form fields */}
           {useAI && (
             <div className="space-y-6">
               <div className="space-y-4">
@@ -274,7 +286,7 @@ interface QuizQuestion {
                 <label className="text-sm font-medium">Difficulty Level</label>
                 <Select value={difficulty} onValueChange={(value: Difficulty) => setDifficulty(value)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select difficulty" />
+                    <SelectValue placeholder="Select difficulty" /> 
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="beginner">Beginner</SelectItem>
@@ -291,7 +303,7 @@ interface QuizQuestion {
                 <textarea
                   id="notes"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) => setNotes(e.target.value)} // Set notes for AI to generate questions from
                   className="w-full p-2 border rounded"
                   placeholder="Add any notes, topics, or keywords for the AI to generate questions from"
                 />
@@ -303,16 +315,18 @@ interface QuizQuestion {
             </div>
           )}
 
+          {/* Quiz questions fill in */}
           {!useAI && questions.map((question, qIndex) => (
             <div key={question.id} className="border p-4 rounded space-y-4">
               <h3 className="font-medium">Question {qIndex + 1}</h3>
-              
+
+              {/* Question fields */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Question Text</label>
                 <input
                     type="text"
                     value={question.question}
-                    onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
+                    onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)} // Set question
                     className="w-full p-2 border rounded"
                     required
                     title="Question Text"
@@ -320,6 +334,7 @@ interface QuizQuestion {
                 />
               </div>
 
+              {/* Options fields */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Options</label>
                 {question.options.map((option, oIndex) => (
@@ -327,7 +342,7 @@ interface QuizQuestion {
                     key={oIndex}
                     type="text"
                     value={option}
-                    onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                    onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)} // Set option
                     className="w-full p-2 border rounded mt-2"
                     placeholder={`Option ${oIndex + 1}`}
                     required
@@ -335,12 +350,13 @@ interface QuizQuestion {
                 ))}
               </div>
 
+              {/* Correct Answer field */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Correct Answer</label>
                 <select
                     title="Correct Answer"
                     value={question.correctAnswer}
-                    onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)}
+                    onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)} // Set correct answer
                     className="w-full p-2 border rounded"
                     required
                 >
@@ -355,6 +371,7 @@ interface QuizQuestion {
             </div>
           ))}
           
+          {/* Preview generated questions */}
           {showPreview && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold">Generated Questions</h3>
@@ -370,13 +387,14 @@ interface QuizQuestion {
                   <p className="font-semibold">Correct Answer: {question.correctAnswer}</p>
                 </div>
               ))}
-              <Button type="button" onClick={generateQuizWithAI}>
+              <Button type="button" onClick={generateQuizWithAI}> {/* Regenerate questions */}
                 Regenerate Questions
               </Button>
             </div>
           )}
         </CardContent>
-    
+
+        {/* Quiz form footer */}
         <CardFooter className="flex justify-between">
             <Button type="button" onClick={handleAddQuestion} variant="outline">
               Add Question

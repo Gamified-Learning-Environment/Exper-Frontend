@@ -2,7 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-const Footer = () => {
+const Footer = () => { // Footer component
   return (
     <footer className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 py-6 text-white">
       <div className="wrapper flex-between flex flex-col gap-4 p-5 text-center sm:flex-row">
@@ -16,6 +16,7 @@ const Footer = () => {
           />
         </Link>
 
+        { /* Footer content */ }
         <div className="flex flex-col gap-2">
           <p className="text-white/90">2024 Exper. Level up your learning journey!</p>
           <div className="flex justify-center gap-4">

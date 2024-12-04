@@ -1,11 +1,12 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
 import Link from 'next/link'
 import Image from 'next/image'
 import React, { useState} from 'react'
-import { Button } from '../ui/button'
 import NavItems from './NavItems'
 import MobileNav from './MobileNav'
+
+// Auth imports
 import { useAuth } from '@/contexts/auth.context';
 import UserButton from './UserButton';
 import RegisterForm from './RegisterForm';
@@ -15,10 +16,8 @@ import LoginForm from './LoginForm';
 import { Progress } from '../ui/progress'; 
 import { Crown, Star, Target, Trophy, Flame, Zap } from 'lucide-react';
 
-// Add this new component above LevelWidget
-const AchievementBanner = () => {
-  // Hardcoded achievements for now
-  const achievements = [
+const AchievementBanner = () => {  // Placeholder achievements
+  const achievements = [ 
     { icon: Crown, label: 'Quiz Master', color: 'text-yellow-400' },
     { icon: Star, label: '5 Day Streak', color: 'text-purple-400' },
     { icon: Target, label: 'Perfect Score', color: 'text-green-400' },
@@ -26,13 +25,14 @@ const AchievementBanner = () => {
     { icon: Flame, label: 'On Fire', color: 'text-red-400' },
   ];
 
-  return (
+  return ( // Achievements banner
     <div className="hidden md:flex items-center gap-6 rounded-full bg-white/20 px-6 py-3 backdrop-blur-sm">
-      {achievements.map((achievement, index) => (
+      {achievements.map((achievement, index) => ( // Map through achievements
         <div
           key={index}
           className="group relative flex items-center justify-center"
         >
+          {/* Achievement icon */}
           <achievement.icon 
             className={`h-7 w-7 ${achievement.color} transition-all hover:scale-150`}  
           />
@@ -46,12 +46,12 @@ const AchievementBanner = () => {
   );
 };
 
-const LevelWidget = () => {
-  // Hardcoded values for now
+const LevelWidget = () => { // placeholder Level widget component
+  // Level and percentage progress, hardcoded for now
   const level = 5;
-  const progress = 65; // percentage to next level
+  const progress = 65;
 
-  return (
+  return ( // return Level widget
     <div className="hidden md:flex items-center gap-3 rounded-full bg-white/20 px-6 py-3 backdrop-blur-sm">
       {/* Level number */}
       <span className="text-3xl font-bold text-white">
@@ -64,6 +64,7 @@ const LevelWidget = () => {
           value={progress}
           className="h-1.5 w-full"
         />
+        {/* Progress text */}
         <span className="text-xs text-white/70 mt-1">
           {progress}% to next level
         </span>
@@ -72,12 +73,13 @@ const LevelWidget = () => {
   );
 };
 
-const Header = () => {
+const Header = () => { // Header component
+  // Auth state
   const { isAuthenticated, user, logout } = useAuth();
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   
-  return (
+  return ( // return Header
     <header className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 shadow-lg">
       <div className="wrapper flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
@@ -92,8 +94,8 @@ const Header = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex md:items-center md:space-x-6">
-          <NavItems />
+        <nav className="hidden md:flex md:items-center md:space-x-4 lg:space-x-6">
+          <NavItems /> {/* NavItems component */}
         </nav>
 
         {/* Achievements Banner */}
@@ -106,21 +108,21 @@ const Header = () => {
        <div className="flex items-center space-x-4">
           <MobileNav />
           <div className="flex items-center gap-4">
-            {isAuthenticated ? (
+            {isAuthenticated ? ( // Check if user is authenticated
               <UserButton 
                 user={user!}
                 onSignOut={logout}
               />
-            ) : (
+            ) : ( // Show Sign In and Sign Up buttons
               <>
                 <button
-                  onClick={() => setIsLoginOpen(true)}
+                  onClick={() => setIsLoginOpen(true)} // Open login modal
                   className="text-sm font-medium text-white hover:text-yellow-300 transition"
                 >
                   Sign In
                 </button>
                 <button
-                  onClick={() => setIsRegisterOpen(true)}
+                  onClick={() => setIsRegisterOpen(true)} // Open register modal
                   className="transform rounded-full bg-yellow-400 px-6 py-2 text-sm font-bold text-purple-900 shadow-md transition hover:scale-105 hover:bg-yellow-300"
                 >
                   Sign Up
