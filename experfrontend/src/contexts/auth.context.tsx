@@ -1,16 +1,16 @@
-'use client';
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
-// imports
-import { createContext, useContext, useState, useEffect } from 'react';
-import { createUser, loginUser, logoutUser } from '@/lib/actions/user.actions';
+import { createContext, useContext, useState, useEffect } from 'react'; 
+import { createUser, loginUser, logoutUser } from '@/lib/actions/user.actions'; // Import user actions
 
+// User interface to define user data
 interface User {
   id: string;
   email: string;
   username: string;
   firstName: string;
   lastName: string;
-  imageUrl?: string;
+  imageUrl?: string; // Optional profile image URL
 }
 
 // Auth context type handles user login, registration, and logout

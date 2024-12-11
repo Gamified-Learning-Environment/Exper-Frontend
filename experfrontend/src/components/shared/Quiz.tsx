@@ -95,6 +95,14 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
         }
     };
 
+    // handle previous question, update currentQuestion state
+    const handlePrevious = () => {
+        if (currentQuestion > 0) {
+            setCurrentQuestion(currentQuestion - 1);
+        }
+    };
+
+
     // calculate score and show results
     const calculateResults = () => {
         let newScore = 0; // initialize score
@@ -123,7 +131,7 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                     </div>
                     {/* Progress bar */}
                     <Progress 
-                        value={(currentQuestion + 1) / quiz.questions.length * 100} 
+                        value={(currentQuestion) / (quiz.questions.length - 1) * 100} 
                         className="mb-4" 
                     />
                     
@@ -143,10 +151,19 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                         ))}
                     </RadioGroup>
 
-                    {/* Next button */}
-                    <Button onClick={handleNext} className='mt-4'>
-                        {currentQuestion < quiz.questions.length - 1 ? 'Next' : 'Finish'}
-                    </Button>
+                    {/* Question navigation button */}
+                    <div className="flex justify-between mt-4">
+                        <Button 
+                            onClick={handlePrevious}
+                            disabled={currentQuestion === 0}
+                            variant="outline"
+                        >
+                            Previous
+                        </Button>
+                        <Button onClick={handleNext}>
+                            {currentQuestion < quiz.questions.length - 1 ? 'Next' : 'Finish'}
+                        </Button>
+                    </div>
                 </div>
             ) : ( // Show quiz results if results are shown
                 <div className="space-y-4">

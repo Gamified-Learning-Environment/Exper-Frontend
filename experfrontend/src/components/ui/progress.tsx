@@ -10,9 +10,10 @@ const Progress = React.forwardRef<
 >(({ className, value, ...props }, ref) =>  {
   // Calculate color based on progress value
   const getColor = (value: number) => {
-    if (value <= 33) return "bg-red-500"
-    if (value <= 66) return "bg-yellow-500"
-    return "bg-green-500"
+    if (value < 25) return "bg-red-500"    // Just started
+    if (value < 50) return "bg-orange-500"  // Quarter way
+    if (value < 75) return "bg-yellow-500"  // Half way
+    return "bg-green-500"                   // Almost done
   }
 
   return (

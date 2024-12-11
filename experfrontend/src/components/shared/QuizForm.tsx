@@ -42,6 +42,10 @@ interface QuizQuestion {
     const [useAI, setUseAI] = useState(false); // toggle AI use on/off
     const [notes, setNotes] = useState('');  // notes for AI
 
+    // pdf paramater states
+    const [pdfUrl, setPdfUrl] = useState(''); // pdf URL
+    const [isPdfProcessing, setIsPdfProcessing] = useState(false); // pdf processing state
+
     // preview generated questions
     const [showPreview, setShowPreview] = useState(false);
 
@@ -68,13 +72,22 @@ interface QuizQuestion {
       // Function to handle option change
       const handleOptionChange = (questionIndex: number, optionIndex: number, value: string) => {
         const updatedQuestions = [...questions];
-        updatedQuestions[questionIndex].options[optionIndex] = value;
+        const question = updatedQuestions[questionIndex];
+  
+        // If we're changing the option that was the correct answer, reset it
+        if (question.options[optionIndex] === question.correctAnswer) {
+          question.correctAnswer = '';
+        }
+        
+        // Update the option
+        question.options[optionIndex] = value;
         setQuestions(updatedQuestions);
       };
 
       // Function to generate quiz with AI
       const generateQuizWithAI = async () => {
         try {
+          setIsPdfProcessing(true); // Set PDF processing state to true
           const response = await fetch('http://localhost:9090/api/generate-quiz', { // Fetch quiz from API
             method: 'POST',
             headers: {
@@ -82,6 +95,7 @@ interface QuizQuestion {
             },
             body: JSON.stringify({ // Send question count, difficulty, and notes along with response format
                notes, 
+               pdfUrl,
                parameters: {
                   questionCount,
                   difficulty,
@@ -163,6 +177,8 @@ interface QuizQuestion {
           setShowPreview(true);
         } catch (error) { // Catch and handle error
           setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
+        } finally {
+          setIsPdfProcessing(false); // Set PDF processing state to false
         }
       }
     
@@ -213,71 +229,86 @@ interface QuizQuestion {
       };
     
     return ( // Return quiz form
-      <Card className="w-full max-w-4xl mx-auto p-6">
+      <Card className="w-full max-w-4xl mx-auto p-6 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl">
         <form onSubmit={handleSubmit}>
-        <CardHeader>
-            <h2 className="text-2xl font-bold">Create New Quiz</h2>
+          <CardHeader className="space-y-4 text-center">
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
+              Create Your Quiz Adventure ✨
+            </h2>
             {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <div className="bg-red-100/90 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg animate-pulse">
                 {error}
-            </div>
+              </div>
             )}
-        </CardHeader>
+          </CardHeader>
 
         {/* Quiz form fields */}
-        <CardContent className="space-y-6">
-            <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-                Quiz Title
-            </label>
+        <CardContent className="space-y-8">
+        <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200 space-y-4 transition-all hover:shadow-md">
+          <h3 className="text-xl font-bold text-blue-700 flex items-center gap-2">
+            <span className="bg-blue-200 p-2 rounded-lg">📝</span>
+            Quiz Title
+          </h3>
+          <div className="space-y-4">
             <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-2 border rounded"
-                required
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+              placeholder="Enter an exciting quiz title..."
+              required
             />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
+              <label htmlFor="description" className="text-sm font-medium text-blue-500 flex items-center gap-2">
                 Quiz Description
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all"
+                placeholder="Describe your quiz adventure..."
                 required
               />
+            </div>
           </div>
 
           {/* AI integration */}
-          <div className='space-y-2'>
-            <input
-              type="checkbox"
-              checked={useAI}
-              onChange={() => setUseAI(!useAI)} // Toggle AI use on/off
-              className="mr-2"
-              title="Use AI to Generate Quiz"
-              placeholder="Use AI to Generate Quiz"
-            />
-            <label className='text-md font-medium'>Use AI to Generate Quiz </label>
+          <div className='bg-purple-50 p-6 rounded-xl border-2 border-purple-200 space-y-4 transition-all hover:shadow-md'>
+            <h3 className="text-xl font-bold text-purple-700 flex items-center gap-2">
+              <span className="bg-purple-200 p-2 rounded-lg">🤖</span>
+              AI Magic
+            </h3>
+            <div className='space-y-4'>
+              <div className='flex items-center gap-2 bg-white p-3 rounded-lg border-2 border-purple-200'>
+                <input
+                  type="checkbox"
+                  checked={useAI}
+                  onChange={() => setUseAI(!useAI)} // Toggle AI use on/off
+                  className="w-5 h-5 text-purple-600"
+                  title="Use AI to Generate Quiz"
+                  placeholder="Use AI to Generate Quiz"
+                />
+                <label className='text-lg font-medium text-purple-700'>Use AI to Generate Quiz</label>
+              </div>
+            </div>
           </div>
 
           {/* AI form fields */}
           {useAI && (
             <div className="space-y-6">
               <div className="space-y-4">
-                <label className="text-sm font-medium">Number of Questions</label>
+                <label className="text-sm font-medium text-purple-500 flex items-center gap-2">Number of Questions</label>
                 <Slider
                   value={[questionCount]}
                   onValueChange={(value) => setQuestionCount(value[0])}
                   min={1}
                   max={20}
                   step={1}
-                  className="w-full"
+                  className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                 />
                 <span className="text-sm text-gray-500">{questionCount} questions</span>
               </div>
@@ -309,6 +340,17 @@ interface QuizQuestion {
                 />
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-medium">PDF URL (Optional)</label>
+                <input
+                  type="url"
+                  value={pdfUrl}
+                  onChange={(e) => setPdfUrl(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter URL to a PDF document"
+                />
+              </div>
+
               <Button type="button" onClick={generateQuizWithAI}>
                 Generate Quiz with AI
               </Button>
@@ -316,9 +358,14 @@ interface QuizQuestion {
           )}
 
           {/* Quiz questions fill in */}
-          {!useAI && questions.map((question, qIndex) => (
-            <div key={question.id} className="border p-4 rounded space-y-4">
-              <h3 className="font-medium">Question {qIndex + 1}</h3>
+          <div className="bg-green-50 p-6 rounded-xl border-2 border-green-200 space-y-6 transition-all hover:shadow-md">
+            <h3 className="text-xl font-bold text-green-700 flex items-center gap-2">
+              <span className="bg-green-200 p-2 rounded-lg">❓</span>
+              Questions
+            </h3>
+            {!useAI && questions.map((question, qIndex) => (
+            <div key={question.id} className="bg-white p-4 rounded-lg border-2 border-green-200 space-y-4 transition-all hover:shadow-md">
+              <h4 className="font-bold text-green-700 flex items-center gap-2">Question {qIndex + 1}</h4>
 
               {/* Question fields */}
               <div className="space-y-2">
@@ -327,49 +374,59 @@ interface QuizQuestion {
                     type="text"
                     value={question.question}
                     onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)} // Set question
-                    className="w-full p-2 border rounded"
+                    className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400"
                     required
                     title="Question Text"
-                    placeholder="Enter the question text"
+                    placeholder="Enter your question..."
                 />
               </div>
 
-              {/* Options fields */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Options</label>
-                {question.options.map((option, oIndex) => (
-                    <input
-                    key={oIndex}
-                    type="text"
-                    value={option}
-                    onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)} // Set option
-                    className="w-full p-2 border rounded mt-2"
-                    placeholder={`Option ${oIndex + 1}`}
-                    required
-                    />
-                ))}
-              </div>
+                {/* Options fields */}
+                <div className="grid gap-3">
+                  {question.options.map((option, oIndex) => (
+                    <div key={oIndex} className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
+                        ${oIndex === 0 ? 'bg-red-400' : 
+                          oIndex === 1 ? 'bg-blue-400' : 
+                          oIndex === 2 ? 'bg-yellow-400' : 'bg-green-400'}`}>
+                        {oIndex + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={option}
+                        onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                        className="flex-1 p-2 border-2 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400"
+                        placeholder={`Option ${oIndex + 1}`}
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
 
-              {/* Correct Answer field */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Correct Answer</label>
-                <select
+                {/* Correct Answer field */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Correct Answer</label>
+                  <select
                     title="Correct Answer"
                     value={question.correctAnswer}
-                    onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)} // Set correct answer
+                    onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)}
                     className="w-full p-2 border rounded"
                     required
-                >
-                    <option value="">Select correct answer</option>
+                  >
+                    <option value="" disabled>Select correct answer</option>
                     {question.options.map((option, index) => (
-                    <option key={index} value={option}>
-                        {option || `Option ${index + 1}`}
-                    </option>
+                      // Only show options that have content
+                      option && (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      )
                     ))}
-                </select>
+                  </select>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
           
           {/* Preview generated questions */}
           {showPreview && (
@@ -395,13 +452,22 @@ interface QuizQuestion {
         </CardContent>
 
         {/* Quiz form footer */}
-        <CardFooter className="flex justify-between">
-            <Button type="button" onClick={handleAddQuestion} variant="outline">
-              Add Question
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating Quiz...' : 'Create Quiz'}
-            </Button>
+        <CardFooter className="flex justify-between pt-6">
+          <Button 
+            type="button" 
+            onClick={handleAddQuestion} 
+            variant="outline"
+            className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border-2 border-indigo-300"
+          >
+            Add Question ✨
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={loading}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+          >
+            {loading ? 'Creating Magic... ✨' : 'Create Quiz 🎮'}
+          </Button>
         </CardFooter>
         </form>
       </Card>
