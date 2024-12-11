@@ -7,6 +7,8 @@ import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 import { Button } from '../ui/button';
 import { useAuth } from '@/contexts/auth.context';
 import Modal from '@/components/ui/modal';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 // Quiz interface
 interface Quiz {
@@ -14,6 +16,7 @@ interface Quiz {
   id: string;
   title: string;
   description: string;
+  category?: string;
   questions: QuizQuestion[];
 }
 
@@ -27,6 +30,8 @@ interface QuizQuestion {
 // UserQuizList component
 export default function UserQuizList() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,10 +39,32 @@ export default function UserQuizList() {
   const router = useRouter();
   const { user } = useAuth();
 
+  // Fetch categories
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('http://localhost:9090/api/categories');
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    }
+    fetchCategories();
+  }, []);
+
+  // Fetch user quizzes with optional category filter
   useEffect(() => {
     async function fetchUserQuizzes() {
       try {
-        const response = await fetch(`http://localhost:9090/api/quizzes?userId=${user?.id}`);
+        let url = `http://localhost:9090/api/quizzes?userId=${user?.id}`;
+        if (selectedCategory) {
+          url += `&category=${selectedCategory}`;
+        }
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch user quizzes');
         }
@@ -53,7 +80,7 @@ export default function UserQuizList() {
     if (user) {
       fetchUserQuizzes();
     }
-  }, [user]);
+  }, [user, selectedCategory]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -97,22 +124,48 @@ export default function UserQuizList() {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {/* Display user quizzes */}
-      {quizzes.map((quiz) => (
-        <Card key={quiz._id} className="p-4">
-          <CardHeader>
-            <CardTitle>{quiz.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription>{quiz.description}</CardDescription>
-          </CardContent>
-          <CardFooter className='flex justify-between'>
-            <Button onClick={() => handlePreview(quiz)} >Preview</Button>
-            <Button onClick={() => router.push(`/quiz/${quiz._id}`)}>View Quiz</Button>
-          </CardFooter>
-        </Card>
-      ))}
+    <div className="space-y-6">
+        <label className="text-sm font-medium">Category</label>
+      <div className="flex gap-4 items-center">
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {quizzes.map((quiz) => (
+          <Card key={quiz._id} className="p-4">
+            <CardHeader>
+              <CardTitle>{quiz.title}</CardTitle>
+              {quiz.category && (
+                <Badge variant="outline" className="w-fit">
+                  {quiz.category}
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent>
+              <CardDescription>{quiz.description}</CardDescription>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => handlePreview(quiz)}>Preview</Button>
+              <Button onClick={() => router.push(`/quiz/${quiz._id}`)}>
+                View Quiz
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+
       {/* Modal to display quiz details */}
       {isModalOpen && selectedQuiz && (
         <Modal onClose={handleCloseModal}>
@@ -141,5 +194,6 @@ export default function UserQuizList() {
         </Modal>
       )}
     </div>
+  </div>
   );
 }

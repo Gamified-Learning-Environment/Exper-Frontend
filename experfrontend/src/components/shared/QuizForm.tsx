@@ -1,6 +1,6 @@
 'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
@@ -30,9 +30,13 @@ interface QuizQuestion {
     const { user } = useAuth();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [categories, setCategories] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [newCategory, setNewCategory] = useState('');
     const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]); // Initialize with one empty question
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // paramaters for AI
     const [questionCount, setQuestionCount] = useState(5);
@@ -57,6 +61,45 @@ interface QuizQuestion {
         options: ['', '', '', ''],
         correctAnswer: ''
       }]);
+    };
+
+    // Fetch categories on component mount
+    useEffect(() => {
+      const fetchCategories = async () => {
+        try {
+          const response = await fetch('http://localhost:9090/api/categories');
+          if (!response.ok) {
+            throw new Error('Failed to fetch categories');
+          }
+          const data = await response.json();
+          setCategories(data);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      };
+      fetchCategories();
+    }, []);
+
+    // Add new category
+    const handleAddCategory = async () => {
+      if (!newCategory) return;
+      try {
+        const response = await fetch('http://localhost:9090/api/categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: newCategory }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to add category');
+        }
+        setCategories([...categories, newCategory]);
+        setSelectedCategory(newCategory);
+        setNewCategory('');
+      } catch (error) {
+        console.error('Error adding category:', error);
+      }
     };
 
     // Function to handle question change
@@ -87,6 +130,7 @@ interface QuizQuestion {
       // Function to generate quiz with AI
       const generateQuizWithAI = async () => {
         try {
+          setIsGenerating(true); // Set generating state to true
           setIsPdfProcessing(true); // Set PDF processing state to true
           const response = await fetch('http://localhost:9090/api/generate-quiz', { // Fetch quiz from API
             method: 'POST',
@@ -179,6 +223,7 @@ interface QuizQuestion {
           setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
         } finally {
           setIsPdfProcessing(false); // Set PDF processing state to false
+          setIsGenerating(false); // Set generating state to false
         }
       }
     
@@ -193,6 +238,7 @@ interface QuizQuestion {
             title,
             description,
             questions,
+            category: selectedCategory,
             userId: user?.id // user ID to connect quiz to its creator
           };
     
@@ -274,6 +320,39 @@ interface QuizQuestion {
                 required
               />
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Category</label>
+              <select
+                title="Category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">Select a category</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Add New Category</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter new category"
+                />
+                <Button type="button" onClick={handleAddCategory}>
+                  Add
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* AI integration */}
@@ -351,8 +430,15 @@ interface QuizQuestion {
                 />
               </div>
 
-              <Button type="button" onClick={generateQuizWithAI}>
-                Generate Quiz with AI
+              <Button type="button" onClick={generateQuizWithAI} disabled={isGenerating} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700">
+                {isGenerating ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                    Generating Quiz...
+                  </div>
+                ) : (
+                  'Generate Quiz with AI'
+                )}
               </Button>
             </div>
           )}

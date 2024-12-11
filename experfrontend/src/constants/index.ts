@@ -17,7 +17,7 @@ export const headerLinks = [
     },
     {
       label: 'My Profile',
-      route: '/profile',
+      route: '/user',
     },
     {
       label: 'Try it Out',
