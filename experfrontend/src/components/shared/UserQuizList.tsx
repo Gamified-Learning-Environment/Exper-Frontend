@@ -60,10 +60,11 @@ export default function UserQuizList() {
   useEffect(() => {
     async function fetchUserQuizzes() {
       try {
-        let url = `http://localhost:9090/api/quizzes?userId=${user?.id}`;
-        if (selectedCategory) {
-          url += `&category=${selectedCategory}`;
-        }
+        let url = selectedCategory && selectedCategory !== 'all'
+          ? `http://localhost:9090/api/quizzes/category/${selectedCategory}?userId=${user?.id}`
+          : `http://localhost:9090/api/quizzes?userId=${user?.id}`;
+
+      
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch user quizzes');

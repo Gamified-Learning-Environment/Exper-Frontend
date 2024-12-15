@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
 import { Slider } from '../ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Upload, Image as ImageIcon, X } from 'lucide-react';
 
 // QuizQuestion interface
 interface QuizQuestion {
@@ -34,6 +35,8 @@ interface QuizQuestion {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [newCategory, setNewCategory] = useState('');
     const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]); // Initialize with one empty question
+    const [questionImages, setQuestionImages] = useState<{ [key: string]: File }>({});
+    const [imageLoading, setImageLoading] = useState<{ [key: string]: boolean }>({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -99,6 +102,38 @@ interface QuizQuestion {
         setNewCategory('');
       } catch (error) {
         console.error('Error adding category:', error);
+      }
+    };
+
+    const handleImageUpload = async (questionIndex: number, file: File) => {
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch('http://localhost:9090/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+    
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+    
+        const { imageUrl } = await response.json();
+        
+        // Update the question with the image URL
+        const updatedQuestions = [...questions];
+        updatedQuestions[questionIndex] = {
+          ...updatedQuestions[questionIndex],
+          imageUrl
+        };
+        setQuestions(updatedQuestions);
+
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        setError('Failed to upload image');
+      } finally {
+        setImageLoading(prev => ({ ...prev, [questionIndex]: false }));
       }
     };
 
@@ -348,7 +383,7 @@ interface QuizQuestion {
                   className="w-full p-2 border rounded"
                   placeholder="Enter new category"
                 />
-                <Button type="button" onClick={handleAddCategory}>
+                <Button type="button" onClick={handleAddCategory} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700">
                   Add
                 </Button>
               </div>
@@ -466,6 +501,96 @@ interface QuizQuestion {
                     placeholder="Enter your question..."
                 />
               </div>
+
+              {/* Image upload section */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  <ImageIcon className="w-4 h-4" />
+                  Question Image (Optional)
+                </label>
+
+                <div className="text-sm font-medium text-green-700 flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleImageUpload(qIndex, file);
+                      }
+                    }}
+                    className="w-full p-2 border rounded"
+                    title="Upload an image for the question"
+                    placeholder="Choose an image file"
+                  />
+                  {question.imageUrl ? (
+                    <div className="relative group">
+                      <img
+                        src={question.imageUrl}
+                        alt="Question image"
+                        className="w-full h-48 object-cover rounded-lg shadow-md transition-all duration-300 group-hover:brightness-75"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="rounded-full bg-red-500/90 hover:bg-red-600"
+                          onClick={() => {
+                            const updatedQuestions = [...questions];
+                            updatedQuestions[qIndex] = {
+                              ...updatedQuestions[qIndex],
+                              imageUrl: undefined
+                            };
+                            setQuestions(updatedQuestions);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Upload button and drag-drop zone
+                    <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setImageLoading(prev => ({ ...prev, [qIndex]: true }));
+                          handleImageUpload(qIndex, file);
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      title="Upload an image for the question"
+                      placeholder="Choose an image file"
+                    />
+                    <div className={`
+                      border-2 border-dashed border-green-200 rounded-lg p-8
+                      flex flex-col items-center justify-center gap-3
+                      transition-all duration-300 hover:border-green-400
+                      ${imageLoading[qIndex] ? 'bg-green-50' : 'bg-white'}
+                    `}>
+                      <div className={`
+                        p-3 rounded-full bg-green-100
+                        ${imageLoading[qIndex] ? 'animate-pulse' : ''}
+                      `}>
+                        <Upload className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-green-600">
+                          {imageLoading[qIndex] ? 'Uploading...' : 'Click or drag image here'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Supports JPG, PNG, GIF up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  )}
+                </div>
+                </div>
 
                 {/* Options fields */}
                 <div className="grid gap-3">

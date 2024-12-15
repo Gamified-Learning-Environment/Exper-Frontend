@@ -11,6 +11,7 @@ interface QuizQuestion { // QuizQuestion interface
     question: string;
     options: string[];
     correctAnswer: string;
+    imageUrl?: string;
 }
 
 interface Quiz { // Quiz interface
@@ -134,22 +135,34 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                         value={(currentQuestion) / (quiz.questions.length - 1) * 100} 
                         className="mb-4" 
                     />
-                    
-                    <p className='mb-4'>{quiz.questions[currentQuestion].question}</p>
+                    <div className="space-y-4">
+                        <p className='mb-4'>{quiz.questions[currentQuestion].question}</p>
 
-                    {/* Radio group for options */}
-                    <RadioGroup
-                        onValueChange={handleAnswer}
-                        value={selectedAnswers[currentQuestion]}
-                        className='space-y-2'
-                    >
-                        {quiz.questions[currentQuestion].options.map((option, index) => (
-                            <div key={index} className='flex items-center space-x-2'>
-                                <RadioGroupItem value={option} id={`option-${index}`} />
-                                <label htmlFor={`option-${index}`} className='cursor-pointer'>{option}</label>
+                        {/* Question image */}
+                        {quiz.questions[currentQuestion].imageUrl && (
+                            <div className="mb-4">
+                                <img
+                                    src={quiz.questions[currentQuestion].imageUrl}
+                                    alt="Question image"
+                                    className="max-w-full h-auto rounded-lg shadow-md"
+                                />
                             </div>
-                        ))}
-                    </RadioGroup>
+                        )}
+
+                        {/* Radio group for options */}
+                        <RadioGroup
+                            onValueChange={handleAnswer}
+                            value={selectedAnswers[currentQuestion]}
+                            className='space-y-2'
+                        >
+                            {quiz.questions[currentQuestion].options.map((option, index) => (
+                                <div key={index} className='flex items-center space-x-2'>
+                                    <RadioGroupItem value={option} id={`option-${index}`} />
+                                    <label htmlFor={`option-${index}`} className='cursor-pointer'>{option}</label>
+                                </div>
+                            ))}
+                        </RadioGroup>
+                    </div>
 
                     {/* Question navigation button */}
                     <div className="flex justify-between mt-4">
@@ -179,8 +192,20 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                     
                     {/* Questions and answers */}
                     {quiz.questions.map((question, index) => (
-                        <div key={index} className={`border p-4 rounded${selectedAnswers[index] === question.correctAnswer ? 'bg-green-300' : 'bg-red-300'}`}>
+                        <div key={index} className={`border p-4 rounded${
+                            selectedAnswers[index] === question.correctAnswer ? 'bg-green-300' : 'bg-red-300'
+                        }`}>
                             <p className="font-semibold">{question.question}</p>
+                            {/* Question image in results */}
+                            {question.imageUrl && (
+                                <div className="my-2">
+                                    <img
+                                    src={question.imageUrl}
+                                    alt="Question image"
+                                    className="max-w-full h-32 object-contain rounded-lg"
+                                    />
+                                </div>
+                            )}
                             <p className="text-green-600">Correct answer: {question.correctAnswer}</p>
                             <p className={`${
                                 selectedAnswers[index] === question.correctAnswer 
