@@ -35,10 +35,10 @@ Welcome to the **Frontend Repository** for the Gamified Learning Environment (GL
 
 
 ## Microservices Integration
-  The frontend interacts with the following backend microservices:
-  
-  User Management Service: Handles user authentication and account details.
-  Quiz Generation Service: Fetches manually created and AI-generated quizzes.
-  Results Tracking Service: Retrieves user performance data for visualization.
-  Gamification Service: Provides gamification data such as achievements and leaderboards.
-  API calls are managed using Axios for seamless communication with these microservices.
+The frontend interacts with the following backend microservices:
+
+- User Management Service: Handles user authentication and account details.
+- Quiz Generation Service: Fetches manually created and AI-generated quizzes.
+- Results Tracking Service: Retrieves user performance data for visualization.
+- Gamification Service: Provides gamification data such as achievements and leaderboards.
+- API calls are managed using Axios for seamless communication with these microservices.
