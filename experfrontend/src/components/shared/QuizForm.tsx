@@ -162,6 +162,19 @@ interface QuizQuestion {
         setQuestions(updatedQuestions);
       };
 
+      // State for validation feedback
+      const [validationFeedback, setValidationFeedback] = useState<{
+        score: number;
+        feedback: Array<{
+          question_id: string;
+          score: number; 
+          issues: string[];
+          suggestions: string[];
+        }>;
+        overall_feedback: string;
+        difficulty_alignment: number;
+      } | null>(null);
+
       // Function to generate quiz with AI
       const generateQuizWithAI = async () => {
         try {
@@ -252,7 +265,25 @@ interface QuizQuestion {
 
           // Parse response data, set questions, and show preview
           const data = await response.json();
+
+          // Check if we have quiz data
+          if (!data.questions) {
+            throw new Error('Invalid quiz data received');
+          }
+
           setQuestions(data.questions);
+
+          // Handle validation feedback
+          if (data.validation) {
+            setValidationFeedback(data.validation);
+            
+            // If validation score is too low, show error
+            if (data.validation.score < 70) {
+              setError(`Quiz quality score (${data.validation.score}/100) is too low. ${data.validation.overall_feedback}`);
+              return;
+            }
+          }
+
           setShowPreview(true);
         } catch (error) { // Catch and handle error
           setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
@@ -640,12 +671,29 @@ interface QuizQuestion {
           </div>
           
           {/* Preview generated questions */}
-          {showPreview && (
+          {showPreview && questions && questions.length > 0 && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
                 <span className="bg-purple-200 p-2 rounded-lg text-2xl">✨</span>
                 <h3 className="text-2xl font-bold text-purple-800">Generated Questions</h3>
               </div>
+
+              {validationFeedback && (
+                <div className="bg-white p-4 rounded-lg shadow mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">📊</span>
+                    <h3 className="text-xl font-bold">
+                      Quality Score: {validationFeedback.score}/100
+                    </h3>
+                  </div>
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-purple-800">
+                      Difficulty Alignment: {validationFeedback.difficulty_alignment}/100
+                    </h4>
+                    <p className="text-gray-700">{validationFeedback.overall_feedback}</p>
+                  </div>
+                </div>
+              )}
             
               {questions.map((question, qIndex) => (
                 <div 
