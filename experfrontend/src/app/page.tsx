@@ -1,3 +1,7 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-100 to-purple-100">
@@ -28,6 +32,84 @@ export default function Home() {
                 alt="Learning"
                 className="w-full max-w-md transform rounded-2xl shadow-2xl transition hover:rotate-2"
               />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Gamification Preview Section */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Daily Challenges Card */}
+            <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200">
+              <CardHeader className="flex flex-row items-center gap-4">
+                <div className="p-3 bg-yellow-100 rounded-xl">
+                  <Star className="w-8 h-8 text-yellow-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-yellow-700">Daily Challenges</h3>
+                  <p className="text-sm text-yellow-600">2/3 completed today</p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Progress value={66} className="h-2 mb-2" />
+                <p className="text-sm text-yellow-600">Complete one more for bonus XP!</p>
+              </CardContent>
+            </Card>
+
+            {/* Current Streak Card */}
+            <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200">
+              <CardHeader className="flex flex-row items-center gap-4">
+                <div className="p-3 bg-red-100 rounded-xl">
+                  <Flame className="w-8 h-8 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-red-700">Current Streak</h3>
+                  <p className="text-sm text-red-600">7 Days! 🔥</p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Progress value={70} className="h-2 mb-2" />
+                <p className="text-sm text-red-600">3 days until next reward!</p>
+              </CardContent>
+            </Card>
+
+            {/* Level Progress Card */}
+            <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200">
+              <CardHeader className="flex flex-row items-center gap-4">
+                <div className="p-3 bg-purple-100 rounded-xl">
+                  <Brain className="w-8 h-8 text-purple-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-purple-700">Level 15</h3>
+                  <p className="text-sm text-purple-600">2,750 / 3,000 XP</p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Progress value={92} className="h-2 mb-2" />
+                <p className="text-sm text-purple-600">Almost at Level 16!</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Achievements Preview */}
+          <div className="bg-white/50 rounded-xl p-6 backdrop-blur-sm">
+            <h2 className="text-2xl font-bold text-purple-900 mb-6">Recent Achievements 🏆</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {[
+                { icon: Trophy, label: "Quiz Master", color: "bg-yellow-500" },
+                { icon: Flame, label: "Week Streak", color: "bg-red-500" },
+                { icon: Target, label: "Perfect Score", color: "bg-green-500" },
+                { icon: Star, label: "Rising Star", color: "bg-blue-500" },
+              ].map((achievement, index) => (
+                <div key={index} className="flex flex-col items-center gap-2 min-w-[100px]">
+                  <div className={`p-4 rounded-full ${achievement.color}`}>
+                    <achievement.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{achievement.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

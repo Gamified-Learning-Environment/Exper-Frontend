@@ -39,7 +39,7 @@ export default function UserButton({ user, onSignOut }: UserButtonProps) { // Us
         <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white p-2 shadow-xl">
           <div className="space-y-1" role="menu">
             <Link
-              href="/profile"
+              href="/user"
               className="block rounded-lg px-4 py-2 text-sm font-medium text-purple-900 transition hover:bg-gradient-to-r hover:from-violet-500 hover:to-fuchsia-500 hover:text-white"
               role="menuitem"
               onClick={() => setIsOpen(false)}

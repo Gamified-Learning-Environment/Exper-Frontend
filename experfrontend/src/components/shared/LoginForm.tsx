@@ -97,29 +97,33 @@ export default function LoginForm({ onClose }: LoginFormProps) { // LoginForm co
             </div>
           </div>
 
-          {/* Remember Me checkbox */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <input
-                id="rememberMe"
-                name="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={() => setRememberMe(!rememberMe)}
-                className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
-              />
-              <label htmlFor="rememberMe" className="text-sm text-purple-900">
-                Remember Me
-              </label>
+          <div className="space-y-4">
+            {/* Remember Me checkbox */}
+            <div className="flex items-center">
+              <div className="flex items-center space-x-2">
+                <input
+                  id="rememberMe"
+                  name="rememberMe"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  className="rounded border-purple-300 text-purple-600 focus:ring-purple-500 text-center"
+                />
+                <label htmlFor="rememberMe" className="text-sm text-purple-900 text-center">
+                  Remember Me
+                </label>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => router.push('/forgot-password')} // Redirect to forgot password page
-              className="text-sm text-purple-600 hover:text-purple-500 hover:underline"
-            >
-              Forgot Password? 🤔
-            </button>
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => router.push('/forgot-password')} // Redirect to forgot password page
+                className="text-sm text-purple-600 hover:text-purple-500 hover:underline"
+              >
+                Forgot Password? 🤔
+              </button>
+            </div>
           </div>
 
           {/* Submit button */}

@@ -19,6 +19,7 @@ interface Quiz { // Quiz interface
     title: string;
     description: string;
     questions: QuizQuestion[];
+    difficulty: 'beginner' | 'intermediate' | 'expert';
 }
 
 // utility function for safe localstorage access in SSR
@@ -42,6 +43,12 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
     const [showResults, setShowResults] = useState<boolean>(false);
     const [score, setScore] = useState<number>(0);
+
+    // Placeholder gamification
+    const [experienceGained, setExperienceGained] = useState(0);
+    const [levelProgress, setLevelProgress] = useState({ current: 15, next: 16, xp: 2750, required: 3000 });
+    const [achievements, setAchievements] = useState<{ title: string; description: string; icon: string }[]>([]);
+    const [streakDays, setStreakDays] = useState(7);
 
     // Load from localStorage after mount if available
     useEffect(() => {
@@ -113,109 +120,270 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                 newScore++;
             }
         });
+
+        // Calculate experience gained based on score and difficulty
+        const baseXP = 100;
+        const difficultyMultiplier = quiz.difficulty === 'expert' ? 2.5 : 
+                                    quiz.difficulty === 'intermediate' ? 1.5 : 1;
+        const accuracyBonus = (newScore / quiz.questions.length) * 50;
+        const xpGained = Math.round((baseXP + accuracyBonus) * difficultyMultiplier);
+        
+        // Check for achievements
+        const newAchievements = [];
+        if (newScore === quiz.questions.length) {
+            newAchievements.push({
+                title: "Perfect Score!",
+                description: "Answer all questions correctly",
+                icon: "🏆"
+            });
+        }
+        if (newScore >= quiz.questions.length * 0.8) {
+            newAchievements.push({
+                title: "Quiz Master",
+                description: "Score 80% or higher",
+                icon: "🎯"
+            });
+        }
+
         setScore(newScore);
+        setExperienceGained(xpGained);
+        setAchievements(newAchievements);
         setShowResults(true);
     };
 
     return ( // Quiz component UI
-        <Card className="p-6 max-w-2x1 mx-auto">
+        <Card className="mx-auto bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl border-2 border-indigo-100">
             {!showResults ? ( // Show quiz questions if results are not shown
-                <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold mb-4">
-                            Question {currentQuestion + 1} of {quiz.questions.length}
+                <div className="space-y-6 p-6">
+                    {/* Question Header */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">❓</span>
+                        <h2 className="text-xl font-bold text-purple-800">
+                        Question {currentQuestion + 1} of {quiz.questions.length}
                         </h2>
-                        {/* Reset quiz button */}
-                        <Button onClick={resetQuiz} variant="outline" size="sm">
-                            Reset Quiz
-                        </Button>
                     </div>
+                    <Button 
+                        onClick={resetQuiz} 
+                        variant="outline" 
+                        size="sm"
+                        className="border-2 border-purple-200 hover:bg-purple-100"
+                    >
+                        Reset Quiz 🔄
+                    </Button>
+                    </div>
+                    
                     {/* Progress bar */}
-                    <Progress 
-                        value={(currentQuestion) / (quiz.questions.length - 1) * 100} 
-                        className="mb-4" 
-                    />
-                    <div className="space-y-4">
-                        <p className='mb-4'>{quiz.questions[currentQuestion].question}</p>
+                    <div className="space-y-2">    
+                        <Progress 
+                            value={(currentQuestion) / (quiz.questions.length - 1) * 100} 
+                            className="h-3 bg-purple-100" 
+                        />
+                    </div>
+
+                    {/* Question Content */}
+                    <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
+                        <p className='text-lg font-medium text-purple-900'>
+                            {quiz.questions[currentQuestion].question}
+                        </p>
 
                         {/* Question image */}
                         {quiz.questions[currentQuestion].imageUrl && (
-                            <div className="mb-4">
+                            <div className="my-4">
                                 <img
                                     src={quiz.questions[currentQuestion].imageUrl}
                                     alt="Question image"
-                                    className="max-w-full h-auto rounded-lg shadow-md"
+                                    className="w-full h-auto rounded-lg shadow-md object-contain max-h-64"
                                 />
                             </div>
                         )}
 
-                        {/* Radio group for options */}
+                        {/* Options */}
                         <RadioGroup
                             onValueChange={handleAnswer}
                             value={selectedAnswers[currentQuestion]}
-                            className='space-y-2'
+                            className='space-y-3'
                         >
                             {quiz.questions[currentQuestion].options.map((option, index) => (
-                                <div key={index} className='flex items-center space-x-2'>
-                                    <RadioGroupItem value={option} id={`option-${index}`} />
-                                    <label htmlFor={`option-${index}`} className='cursor-pointer'>{option}</label>
+                                <div 
+                                    key={index} 
+                                    className={`
+                                        relative overflow-hidden rounded-lg border-2 transition-all
+                                        ${selectedAnswers[currentQuestion] === option 
+                                          ? 'border-purple-500 bg-purple-50' 
+                                          : 'border-gray-200 hover:border-purple-200 bg-white'}
+                                      `}>
+                                    <label className="flex items-center p-4 cursor-pointer group">
+                                        <RadioGroupItem 
+                                            value={option} 
+                                            id={`option-${index}`}
+                                            className="text-purple-600"
+                                        />
+                                        <div className="flex items-center gap-3 ml-3">
+                                            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
+                                                ${index === 0 ? 'bg-red-400' : 
+                                                index === 1 ? 'bg-blue-400' : 
+                                                index === 2 ? 'bg-yellow-400' : 'bg-green-400'
+                                                }`}
+                                            >
+                                                {String.fromCharCode(65 + index)} {/* Converts 0,1,2,3 to A,B,C,D */}
+                                            </span>
+                                            <span className="text-gray-700 group-hover:text-gray-900">{option}</span>
+                                        </div>
+                                    </label>
                                 </div>
                             ))}
                         </RadioGroup>
                     </div>
 
                     {/* Question navigation button */}
-                    <div className="flex justify-between mt-4">
+                    <div className="flex justify-between gap-4 pt-4">
                         <Button 
                             onClick={handlePrevious}
                             disabled={currentQuestion === 0}
                             variant="outline"
+                            className="w-1/2 border-2 border-indigo-200 hover:bg-indigo-100"
                         >
-                            Previous
+                           ← Previous
                         </Button>
-                        <Button onClick={handleNext}>
-                            {currentQuestion < quiz.questions.length - 1 ? 'Next' : 'Finish'}
+                        <Button 
+                            onClick={handleNext}
+                            className="w-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                        >
+                            {currentQuestion < quiz.questions.length - 1 ? 'Next →' : 'Finish! 🎉'}
                         </Button>
                     </div>
                 </div>
             ) : ( // Show quiz results if results are shown
-                <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold mb-4">Quiz Results</h2>
-                        {/* Retake quiz button */}
-                        <Button onClick={resetQuiz} variant="outline" size="sm">
-                            Retake Quiz
-                        </Button>
-                    </div>
-                    {/* Score display */}
-                    <p>Your score: {score} / {quiz.questions.length}</p>
-                    
-                    {/* Questions and answers */}
-                    {quiz.questions.map((question, index) => (
-                        <div key={index} className={`border p-4 rounded${
-                            selectedAnswers[index] === question.correctAnswer ? 'bg-green-300' : 'bg-red-300'
-                        }`}>
-                            <p className="font-semibold">{question.question}</p>
-                            {/* Question image in results */}
-                            {question.imageUrl && (
-                                <div className="my-2">
-                                    <img
-                                    src={question.imageUrl}
-                                    alt="Question image"
-                                    className="max-w-full h-32 object-contain rounded-lg"
-                                    />
-                                </div>
-                            )}
-                            <p className="text-green-600">Correct answer: {question.correctAnswer}</p>
-                            <p className={`${
-                                selectedAnswers[index] === question.correctAnswer 
-                                    ? 'text-green-600' 
-                                    : 'text-red-600'
-                            }`}>
-                                Your answer: {selectedAnswers[index]} 
+                <div className="p-6 space-y-6">
+                    {/* Results Header */}
+                    <div className="text-center space-y-4">
+                        <h2 className="text-2xl font-bold text-purple-800">Quiz Complete! 🎉</h2>
+                        <div className="flex justify-center items-center gap-2">
+                            <span className="text-4xl">
+                            {score === quiz.questions.length ? '🏆' : score >= quiz.questions.length / 2 ? '🌟' : '💫'}
+                            </span>
+                            <p className="text-xl font-semibold">
+                            Your Score: {score} / {quiz.questions.length}
+                            <span className="text-sm text-purple-600 block">
+                                ({Math.round((score / quiz.questions.length) * 100)}%)
+                            </span>
                             </p>
                         </div>
+                        <Button 
+                            onClick={resetQuiz} 
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-800 hover:to-emerald-800"
+                        >
+                            Try Again 🔄
+                        </Button>
+                    </div>
+                    {/* XP Gained Animation */}
+                    <div className="text-center animate-bounce">
+                        <span className="text-2xl font-bold text-yellow-500">+{experienceGained} XP</span>
+                    </div>
+
+                    {/* Level Progress */}
+                    <div className="bg-white p-4 rounded-xl shadow-md space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-purple-700 font-semibold">Level {levelProgress.current}</span>
+                            <span className="text-purple-700 font-semibold">Level {levelProgress.next}</span>
+                        </div>
+                        <Progress 
+                            value={(levelProgress.xp + experienceGained) / levelProgress.required * 100}
+                            className="h-3"
+                        />
+                        <p className="text-sm text-center text-gray-600">
+                            {levelProgress.xp + experienceGained} / {levelProgress.required} XP
+                        </p>
+                    </div>
+
+                    {/* Achievements Unlocked */}
+                    {achievements.length > 0 && (
+                        <div className="bg-white p-4 rounded-xl shadow-md space-y-3">
+                            <h3 className="text-lg font-bold text-purple-800 flex items-center gap-2">
+                                <span>🎉</span> Achievements Unlocked!
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                {achievements.map((achievement, index) => (
+                                    <div key={index} 
+                                        className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg border-2 border-purple-200">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-3xl">{achievement.icon}</span>
+                                            <div>
+                                                <p className="font-semibold text-purple-900">{achievement.title}</p>
+                                                <p className="text-sm text-purple-600">{achievement.description}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Streak Progress */}
+                    <div className="bg-white p-4 rounded-xl shadow-md">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-2xl">🔥</span>
+                                <div>
+                                    <p className="font-semibold text-purple-900">{streakDays} Day Streak</p>
+                                    <p className="text-sm text-purple-600">Keep it up!</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-1">
+                                {[...Array(7)].map((_, i) => (
+                                    <div 
+                                        key={i}
+                                        className={`w-3 h-8 rounded-full ${
+                                            i < streakDays ? 'bg-gradient-to-t from-orange-500 to-yellow-500' 
+                                            : 'bg-gray-200'
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Results List */}
+                    <div className="space-y-4">
+                    {quiz.questions.map((question, index) => (
+                        <div 
+                        key={index} 
+                        className={`p-4 rounded-lg border-2 ${
+                            selectedAnswers[index] === question.correctAnswer 
+                            ? 'bg-green-50 border-green-200' 
+                            : 'bg-red-50 border-red-200'
+                        }`}
+                        >
+                        <div className="flex items-center gap-2 mb-2">
+                            <span>
+                            {selectedAnswers[index] === question.correctAnswer ? '✅' : '❌'}
+                            </span>
+                            <p className="font-medium">{question.question}</p>
+                        </div>
+
+                        {question.imageUrl && (
+                            <img
+                            src={question.imageUrl}
+                            alt="Question image"
+                            className="my-2 w-full max-h-32 object-contain rounded-lg"
+                            />
+                        )}
+
+                        <div className="mt-2 space-y-1 text-sm">
+                            <p className="text-green-600">
+                            <span className="font-medium">Correct answer:</span> {question.correctAnswer}
+                            </p>
+                            <p className={selectedAnswers[index] === question.correctAnswer 
+                            ? 'text-green-600' 
+                            : 'text-red-600'
+                            }>
+                            <span className="font-medium">Your answer:</span> {selectedAnswers[index]}
+                            </p>
+                        </div>
+                        </div>
                     ))}
+                    </div>
                 </div>
             )}
         </Card>

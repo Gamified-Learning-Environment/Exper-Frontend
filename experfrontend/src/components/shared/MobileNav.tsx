@@ -3,6 +3,7 @@ import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTri
 import Image from 'next/image'
 import { Separator } from '../ui/separator'
 import NavItems from './NavItems'
+import Link from 'next/link'
 
 const MobileNav = () => { // MobileNav component, renders mobile navigation
   return ( 
@@ -27,13 +28,18 @@ const MobileNav = () => { // MobileNav component, renders mobile navigation
                     </SheetDescription>
                 </SheetHeader>
                 
-                <Image 
-                    src="/assets/images/logo.svg"
-                    alt="Exper logo"
-                    width={128}
-                    height={38}
-                    className="drop-shadow-lg transition hover:scale-105"
-                />
+                <Link href="/" className="relative w-24 transform transition hover:scale-105">
+                    <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg -m-2"></div>
+                    <div className="relative">
+                        <Image 
+                        src="/assets/images/logo.svg" 
+                        alt="Exper logo" 
+                        width={128} 
+                        height={38}
+                        className="drop-shadow-lg filter brightness-105 rounded-lg" 
+                        />
+                    </div>
+                </Link>
 
                 <Separator className="border-white/20" />
 

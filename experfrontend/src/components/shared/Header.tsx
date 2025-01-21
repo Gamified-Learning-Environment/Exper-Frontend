@@ -48,7 +48,7 @@ const AchievementBanner = () => {  // Placeholder achievements
 
 const LevelWidget = () => { // placeholder Level widget component
   // Level and percentage progress, hardcoded for now
-  const level = 5;
+  const level = 15;
   const progress = 65;
 
   return ( // return Level widget
@@ -83,14 +83,17 @@ const Header = () => { // Header component
     <header className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 shadow-lg">
       <div className="wrapper flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="w-36 transform transition hover:scale-105">
-          <Image 
-            src="/assets/images/logo.svg" 
-            alt="Exper logo" 
-            width={128} 
-            height={38}
-            className="drop-shadow-lg" 
-          />
+        <Link href="/" className="relative w-38 transform transition hover:scale-105">
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg -m-2"></div>
+          <div className="relative">
+            <Image 
+              src="/assets/images/logo.svg" 
+              alt="Exper logo" 
+              width={128} 
+              height={38}
+              className="drop-shadow-lg filter brightness-105 rounded-lg" 
+            />
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
