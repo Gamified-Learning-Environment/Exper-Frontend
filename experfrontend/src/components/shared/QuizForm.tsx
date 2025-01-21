@@ -641,22 +641,69 @@ interface QuizQuestion {
           
           {/* Preview generated questions */}
           {showPreview && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Generated Questions</h3>
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="bg-purple-200 p-2 rounded-lg text-2xl">✨</span>
+                <h3 className="text-2xl font-bold text-purple-800">Generated Questions</h3>
+              </div>
+            
               {questions.map((question, qIndex) => (
-                <div key={question.id} className="border p-4 rounded space-y-4">
-                  <h4 className="font-medium">Question {qIndex + 1}</h4>
-                  <p>{question.question}</p>
-                  <ul className="list-disc list-inside">
+                <div 
+                  key={question.id} 
+                  className="bg-white p-6 rounded-xl border-2 border-purple-200 shadow-md hover:shadow-lg transition-all"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
+                      {qIndex + 1}
+                    </span>
+                    <h4 className="text-lg font-semibold text-purple-900">{question.question}</h4>
+                  </div>
+            
+                  <div className="grid gap-3 mb-4 pl-11">
                     {question.options.map((option, oIndex) => (
-                      <li key={oIndex}>{option}</li>
+                      <div 
+                        key={oIndex}
+                        className={`p-3 rounded-lg border-2 transition-all
+                          ${option === question.correctAnswer 
+                            ? 'border-green-200 bg-green-50 text-green-700'
+                            : 'border-gray-200 bg-gray-50 text-gray-600'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
+                            ${oIndex === 0 ? 'bg-red-400' : 
+                              oIndex === 1 ? 'bg-blue-400' : 
+                              oIndex === 2 ? 'bg-yellow-400' : 'bg-green-400'
+                            }`}
+                          >
+                            {String.fromCharCode(65 + oIndex)}
+                          </span>
+                          <span>{option}</span>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
-                  <p className="font-semibold">Correct Answer: {question.correctAnswer}</p>
+                  </div>
+            
+                  <div className="pl-11">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <span className="text-xl">✅</span>
+                      <p className="font-medium">
+                        Correct Answer: <span className="text-green-700">{question.correctAnswer}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ))}
-              <Button type="button" onClick={generateQuizWithAI}> {/* Regenerate questions */}
-                Regenerate Questions
+            
+              <Button 
+                type="button" 
+                onClick={generateQuizWithAI}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 font-medium py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <span>🎲</span>
+                  Regenerate Questions
+                </div>
               </Button>
             </div>
           )}
@@ -664,6 +711,7 @@ interface QuizQuestion {
 
         {/* Quiz form footer */}
         <CardFooter className="flex justify-between pt-6">
+        <div className="flex gap-2">
           <Button 
             type="button" 
             onClick={handleAddQuestion} 
@@ -672,13 +720,23 @@ interface QuizQuestion {
           >
             Add Question ✨
           </Button>
-          <Button 
-            type="submit" 
-            disabled={loading}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+          <Button
+            type="button"
+            onClick={() => setQuestions(questions.slice(0, -1))}
+            variant="outline"
+            className="bg-red-100 hover:bg-red-200 text-red-700 border-2 border-red-300"
+            disabled={questions.length <= 1}
           >
-            {loading ? 'Creating Magic... ✨' : 'Create Quiz 🎮'}
+            Remove Question 🗑️
           </Button>
+        </div>
+        <Button 
+          type="submit" 
+          disabled={loading}
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+        >
+          Submit Quiz
+        </Button>
         </CardFooter>
         </form>
       </Card>
