@@ -56,7 +56,30 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		keyframes: {
+		bounce: {/* existing bounce */},
+		// Add these new animations
+		wiggle: {
+			'0%, 100%': { transform: 'rotate(-3deg)' },
+			'50%': { transform: 'rotate(3deg)' },
+		},
+		float: {
+			'0%, 100%': { transform: 'translateY(0)' },
+			'50%': { transform: 'translateY(-10px)' },
+		},
+		expandCircle: {
+			'0%': { transform: 'scale(0)', opacity: '0' },
+			'50%': { transform: 'scale(1.2)', opacity: '0.5' },
+			'100%': { transform: 'scale(1)', opacity: '1' },
+		}
+		},
+		animation: {
+		// Add these new animations
+		'wiggle': 'wiggle 1s ease-in-out infinite',
+		'float': 'float 3s ease-in-out infinite',
+		'expand-circle': 'expandCircle 2s ease-out infinite',
+		}
   	}
   },
   plugins: [

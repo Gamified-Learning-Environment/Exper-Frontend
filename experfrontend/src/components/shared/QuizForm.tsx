@@ -105,6 +105,7 @@ interface QuizQuestion {
       }
     };
 
+    // Handle image uploads for questions
     const handleImageUpload = async (questionIndex: number, file: File) => {
       try {
         const formData = new FormData();
@@ -339,6 +340,39 @@ interface QuizQuestion {
           setLoading(false);
         }
       };
+
+      const QuizGenerationLoader = () => {
+        return (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 shadow-xl max-w-md w-full mx-4 space-y-6">
+              <div className="flex flex-col items-center text-center space-y-4">
+                {/* Main animated icon */}
+                <div className="relative">
+                  <span className="text-6xl animate-float">🎮</span>
+                  <div className="absolute inset-0 bg-purple-500/20 rounded-full animate-expand-circle" />
+                </div>
+                
+                {/* Loading text */}
+                <h3 className="text-2xl font-bold text-purple-800 animate-pulse">
+                  Generating Quiz...
+                </h3>
+                
+                {/* Fun loading indicators */}
+                <div className="flex gap-2 items-center">
+                  <span className="text-2xl animate-wiggle delay-100">🎲</span>
+                  <span className="text-2xl animate-wiggle delay-200">📝</span>
+                  <span className="text-2xl animate-wiggle delay-300">✨</span>
+                </div>
+                
+                {/* Loading message */}
+                <p className="text-purple-600">
+                  Summoning knowledge powers...
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      };
     
     return ( // Return quiz form
       <Card className="w-full max-w-4xl mx-auto p-6 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl">
@@ -501,6 +535,7 @@ interface QuizQuestion {
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin" />
                     Generating Quiz...
+                    <QuizGenerationLoader />
                   </div>
                 ) : (
                   'Generate Quiz with AI'
