@@ -10,8 +10,9 @@ interface QuizQuestion { // QuizQuestion interface
     id: string;
     question: string;
     options: string[];
-    correctAnswer: string;
+    correctAnswer: string | string[]; // Can be a single string or an array of strings
     imageUrl?: string;
+    isMultiAnswer?: boolean; // Multiple answer question flag
 }
 
 interface Quiz { // Quiz interface
@@ -40,7 +41,7 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     // State variables to keep track of current question, selected answers, show results and score
     // Initialized with default values
     const [currentQuestion, setCurrentQuestion] = useState<number>(0); 
-    const [selectedAnswers, setSelectedAnswers] = useState<string[]>([]);
+    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>([]);
     const [showResults, setShowResults] = useState<boolean>(false);
     const [score, setScore] = useState<number>(0);
 
@@ -88,9 +89,28 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     };
 
     // handle answer selection, update selectedAnswers state
-    const handleAnswer = (answer: string) => {
+    const handleAnswer = (questionIndex: number, answer: string) => {
         const newAnswers = [...selectedAnswers];
-        newAnswers[currentQuestion] = answer;
+        const question = quiz.questions[questionIndex];
+        
+        if (question.isMultiAnswer) {
+            // Handle multiple answer questions
+            const currentAnswers = Array.isArray(newAnswers[questionIndex]) 
+                ? newAnswers[questionIndex] as string[] 
+                : [];
+                
+            if (Array.isArray(currentAnswers)) {
+                const answerIndex = currentAnswers.indexOf(answer);
+                if (answerIndex === -1) {
+                    newAnswers[questionIndex] = [...currentAnswers, answer];
+                } else {
+                    newAnswers[questionIndex] = currentAnswers.filter(a => a !== answer);
+                }
+            }
+        } else {
+            // Handle single answer questions
+            newAnswers[questionIndex] = answer;
+        }
         setSelectedAnswers(newAnswers);
     };
 
@@ -115,9 +135,22 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     const calculateResults = () => {
         let newScore = 0; // initialize score
         // loop through questions and compare selected answers with correct answers
-        quiz.questions.forEach((question, index) => { 
-            if (selectedAnswers[index] === question.correctAnswer) { // if selected answer is correct
-                newScore++;
+        quiz.questions.forEach((question, index) => {
+            const selectedAnswer = selectedAnswers[index];
+            const correctAnswer = question.correctAnswer;
+
+            if (question.isMultiAnswer && Array.isArray(correctAnswer) && Array.isArray(selectedAnswer)) {
+                // For multiple answer questions, all correct answers must be selected
+                const isCorrect = correctAnswer.length === selectedAnswer.length &&
+                    correctAnswer.every(answer => selectedAnswer.includes(answer));
+                if (isCorrect) newScore++;
+            } else {
+                // For single answer questions
+                if (Array.isArray(correctAnswer) && correctAnswer[0] === selectedAnswer) {
+                    newScore++;
+                } else if (correctAnswer === selectedAnswer) {
+                    newScore++;
+                }
             }
         });
 
@@ -199,41 +232,65 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                         )}
 
                         {/* Options */}
-                        <RadioGroup
-                            onValueChange={handleAnswer}
-                            value={selectedAnswers[currentQuestion]}
-                            className='space-y-3'
-                        >
-                            {quiz.questions[currentQuestion].options.map((option, index) => (
-                                <div 
-                                    key={index} 
-                                    className={`
-                                        relative overflow-hidden rounded-lg border-2 transition-all
-                                        ${selectedAnswers[currentQuestion] === option 
-                                          ? 'border-purple-500 bg-purple-50' 
-                                          : 'border-gray-200 hover:border-purple-200 bg-white'}
-                                      `}>
-                                    <label className="flex items-center p-4 cursor-pointer group">
-                                        <RadioGroupItem 
-                                            value={option} 
-                                            id={`option-${index}`}
-                                            className="text-purple-600"
-                                        />
-                                        <div className="flex items-center gap-3 ml-3">
-                                            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
-                                                ${index === 0 ? 'bg-red-400' : 
-                                                index === 1 ? 'bg-blue-400' : 
-                                                index === 2 ? 'bg-yellow-400' : 'bg-green-400'
-                                                }`}
-                                            >
-                                                {String.fromCharCode(65 + index)} {/* Converts 0,1,2,3 to A,B,C,D */}
-                                            </span>
-                                            <span className="text-gray-700 group-hover:text-gray-900">{option}</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            ))}
-                        </RadioGroup>
+                        {/* Render either radio group or checkbox group based on question type */}
+                        {quiz.questions[currentQuestion].isMultiAnswer ? (
+                            <div className="space-y-3">
+                                {quiz.questions[currentQuestion].options.map((option, index) => (
+                                    <div key={index} 
+                                         className={`relative rounded-lg border-2 transition-all
+                                            ${Array.isArray(selectedAnswers[currentQuestion]) &&
+                                              (selectedAnswers[currentQuestion] as string[]).includes(option)
+                                                ? 'border-purple-500 bg-purple-50'
+                                                : 'border-gray-200 hover:border-purple-200 bg-white'}`}>
+                                        <label className="flex items-center p-4 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={Array.isArray(selectedAnswers[currentQuestion]) &&
+                                                        (selectedAnswers[currentQuestion] as string[]).includes(option)}
+                                                onChange={() => handleAnswer(currentQuestion, option)}
+                                                className="text-purple-600"
+                                            />
+                                            <span className="ml-3">{option}</span>
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <RadioGroup
+                                onValueChange={(value) => handleAnswer(currentQuestion, value)}
+                                value={selectedAnswers[currentQuestion] as string}>
+
+                                {quiz.questions[currentQuestion].options.map((option, index) => (
+                                    <div 
+                                        key={index} 
+                                        className={`
+                                            relative overflow-hidden rounded-lg border-2 transition-all
+                                            ${selectedAnswers[currentQuestion] === option 
+                                            ? 'border-purple-500 bg-purple-50' 
+                                            : 'border-gray-200 hover:border-purple-200 bg-white'}
+                                        `}>
+                                        <label className="flex items-center p-4 cursor-pointer group">
+                                            <RadioGroupItem 
+                                                value={option} 
+                                                id={`option-${index}`}
+                                                className="text-purple-600"
+                                            />
+                                            <div className="flex items-center gap-3 ml-3">
+                                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
+                                                    ${index === 0 ? 'bg-red-400' : 
+                                                    index === 1 ? 'bg-blue-400' : 
+                                                    index === 2 ? 'bg-yellow-400' : 'bg-green-400'
+                                                    }`}
+                                                >
+                                                    {String.fromCharCode(65 + index)} {/* Converts 0,1,2,3 to A,B,C,D */}
+                                                </span>
+                                                <span className="text-gray-700 group-hover:text-gray-900">{option}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                ))}
+                            </RadioGroup>
+                        )}
                     </div>
 
                     {/* Question navigation button */}

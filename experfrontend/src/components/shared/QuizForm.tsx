@@ -10,22 +10,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Upload, Image as ImageIcon, X } from 'lucide-react';
 
 // QuizQuestion interface
-interface QuizQuestion {
+  interface QuizQuestion {
     id: string;
     question: string;
     options: string[]; // Array of options
-    correctAnswer: string;
+    correctAnswer: string[]; // String array to handle multiple correct answers
     imageUrl?: string; // Optional image URL
+    isMultiAnswer?: boolean; // Optional multi-answer question flag
   }
+
+  interface Quiz { // Quiz interface
+    id: string;
+    title: string;
+    description: string;
+    questions: QuizQuestion[];
+    difficulty: 'beginner' | 'intermediate' | 'expert';
+}
   
   interface QuizFormProps { // QuizFormProps interface, defines props
     onClose?: () => void;
+    quiz?: Quiz;
   }
 
   // Difficulty type parameter
   type Difficulty = 'beginner' | 'intermediate' | 'expert';
 
-  export default function QuizForm({ onClose }: QuizFormProps) { // QuizForm component, takes onClose as prop
+  export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm component, takes onClose and quiz as props
     // State variables to keep track of title, description, questions, error, loading
     const router = useRouter();
     const { user } = useAuth();
@@ -34,7 +44,7 @@ interface QuizQuestion {
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState('');
     const [newCategory, setNewCategory] = useState('');
-    const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: ''}]); // Initialize with one empty question
+    const [questions, setQuestions] = useState<QuizQuestion[]>([{id: '1', question: '', options: ['', '', '', ''], correctAnswer: [], isMultiAnswer: false}]); // Initialize with one empty question
     const [questionImages, setQuestionImages] = useState<{ [key: string]: File }>({});
     const [imageLoading, setImageLoading] = useState<{ [key: string]: boolean }>({});
     const [error, setError] = useState('');
@@ -62,9 +72,23 @@ interface QuizQuestion {
         id: (questions.length + 1).toString(),
         question: '',
         options: ['', '', '', ''],
-        correctAnswer: ''
+        correctAnswer: [], // Initialize to empty array
+        isMultiAnswer: false // Default to single answer
       }]);
     };
+
+    // Add the useEffect here for processing existing quizzes
+    useEffect(() => {
+      if (quiz) {
+          // Convert existing questions to new format
+          const processedQuestions = quiz.questions.map(q => ({
+              ...q,
+              correctAnswer: Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer],
+              isMultiAnswer: Array.isArray(q.correctAnswer) && q.correctAnswer.length > 1
+          }));
+          setQuestions(processedQuestions);
+      }
+  }, [quiz]);
 
     // Fetch categories on component mount
     useEffect(() => {
@@ -139,14 +163,23 @@ interface QuizQuestion {
     };
 
     // Function to handle question change
-    const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: string) => {
-        const updatedQuestions = [...questions];
-        updatedQuestions[index] = {
-          ...updatedQuestions[index],
-          [field]: value
-        };
-        setQuestions(updatedQuestions);
-      };
+    const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: any) => {
+      const updatedQuestions = [...questions];
+      if (field === 'correctAnswer') {
+          // If it's a single answer question, ensure we store a single string
+          // If it's a multiple answer question, store an array
+          updatedQuestions[index] = {
+            ...updatedQuestions[index],
+            correctAnswer: updatedQuestions[index].isMultiAnswer ? value : value[0] || ''
+          };
+      } else {
+          updatedQuestions[index] = {
+              ...updatedQuestions[index],
+              [field]: value
+          };
+      }
+      setQuestions(updatedQuestions);
+    };
     
       // Function to handle option change
       const handleOptionChange = (questionIndex: number, optionIndex: number, value: string) => {
@@ -154,13 +187,76 @@ interface QuizQuestion {
         const question = updatedQuestions[questionIndex];
   
         // If we're changing the option that was the correct answer, reset it
-        if (question.options[optionIndex] === question.correctAnswer) {
-          question.correctAnswer = '';
+        if (question.correctAnswer.includes(question.options[optionIndex])) {
+          question.correctAnswer = [];
         }
         
         // Update the option
         question.options[optionIndex] = value;
         setQuestions(updatedQuestions);
+      };
+
+      const renderCorrectAnswerField = (question: QuizQuestion, qIndex: number) => {
+          if (question.isMultiAnswer) {
+              return (
+                  <div className="space-y-2">
+                      <label className="text-sm font-medium">Correct Answers: </label>
+                      <div className="space-y-2">
+                          {question.options.map((option, oIndex) => (
+                              option && (
+                                  <div key={oIndex} className="flex items-center gap-2">
+                                      <input
+                                          type="checkbox"
+                                          title={`Select ${option} as correct answer`}
+                                          placeholder={`Select ${option} as correct answer`}
+                                          checked={Array.isArray(question.correctAnswer) && 
+                                                question.correctAnswer.includes(option)}
+                                          onChange={(e) => {
+                                              const currentAnswers = Array.isArray(question.correctAnswer) 
+                                                  ? question.correctAnswer 
+                                                  : [];
+                                              const updatedAnswers = e.target.checked
+                                                  ? [...currentAnswers, option]
+                                                  : currentAnswers.filter(ans => ans !== option);
+                                              handleQuestionChange(qIndex, 'correctAnswer', updatedAnswers);
+                                          }}
+                                          className="rounded border-gray-300"
+                                      />
+                                      <span>{option}</span>
+                                  </div>
+                              )
+                          ))}
+                      </div>
+                  </div>
+              );
+          } else {
+              // For single answer questions, ensure we're passing a string value
+              const currentAnswer = Array.isArray(question.correctAnswer) 
+                  ? question.correctAnswer[0] || ''
+                  : question.correctAnswer || '';
+      
+              return (
+                  <div className="space-y-2">
+                      <label className="text-sm font-medium">Correct Answer</label>
+                      <select
+                          title="Select the correct answer for this question"
+                          value={currentAnswer}
+                          onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', [e.target.value])}
+                          className="w-full p-2 border rounded"
+                          required
+                      >
+                          <option value="">Select correct answer</option>
+                          {question.options.map((option, index) => (
+                              option && (
+                                  <option key={index} value={option}>
+                                      {option}
+                                  </option>
+                              )
+                          ))}
+                      </select>
+                  </div>
+              );
+          }
       };
 
       // State for validation feedback
@@ -301,10 +397,17 @@ interface QuizQuestion {
         setError(''); // Reset error state
     
         try { // Try to create quiz
+          const processedQuestions = questions.map(q => ({
+              ...q,
+              correctAnswer: q.isMultiAnswer 
+                  ? (Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer])
+                  : (Array.isArray(q.correctAnswer) ? q.correctAnswer[0] : q.correctAnswer)
+          }));
+
           const quizData = {
             title,
             description,
-            questions,
+            questions: processedQuestions,
             category: selectedCategory,
             userId: user?.id // user ID to connect quiz to its creator
           };
@@ -568,6 +671,27 @@ interface QuizQuestion {
                 />
               </div>
 
+              {/* Add multiple answer toggle */}
+              <div className="flex items-center gap-2">
+                  <input
+                      type="checkbox"
+                      title="Allow multiple correct answers"
+                      checked={question.isMultiAnswer}
+                      onChange={(e) => {
+                          const updatedQuestions = [...questions];
+                          updatedQuestions[qIndex].isMultiAnswer = e.target.checked;
+                          // Reset answers when toggling between single/multiple
+                          updatedQuestions[qIndex].correctAnswer = e.target.checked ? [] : [];
+                          setQuestions(updatedQuestions);
+                      }}
+                      className="rounded border-gray-300"
+                  />
+                  <label className="text-sm font-medium">Allow multiple correct answers</label>
+              </div>
+
+              {/* Render correct answer field */}
+        {     renderCorrectAnswerField(question, qIndex)}
+
               {/* Image upload section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
@@ -585,9 +709,9 @@ interface QuizQuestion {
                         handleImageUpload(qIndex, file);
                       }
                     }}
-                    className="w-full p-2 border rounded"
-                    title="Upload an image for the question"
+                    title="Upload an image for this question"
                     placeholder="Choose an image file"
+                    className="w-full p-2 border rounded"
                   />
                   {question.imageUrl ? (
                     <div className="relative group">
@@ -747,7 +871,7 @@ interface QuizQuestion {
                       <div 
                         key={oIndex}
                         className={`p-3 rounded-lg border-2 transition-all
-                          ${option === question.correctAnswer 
+                          ${question.correctAnswer.includes(option)
                             ? 'border-green-200 bg-green-50 text-green-700'
                             : 'border-gray-200 bg-gray-50 text-gray-600'
                           }`}
