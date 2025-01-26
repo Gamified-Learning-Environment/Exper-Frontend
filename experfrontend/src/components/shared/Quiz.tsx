@@ -41,7 +41,9 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     // State variables to keep track of current question, selected answers, show results and score
     // Initialized with default values
     const [currentQuestion, setCurrentQuestion] = useState<number>(0); 
-    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>([]);
+    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>(
+        new Array(quiz.questions.length).fill(undefined)
+    );    
     const [showResults, setShowResults] = useState<boolean>(false);
     const [score, setScore] = useState<number>(0);
 
@@ -99,13 +101,12 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                 ? newAnswers[questionIndex] as string[] 
                 : [];
                 
-            if (Array.isArray(currentAnswers)) {
-                const answerIndex = currentAnswers.indexOf(answer);
-                if (answerIndex === -1) {
-                    newAnswers[questionIndex] = [...currentAnswers, answer];
-                } else {
-                    newAnswers[questionIndex] = currentAnswers.filter(a => a !== answer);
-                }
+            if (currentAnswers.includes(answer)) {
+                // Remove answer if already selected
+                newAnswers[questionIndex] = currentAnswers.filter(a => a !== answer);
+            } else {
+                // Add new answer
+                newAnswers[questionIndex] = [...currentAnswers, answer];
             }
         } else {
             // Handle single answer questions
@@ -137,20 +138,21 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
         // loop through questions and compare selected answers with correct answers
         quiz.questions.forEach((question, index) => {
             const selectedAnswer = selectedAnswers[index];
-            const correctAnswer = question.correctAnswer;
 
-            if (question.isMultiAnswer && Array.isArray(correctAnswer) && Array.isArray(selectedAnswer)) {
-                // For multiple answer questions, all correct answers must be selected
-                const isCorrect = correctAnswer.length === selectedAnswer.length &&
-                    correctAnswer.every(answer => selectedAnswer.includes(answer));
+            if (question.isMultiAnswer) {
+                // For multiple answers, compare arrays
+                const correctAnswers = Array.isArray(question.correctAnswer) 
+                    ? question.correctAnswer 
+                    : [question.correctAnswer];
+                    
+                const isCorrect = Array.isArray(selectedAnswer) &&
+                    correctAnswers.length === selectedAnswer.length &&
+                    correctAnswers.every(ans => selectedAnswer.includes(ans));
+                    
                 if (isCorrect) newScore++;
             } else {
-                // For single answer questions
-                if (Array.isArray(correctAnswer) && correctAnswer[0] === selectedAnswer) {
-                    newScore++;
-                } else if (correctAnswer === selectedAnswer) {
-                    newScore++;
-                }
+                // For single answer
+                if (selectedAnswer === question.correctAnswer) newScore++;
             }
         });
 
@@ -235,25 +237,39 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                         {/* Render either radio group or checkbox group based on question type */}
                         {quiz.questions[currentQuestion].isMultiAnswer ? (
                             <div className="space-y-3">
-                                {quiz.questions[currentQuestion].options.map((option, index) => (
-                                    <div key={index} 
-                                         className={`relative rounded-lg border-2 transition-all
-                                            ${Array.isArray(selectedAnswers[currentQuestion]) &&
-                                              (selectedAnswers[currentQuestion] as string[]).includes(option)
-                                                ? 'border-purple-500 bg-purple-50'
-                                                : 'border-gray-200 hover:border-purple-200 bg-white'}`}>
-                                        <label className="flex items-center p-4 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={Array.isArray(selectedAnswers[currentQuestion]) &&
-                                                        (selectedAnswers[currentQuestion] as string[]).includes(option)}
-                                                onChange={() => handleAnswer(currentQuestion, option)}
-                                                className="text-purple-600"
-                                            />
-                                            <span className="ml-3">{option}</span>
-                                        </label>
-                                    </div>
-                                ))}
+                                {quiz.questions[currentQuestion].options.map((option, index) => {
+                                    const currentAnswers = Array.isArray(selectedAnswers[currentQuestion])
+                                        ? selectedAnswers[currentQuestion] as string[]
+                                        : [];
+                                    
+                                    return (
+                                        <div key={index} 
+                                            className={`relative rounded-lg border-2 transition-all
+                                                ${currentAnswers.includes(option)
+                                                    ? 'border-purple-500 bg-purple-50'
+                                                    : 'border-gray-200 hover:border-purple-200 bg-white'}`}>
+                                            <label className="flex items-center p-4 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={currentAnswers.includes(option)}
+                                                    onChange={() => handleAnswer(currentQuestion, option)}
+                                                    className="w-4 h-4 rounded border-gray-300 text-purple-600 
+                                                            focus:ring-purple-500"
+                                                />
+                                                <div className="flex items-center gap-3 ml-3">
+                                                    <span className={`w-6 h-6 rounded-full flex items-center 
+                                                                justify-center text-white text-sm
+                                                        ${index === 0 ? 'bg-red-400' : 
+                                                        index === 1 ? 'bg-blue-400' : 
+                                                        index === 2 ? 'bg-yellow-400' : 'bg-green-400'}`}>
+                                                        {String.fromCharCode(65 + index)}
+                                                    </span>
+                                                    <span className="text-gray-700">{option}</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <RadioGroup
@@ -403,43 +419,73 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
 
                     {/* Results List */}
                     <div className="space-y-4">
-                    {quiz.questions.map((question, index) => (
-                        <div 
-                        key={index} 
-                        className={`p-4 rounded-lg border-2 ${
-                            selectedAnswers[index] === question.correctAnswer 
-                            ? 'bg-green-50 border-green-200' 
-                            : 'bg-red-50 border-red-200'
-                        }`}
-                        >
-                        <div className="flex items-center gap-2 mb-2">
-                            <span>
-                            {selectedAnswers[index] === question.correctAnswer ? '✅' : '❌'}
-                            </span>
-                            <p className="font-medium">{question.question}</p>
-                        </div>
+                        {quiz.questions.map((question, index) => (
+                            <div key={index} 
+                                className={`p-4 rounded-lg border-2 ${
+                                    question.isMultiAnswer 
+                                        ? (Array.isArray(selectedAnswers[index]) && 
+                                        Array.isArray(question.correctAnswer) &&
+                                        question.correctAnswer.length === selectedAnswers[index].length &&
+                                        question.correctAnswer.every(ans => selectedAnswers[index].includes(ans)))
+                                            ? 'bg-green-50 border-green-200'
+                                            : 'bg-red-50 border-red-200'
+                                        : selectedAnswers[index] === question.correctAnswer
+                                            ? 'bg-green-50 border-green-200'
+                                            : 'bg-red-50 border-red-200'
+                                }`}>
 
-                        {question.imageUrl && (
-                            <img
-                            src={question.imageUrl}
-                            alt="Question image"
-                            className="my-2 w-full max-h-32 object-contain rounded-lg"
-                            />
-                        )}
+                                {/* Question Display */}
+                                <div className="mb-2 flex items-center gap-2">
+                                    <span>{question.isMultiAnswer 
+                                        ? (Array.isArray(selectedAnswers[index]) &&
+                                            Array.isArray(question.correctAnswer) &&
+                                            question.correctAnswer.length === selectedAnswers[index].length &&
+                                            question.correctAnswer.every(ans => selectedAnswers[index].includes(ans)))
+                                            ? '✅' 
+                                            : '❌'
+                                        : selectedAnswers[index] === question.correctAnswer
+                                            ? '✅'
+                                            : '❌'
+                                    }</span>
+                                    <p className="font-medium">{question.question}</p>
+                                </div>
 
-                        <div className="mt-2 space-y-1 text-sm">
-                            <p className="text-green-600">
-                            <span className="font-medium">Correct answer:</span> {question.correctAnswer}
-                            </p>
-                            <p className={selectedAnswers[index] === question.correctAnswer 
-                            ? 'text-green-600' 
-                            : 'text-red-600'
-                            }>
-                            <span className="font-medium">Your answer:</span> {selectedAnswers[index]}
-                            </p>
-                        </div>
-                        </div>
-                    ))}
+                                {/* Question Image */}
+                                {question.imageUrl && (
+                                    <img
+                                    src={question.imageUrl}
+                                    alt="Question image"
+                                    className="my-2 w-full max-h-32 object-contain rounded-lg"
+                                    />
+                                )}
+
+                                {/* Answer Display */}
+                                <div className="mt-2 space-y-1 text-sm">
+                                    <p className="text-green-600">
+                                        <span className="font-medium">Correct answer(s):</span>{' '}
+                                        {Array.isArray(question.correctAnswer) 
+                                            ? question.correctAnswer.join(', ')
+                                            : question.correctAnswer}
+                                    </p>
+                                    <p className={question.isMultiAnswer
+                                        ? (Array.isArray(selectedAnswers[index]) &&
+                                        Array.isArray(question.correctAnswer) &&
+                                        question.correctAnswer.length === selectedAnswers[index].length &&
+                                        question.correctAnswer.every(ans => selectedAnswers[index].includes(ans)))
+                                            ? 'text-green-600'
+                                            : 'text-red-600'
+                                        : selectedAnswers[index] === question.correctAnswer
+                                            ? 'text-green-600'
+                                            : 'text-red-600'
+                                    }>
+                                        <span className="font-medium">Your answer(s):</span>{' '}
+                                        {Array.isArray(selectedAnswers[index])
+                                            ? selectedAnswers[index].join(', ')
+                                            : selectedAnswers[index]}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

@@ -14,7 +14,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
     id: string;
     question: string;
     options: string[]; // Array of options
-    correctAnswer: string[]; // String array to handle multiple correct answers
+    correctAnswer: string | string[]; // String array to handle multiple correct answers
     imageUrl?: string; // Optional image URL
     isMultiAnswer?: boolean; // Optional multi-answer question flag
   }
@@ -166,8 +166,8 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
     const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: any) => {
       const updatedQuestions = [...questions];
       if (field === 'correctAnswer') {
-          // If it's a single answer question, ensure we store a single string
-          // If it's a multiple answer question, store an array
+          // If it's a multiple answer question, keep array format
+          // If it's a single answer question, use string format
           updatedQuestions[index] = {
             ...updatedQuestions[index],
             correctAnswer: updatedQuestions[index].isMultiAnswer ? value : value[0] || ''
@@ -212,13 +212,16 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                                           checked={Array.isArray(question.correctAnswer) && 
                                                 question.correctAnswer.includes(option)}
                                           onChange={(e) => {
-                                              const currentAnswers = Array.isArray(question.correctAnswer) 
-                                                  ? question.correctAnswer 
-                                                  : [];
-                                              const updatedAnswers = e.target.checked
-                                                  ? [...currentAnswers, option]
-                                                  : currentAnswers.filter(ans => ans !== option);
-                                              handleQuestionChange(qIndex, 'correctAnswer', updatedAnswers);
+                                            const updatedQuestions = [...questions];
+                                            const currentAnswers = Array.isArray(question.correctAnswer) 
+                                              ? question.correctAnswer 
+                                              : [];
+                                            
+                                            updatedQuestions[qIndex].correctAnswer = e.target.checked
+                                              ? [...currentAnswers, option]
+                                              : currentAnswers.filter(ans => ans !== option);
+                                            
+                                            setQuestions(updatedQuestions);
                                           }}
                                           className="rounded border-gray-300"
                                       />
@@ -229,34 +232,29 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                       </div>
                   </div>
               );
-          } else {
-              // For single answer questions, ensure we're passing a string value
-              const currentAnswer = Array.isArray(question.correctAnswer) 
-                  ? question.correctAnswer[0] || ''
-                  : question.correctAnswer || '';
+            }
       
-              return (
-                  <div className="space-y-2">
-                      <label className="text-sm font-medium">Correct Answer</label>
-                      <select
-                          title="Select the correct answer for this question"
-                          value={currentAnswer}
-                          onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', [e.target.value])}
-                          className="w-full p-2 border rounded"
-                          required
-                      >
-                          <option value="">Select correct answer</option>
-                          {question.options.map((option, index) => (
-                              option && (
-                                  <option key={index} value={option}>
-                                      {option}
-                                  </option>
-                              )
-                          ))}
-                      </select>
-                  </div>
-              );
-          }
+            return (
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Correct Answer</label>
+                    <select
+                        title="Select the correct answer for this question"
+                        value={Array.isArray(question.correctAnswer) ? question.correctAnswer[0] || '' : question.correctAnswer}
+                        onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', [e.target.value])}
+                        className="w-full p-2 border rounded"
+                        required
+                    >
+                      <option value="">Select correct answer</option>
+                      {question.options.map((option, index) => (
+                        option && (
+                          <option key={index} value={option}>
+                              {option}
+                          </option>
+                        )
+                      ))}
+                    </select>
+                </div>
+            );
       };
 
       // State for validation feedback
@@ -672,7 +670,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
               </div>
 
               {/* Add multiple answer toggle */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-4">
                   <input
                       type="checkbox"
                       title="Allow multiple correct answers"
@@ -681,7 +679,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                           const updatedQuestions = [...questions];
                           updatedQuestions[qIndex].isMultiAnswer = e.target.checked;
                           // Reset answers when toggling between single/multiple
-                          updatedQuestions[qIndex].correctAnswer = e.target.checked ? [] : [];
+                          updatedQuestions[qIndex].correctAnswer = e.target.checked ? [] : '';
                           setQuestions(updatedQuestions);
                       }}
                       className="rounded border-gray-300"
@@ -690,7 +688,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
               </div>
 
               {/* Render correct answer field */}
-        {     renderCorrectAnswerField(question, qIndex)}
+              {renderCorrectAnswerField(question, qIndex)}
 
               {/* Image upload section */}
               <div className="space-y-2">
@@ -802,28 +800,6 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                       />
                     </div>
                   ))}
-                </div>
-
-                {/* Correct Answer field */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Correct Answer</label>
-                  <select
-                    title="Correct Answer"
-                    value={question.correctAnswer}
-                    onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="" disabled>Select correct answer</option>
-                    {question.options.map((option, index) => (
-                      // Only show options that have content
-                      option && (
-                        <option key={index} value={option}>
-                          {option}
-                        </option>
-                      )
-                    ))}
-                  </select>
                 </div>
               </div>
             ))}
