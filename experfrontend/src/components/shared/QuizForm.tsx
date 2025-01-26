@@ -17,6 +17,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
     correctAnswer: string | string[]; // String array to handle multiple correct answers
     imageUrl?: string; // Optional image URL
     isMultiAnswer?: boolean; // Optional multi-answer question flag
+    explanation?: string; // Optional explanation for a question's answer
   }
 
   interface Quiz { // Quiz interface
@@ -286,6 +287,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                parameters: {
                   questionCount,
                   difficulty,
+                  includeExplanations: true, // Include explanations for answers
                },
                format: ` 
                {
@@ -800,6 +802,20 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                       />
                     </div>
                   ))}
+                </div>
+
+                {/* Explanation field */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Answer Explanation (Optional)
+                  </label>
+                  <textarea
+                    value={question.explanation || ''}
+                    onChange={(e) => handleQuestionChange(qIndex, 'explanation', e.target.value)}
+                    className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400"
+                    placeholder="Explain why this answer is correct..."
+                    rows={3}
+                  />
                 </div>
               </div>
             ))}

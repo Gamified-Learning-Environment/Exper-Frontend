@@ -13,6 +13,7 @@ interface QuizQuestion { // QuizQuestion interface
     correctAnswer: string | string[]; // Can be a single string or an array of strings
     imageUrl?: string;
     isMultiAnswer?: boolean; // Multiple answer question flag
+    explanation?: string;
 }
 
 interface Quiz { // Quiz interface
@@ -484,6 +485,19 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
                                             : selectedAnswers[index]}
                                     </p>
                                 </div>
+
+                                {/* Explanation Display */}
+                                {question.explanation && (
+                                    <div className="mt-3 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                        <p className="text-sm font-medium text-blue-800">
+                                            <span className="mr-2">💡</span>
+                                            Explanation:
+                                        </p>
+                                        <p className="text-sm text-blue-700 mt-1">
+                                            {question.explanation}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
