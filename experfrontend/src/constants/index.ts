@@ -20,6 +20,10 @@ export const headerLinks = [
       route: '/user',
     },
     {
+      label: 'Preferences',
+      route: '/preferences',
+    },
+    {
       label: 'Try it Out',
       route: '/quiz/672cba4a1bbfed516e746c3a',
     },

@@ -108,6 +108,29 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
       fetchCategories();
     }, []);
 
+    useEffect(() => {
+      const loadPreferences = async () => {
+        if (user && selectedCategory) {
+          try {
+            const response = await fetch('http://localhost:8080/api/auth/preferences');
+            if (!response.ok) throw new Error('Failed to fetch preferences');
+            
+            const data = await response.json();
+            const categoryPrefs = data.categories[selectedCategory];
+            
+            if (categoryPrefs) {
+              setQuestionCount(categoryPrefs.questionCount);
+              setDifficulty(categoryPrefs.difficulty);
+            }
+          } catch (error) {
+            console.error('Error loading preferences:', error);
+          }
+        }
+      };
+      
+      loadPreferences();
+    }, [selectedCategory, user]);
+
     // Add new category
     const handleAddCategory = async () => {
       if (!newCategory) return;
