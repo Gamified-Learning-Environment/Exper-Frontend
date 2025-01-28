@@ -225,12 +225,28 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
 
                         {/* Question image */}
                         {quiz.questions[currentQuestion].imageUrl && (
-                            <div className="my-4">
-                                <img
-                                    src={quiz.questions[currentQuestion].imageUrl}
-                                    alt="Question image"
-                                    className="w-full h-auto rounded-lg shadow-md object-contain max-h-64"
-                                />
+                            <div className="relative group my-6 max-w-[50%] mx-auto"> {/* Added max-w-[50%] and mx-auto */}
+                                <div className="overflow-hidden rounded-xl border-2 border-purple-200 shadow-md transition-all duration-300 hover:shadow-lg">
+                                    <div className="relative aspect-video bg-purple-50">
+                                        <img
+                                            src={quiz.questions[currentQuestion].imageUrl}
+                                            alt="Question image"
+                                            className="absolute inset-0 w-full h-full object-contain p-2"
+                                        />
+                                        {/* Gradient overlay on hover */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                    </div>
+                                    
+                                    {/* Optional image caption/zoom hint */}
+                                    <div className="absolute bottom-2 left-2 right-2 text-center text-sm text-purple-600 bg-white/90 px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                            Hover to examine
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -453,11 +469,23 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
 
                                 {/* Question Image */}
                                 {question.imageUrl && (
-                                    <img
-                                    src={question.imageUrl}
-                                    alt="Question image"
-                                    className="my-2 w-full max-h-32 object-contain rounded-lg"
-                                    />
+                                    <div className="relative group my-2 max-w-[50%] mx-auto"> {/* Added max-w-[50%] and mx-auto */}
+                                        <div className="overflow-hidden rounded-xl border-2 border-purple-200 shadow-md transition-transform duration-300 group-hover:scale-[1.02]">
+                                            <div className="relative aspect-video bg-purple-50">
+                                                <img
+                                                    src={question.imageUrl}
+                                                    alt={`Question ${index + 1} image`}
+                                                    className="absolute inset-0 w-full h-full object-contain p-2"
+                                                />
+                                                {/* Gradient overlay on hover */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            </div>
+                                        </div>
+                                        {/* Optional image caption */}
+                                        <div className="absolute bottom-2 left-2 right-2 text-center text-sm text-purple-600 bg-white/90 px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            Question {index + 1} Visual Reference
+                                        </div>
+                                    </div>
                                 )}
 
                                 {/* Answer Display */}
