@@ -38,11 +38,12 @@ export async function loginUser(email: string, password: string, rememberMe: boo
   try {
     const response = await fetch('http://localhost:8080/api/auth/login', { // fetch user data from API
       method: 'POST',
+      credentials: 'include', // Send cookies with request
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include', // Send cookies with request
+      body: JSON.stringify({ email, password })
     });
 
     // Check for errors in response
@@ -70,6 +71,10 @@ export async function logoutUser() {
     const response = await fetch('http://localhost:8080/api/auth/logout', {
       method: 'POST',
       credentials: 'include',  // Include cookies in the request
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
     });
 
     if (!response.ok) {
@@ -77,10 +82,16 @@ export async function logoutUser() {
       throw new Error(error.message);
     }
 
+    // Clear local storage regardless of server response
     localStorage.removeItem('user');
     sessionStorage.removeItem('user');
+
+    return await response.json();
   } catch (error) {
     console.error('Error logging out:', error);
+    // Still clear local storage even if server request fails
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     throw error;
   }
 }

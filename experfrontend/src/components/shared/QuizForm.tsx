@@ -67,6 +67,20 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
     // preview generated questions
     const [showPreview, setShowPreview] = useState(false);
 
+    // User Preferences
+    const [defaultPreferences, setDefaultPreferences] = useState<{
+      defaultQuestionCount: number;
+      categories: {
+        [key: string]: {
+          difficulty: 'beginner' | 'intermediate' | 'expert';
+          questionCount: number;
+        };
+      };
+    }>({
+      defaultQuestionCount: 5,
+      categories: {}
+    });
+
     // Function to add a new question
     const handleAddQuestion = () => {
       setQuestions([...questions, {
@@ -78,7 +92,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
       }]);
     };
 
-    // Add the useEffect here for processing existing quizzes
+    // UseEffect for processing existing quizzes
     useEffect(() => {
       if (quiz) {
           // Convert existing questions to new format
@@ -108,28 +122,43 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
       fetchCategories();
     }, []);
 
+    /*
+    // Fetch user preferences on component mount
     useEffect(() => {
       const loadPreferences = async () => {
-        if (user && selectedCategory) {
+        if (user) {
           try {
-            const response = await fetch('http://localhost:8080/api/auth/preferences');
+            const response = await fetch('http://localhost:8080/api/auth/preferences', {
+              credentials: 'include', // Important for session cookies
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              }
+            });
+            
             if (!response.ok) throw new Error('Failed to fetch preferences');
             
             const data = await response.json();
-            const categoryPrefs = data.categories[selectedCategory];
+            setDefaultPreferences(data);
             
-            if (categoryPrefs) {
-              setQuestionCount(categoryPrefs.questionCount);
-              setDifficulty(categoryPrefs.difficulty);
+            // Apply default preferences if no category is selected
+            if (!selectedCategory) {
+              setQuestionCount(data.defaultQuestionCount || 5); // Fallback to 5 if not set
             }
           } catch (error) {
             console.error('Error loading preferences:', error);
+            // Set default preferences on error
+            setDefaultPreferences({
+              defaultQuestionCount: 5,
+              categories: {}
+            });
           }
         }
       };
       
       loadPreferences();
-    }, [selectedCategory, user]);
+    }, [user]);
+    */
 
     // Add new category
     const handleAddCategory = async () => {
@@ -150,6 +179,21 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
         setNewCategory('');
       } catch (error) {
         console.error('Error adding category:', error);
+      }
+    };
+
+    const handleCategoryChange = (category: string) => {
+      setSelectedCategory(category);
+      
+      // Apply category-specific preferences if they exist
+      if (defaultPreferences.categories[category]) {
+        const categoryPrefs = defaultPreferences.categories[category];
+        setQuestionCount(categoryPrefs.questionCount);
+        setDifficulty(categoryPrefs.difficulty);
+      } else {
+        // Fall back to default preferences
+        setQuestionCount(defaultPreferences.defaultQuestionCount);
+        setDifficulty('intermediate');
       }
     };
 
@@ -552,7 +596,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
               <select
                 title="Category"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full p-2 border rounded"
               >
                 <option value="">Select a category</option>
@@ -615,12 +659,17 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                   step={1}
                   className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                 />
-                <span className="text-sm text-gray-500">{questionCount} questions</span>
+                <span className="text-sm text-gray-500">
+                  {questionCount} questions (Default: {defaultPreferences.defaultQuestionCount})
+                </span>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Difficulty Level</label>
-                <Select value={difficulty} onValueChange={(value: Difficulty) => setDifficulty(value)}>
+                <Select 
+                  value={difficulty} 
+                  onValueChange={(value: Difficulty) => setDifficulty(value)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select difficulty" /> 
                   </SelectTrigger>
@@ -630,6 +679,11 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                     <SelectItem value="expert">Expert</SelectItem>
                   </SelectContent>
                 </Select>
+                {selectedCategory && defaultPreferences.categories[selectedCategory] && (
+                  <p className="text-sm text-gray-500">
+                    Preferred difficulty: {defaultPreferences.categories[selectedCategory].difficulty}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">

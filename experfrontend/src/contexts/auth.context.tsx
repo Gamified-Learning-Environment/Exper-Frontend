@@ -30,14 +30,36 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Verify session on mount and after login
   useEffect(() => {
-    // Check for existing user data in local storage / session storage
-    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    const verifySession = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/verify', {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+        });
+  
+        if (!response.ok) {
+          // Clear invalid session
+          throw new Error('Session verification failed');
+        }
+  
+        const { user } = await response.json();
+        setUser(user);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Session verification failed:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+
+    verifySession();
   }, []);
 
   // Login function to authenticate user
