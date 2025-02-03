@@ -22,6 +22,7 @@ interface Quiz { // Quiz interface
     description: string;
     questions: QuizQuestion[];
     difficulty: 'beginner' | 'intermediate' | 'expert';
+    userId? : string;
 }
 
 // utility function for safe localstorage access in SSR
@@ -38,7 +39,7 @@ const getStorageValue = (key: string, defaultValue: any) => {
       }
   };
 
-export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in types/quiz.ts
+export default function Quiz({ quiz, userId }: { quiz: Quiz, userId?: string }) { // Quiz type defined in types/quiz.ts
     // State variables to keep track of current question, selected answers, show results and score
     // Initialized with default values
     const [currentQuestion, setCurrentQuestion] = useState<number>(0); 
@@ -117,11 +118,11 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
     };
 
     // handle next question, update currentQuestion state
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentQuestion < quiz.questions.length - 1) {
             setCurrentQuestion(currentQuestion + 1);
         } else {
-            calculateResults();
+            await calculateResults();
         }
     };
 
@@ -134,7 +135,8 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
 
 
     // calculate score and show results
-    const calculateResults = () => {
+    const calculateResults = async () => {
+        console.log(quiz._id);
         let newScore = 0; // initialize score
         // loop through questions and compare selected answers with correct answers
         quiz.questions.forEach((question, index) => {
@@ -185,7 +187,50 @@ export default function Quiz({ quiz }: { quiz: Quiz}) { // Quiz type defined in 
         setExperienceGained(xpGained);
         setAchievements(newAchievements);
         setShowResults(true);
-    };
+
+        // Submit result to API
+        try{
+            // Build result data object
+            const resultData = {
+                userId: userId,
+                quizId: quiz._id, 
+                score: newScore,
+                totalQuestions: quiz.questions.length,
+            };
+
+            // Add debug logging
+            console.log('Submitting result with userId:', userId);
+
+            // Validate required fields
+            if (!userId || userId === undefined) {
+                console.error('Missing userId:', userId);
+                throw new Error('No userId provided');
+            }
+
+            // Debug for checking result data
+            console.log('Submitting result:', resultData);
+
+            const response = await fetch('http://localhost:8070/api/results', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(resultData),
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save result');
+            }
+
+            const data = await response.json();
+            console.log('Result saved successfully:', data);
+        
+        } catch (error) {
+            console.error('Error saving result:', error);
+        }
+    };          
 
     return ( // Quiz component UI
         <Card className="mx-auto bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl border-2 border-indigo-100">
