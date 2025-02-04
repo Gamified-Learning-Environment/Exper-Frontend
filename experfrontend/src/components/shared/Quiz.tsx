@@ -5,6 +5,7 @@ import { Button } from '../ui/button'; // Button component
 import { Card } from '../ui/card'; // Card component
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'; // Radio Form components from shadcn-ui
 import { Progress } from '../ui/progress'; // Progress Bar component from shadcn-ui
+import { useAuth } from '@/contexts/auth.context';
 
 interface QuizQuestion { // QuizQuestion interface
     id: string;
@@ -39,9 +40,10 @@ const getStorageValue = (key: string, defaultValue: any) => {
       }
   };
 
-export default function Quiz({ quiz, userId }: { quiz: Quiz, userId?: string }) { // Quiz type defined in types/quiz.ts
+export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in types/quiz.ts
     // State variables to keep track of current question, selected answers, show results and score
     // Initialized with default values
+    const { user } = useAuth();
     const [currentQuestion, setCurrentQuestion] = useState<number>(0); 
     const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>(
         new Array(quiz.questions.length).fill(undefined)
@@ -192,18 +194,18 @@ export default function Quiz({ quiz, userId }: { quiz: Quiz, userId?: string }) 
         try{
             // Build result data object
             const resultData = {
-                userId: userId,
+                userId: user?._id,
                 quizId: quiz._id, 
                 score: newScore,
                 totalQuestions: quiz.questions.length,
             };
 
             // Add debug logging
-            console.log('Submitting result with userId:', userId);
+            console.log('Submitting result with userId:', user?._id);
 
             // Validate required fields
-            if (!userId || userId === undefined) {
-                console.error('Missing userId:', userId);
+            if (!user?._id) {
+                console.error('Missing userId:', userId + " no user ID found");
                 throw new Error('No userId provided');
             }
 
