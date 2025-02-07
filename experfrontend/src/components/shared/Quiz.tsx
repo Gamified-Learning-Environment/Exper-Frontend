@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // React hooks
+import { useState, useEffect, useRef } from 'react'; // React hooks
 import { Button } from '../ui/button'; // Button component
 import { Card } from '../ui/card'; // Card component
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'; // Radio Form components from shadcn-ui
 import { Progress } from '../ui/progress'; // Progress Bar component from shadcn-ui
 import { useAuth } from '@/contexts/auth.context';
+import * as d3 from 'd3'; // D3 library for data visualization
 
 interface QuizQuestion { // QuizQuestion interface
     id: string;
@@ -25,6 +26,216 @@ interface Quiz { // Quiz interface
     difficulty: 'beginner' | 'intermediate' | 'expert';
     userId? : string;
 }
+
+interface QuestionAttempt {
+    questionIndex: number;
+    timeSpent: number;
+    isCorrect: boolean;
+}
+
+interface ProgressData {
+    attempts: QuestionAttempt[];
+    correctCount: number;
+    incorrectCount: number;
+}
+
+// QuizProgressLine component for showing time spent and correct/incorrect answers
+const QuizProgressLine = ({ attempts }: { attempts: QuestionAttempt[] }) => {
+    const chartRef = useRef<SVGSVGElement>(null); // Ref to SVG element for D3 chart rendering
+
+    useEffect(() => {
+        if (!chartRef.current || attempts.length === 0) return; // Skip if chartRef is not set or no attempts
+
+        // clear previous chart
+        d3.select(chartRef.current).selectAll('*').remove();
+
+        // set dimensions
+        const margin = { top: 20, right: 50, bottom: 40, left: 50 };
+        const width = 600 - margin.left - margin.right;
+        const height = 200 - margin.top - margin.bottom;
+
+        // create SVG container
+        const svg = d3.select(chartRef.current)
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g') // Append group element
+            .attr('transform', `translate(${margin.left},${margin.top})`); // Translate group to margin
+
+        // Create scales
+        const xScale = d3.scaleLinear()
+            .domain([0, attempts.length - 1]) // Domain from 0 to number of attempts
+            .range([0, width]); // Range from 0 to width
+
+        const yScale = d3.scaleLinear()
+            .domain([0, d3.max(attempts, d => d.timeSpent) || 0]) // Domain from 0 to max timeSpent
+            .range([height, 0]); // Range from height to 0
+
+        // Create line for time spent
+        const line = d3.line<QuestionAttempt>()
+            .x(d => xScale(d.questionIndex)) // set x position based on questionIndex scaled by xScale
+            .y(d => yScale(d.timeSpent)) // set y position based on timeSpent scaled by yScale
+            .curve(d3.curveMonotoneX); // smooth line curve for better visuals
+
+        // Add axes
+        svg.append('g')
+            .attr('transform', `translate(0,${height})`)
+            .call(d3.axisBottom(xScale).ticks(attempts.length))
+            .append('text')
+            .attr('x', width / 2)
+            .attr('y', 35)
+            .attr('fill', 'currentColor')
+            .attr('text-anchor', 'middle')
+            .text('Question Number');
+
+        svg.append('g')
+            .call(d3.axisLeft(yScale))
+            .append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', -40)
+            .attr('x', -height / 2)
+            .attr('fill', 'currentColor')
+            .attr('text-anchor', 'middle')
+            .text('Time Spent (seconds)');
+
+        // add path with gradient
+        const gradient = svg.append('linearGradient')
+            .attr('id', 'line-gradient')
+            .attr('gradientUnits', 'userSpaceOnUse')
+            .attr('x1', 0)
+            .attr('y1', yScale(d3.min(attempts, d => d.timeSpent) || 0))
+            .attr('x2', 0)
+            .attr('y2', yScale(d3.max(attempts, d => d.timeSpent) || 0));
+
+        // Add gradient stops
+        gradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', 'rgb(147, 51, 234)');
+
+        gradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', 'rgb(79, 70, 229)');
+
+        // Add path for line
+        svg.append('path')
+            .datum(attempts)
+            .attr('fill', 'none')
+            .attr('stroke', 'url(#line-gradient)')
+            .attr('stroke-width', 2)
+            .attr('d', line);
+
+        // Add points and performance indicators
+        const points = svg.selectAll('g.point')
+            .data(attempts)
+            .enter()
+            .append('g')
+            .attr('class', 'point')
+            .attr('transform', d => `translate(${xScale(d.questionIndex)},${yScale(d.timeSpent)})`);
+
+        // Add circles for each point
+        points.append('circle')
+            .attr('r', 6)
+            .attr('fill', d => d.isCorrect ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)')
+            .attr('stroke', 'white')
+            .attr('stroke-width', 2);
+
+        // Add performance trend arrows
+        attempts.forEach((attempt, i) => {
+            if (i > 0) {
+                const prev = attempts[i - 1];
+                const x1 = xScale(prev.questionIndex);
+                const y1 = yScale(prev.timeSpent);
+                const x2 = xScale(attempt.questionIndex);
+                const y2 = yScale(attempt.timeSpent);
+
+                // Draw trend arrow
+                svg.append('path')
+                    .attr('d', `M${x2},${y2 - 15}v-10`)
+                    .attr('stroke', y2 < y1 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)')
+                    .attr('stroke-width', 2)
+                    .attr('marker-end', 'url(#arrow)');
+            }
+        });
+
+        // Add arrow marker definition
+        svg.append('defs').append('marker')
+            .attr('id', 'arrow')
+            .attr('viewBox', '0 -5 10 10')
+            .attr('refX', 5)
+            .attr('refY', 0)
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .attr('orient', 'auto')
+            .append('path')
+            .attr('d', 'M0,-5L10,0L0,5')
+            .attr('fill', 'rgb(107, 114, 128)');
+
+        // Add tooltip for points
+        points.append('title')
+            .text(d => `Question ${d.questionIndex + 1} Time: ${d.timeSpent.toFixed(1)}s ${d.isCorrect ? '✓ Correct' : '✗ Incorrect'}`);
+    }, [attempts]);
+
+    return <svg ref={chartRef} className="w-full h-[200px] bg-white rounded-lg shadow-md" />;
+};
+
+// ResultsBarChart component for showing correct vs incorrect answers
+const ResultsBarChart = ({ correct, incorrect}: { correct: number; incorrect: number }) => {
+    const chartRef = useRef<SVGSVGElement>(null);
+
+    useEffect(() => {
+        if (!chartRef.current) return;
+
+        // Clear previous chart
+        d3.select(chartRef.current).selectAll('*').remove();
+
+        // Set dimensions
+        const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+        const width = 300 - margin.left - margin.right;
+        const height = 200 - margin.top - margin.bottom;
+
+        // Create SVG container
+        const svg = d3.select(chartRef.current)
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+        const data = [
+            { label: 'Correct', value: correct },
+            { label: 'Incorrect', value: incorrect }
+        ];
+
+        // Create scales
+        const xScale = d3.scaleBand()
+            .range([0, width])
+            .padding(0.3)
+            .domain(data.map(d => d.label));
+
+        const yScale = d3.scaleLinear()
+            .range([height, 0])
+            .domain([0, d3.max(data, d => d.value) || 0]);
+
+        // Add bars
+        svg.selectAll('rect')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('x', d => xScale(d.label) || 0)
+            .attr('y', d => yScale(d.value))
+            .attr('width', xScale.bandwidth())
+            .attr('height', d => height - yScale(d.value))
+            .attr('fill', d => d.label === 'Correct' ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)');
+
+        // Add axes
+        svg.append('g')
+            .attr('transform', `translate(0,${height})`)
+            .call(d3.axisBottom(xScale));
+
+        svg.append('g')
+            .call(d3.axisLeft(yScale));
+    }, [correct, incorrect]);
+
+    return <svg ref={chartRef} className="w-full h-[200px] bg-white rounded-lg shadow-md" />;
+};
 
 // utility function for safe localstorage access in SSR
 const getStorageValue = (key: string, defaultValue: any) => {
@@ -50,6 +261,9 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
     );    
     const [showResults, setShowResults] = useState<boolean>(false);
     const [score, setScore] = useState<number>(0);
+    const [questionAttempts, setQuestionAttempts] = useState<QuestionAttempt[]>([]);
+    const [startTime, setStartTime] = useState<number>(Date.now());
+    const [questionTracker, setQuestionTracker] = useState<Set<number>>(new Set());
 
     // Placeholder gamification
     const [experienceGained, setExperienceGained] = useState(0);
@@ -87,6 +301,8 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
         setSelectedAnswers([]);
         setShowResults(false);
         setScore(0);
+        setQuestionAttempts([]);
+        setQuestionTracker(new Set());
         // Clear localStorage for this quiz
         localStorage.removeItem(`quiz_${quiz.id}_current`);
         localStorage.removeItem(`quiz_${quiz.id}_answers`);
@@ -121,6 +337,22 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
 
     // handle next question, update currentQuestion state
     const handleNext = async () => {
+        const timeSpent = (Date.now() - startTime) / 1000;
+
+        // Only record the attempt if we haven't seen this question before
+        if (!questionTracker.has(currentQuestion)) {
+            const currentAttempt: QuestionAttempt = {
+                questionIndex: currentQuestion,
+                timeSpent,
+                isCorrect: isAnswerCorrect(currentQuestion)
+            };
+
+            setQuestionAttempts(prev => [...prev, currentAttempt]);
+            setQuestionTracker(prev => new Set(prev).add(currentQuestion));
+        }
+
+        setStartTime(Date.now()); // Reset timer for next question
+
         if (currentQuestion < quiz.questions.length - 1) {
             setCurrentQuestion(currentQuestion + 1);
         } else {
@@ -133,6 +365,23 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
         if (currentQuestion > 0) {
             setCurrentQuestion(currentQuestion - 1);
         }
+    };
+
+    const isAnswerCorrect = (questionIndex: number) => {
+        const question = quiz.questions[questionIndex];
+        const selectedAnswer = selectedAnswers[questionIndex];
+      
+        if (question.isMultiAnswer) {
+          const correctAnswers = Array.isArray(question.correctAnswer) 
+            ? question.correctAnswer 
+            : [question.correctAnswer];
+            
+          return Array.isArray(selectedAnswer) &&
+            correctAnswers.length === selectedAnswer.length &&
+            correctAnswers.every(ans => selectedAnswer.includes(ans));
+        }
+        
+        return selectedAnswer === question.correctAnswer;
     };
 
 
@@ -198,6 +447,7 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
                 quizId: quiz._id, 
                 score: newScore,
                 totalQuestions: quiz.questions.length,
+                questionAttempts: questionAttempts 
             };
 
             // Add debug logging
@@ -479,6 +729,25 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
                                 ))}
                             </div>
                         </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white p-4 rounded-xl shadow-md">
+                        <h3 className="text-lg font-bold text-purple-800 mb-4">Question Progress</h3>
+                        <QuizProgressLine attempts={questionAttempts} />
+                        <p className="text-sm text-gray-600 mt-2 text-center">
+                        Time spent on each question (dots color indicates correct/incorrect)
+                        </p>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl shadow-md">
+                        <h3 className="text-lg font-bold text-purple-800 mb-4">Answer Distribution</h3>
+                        <ResultsBarChart 
+                        correct={score} 
+                        incorrect={quiz.questions.length - score} 
+                        />
+                        <p className="text-sm text-gray-600 mt-2 text-center">
+                        Correct vs Incorrect Answers
+                        </p>
+                    </div>
                     </div>
 
                     {/* Results List */}
