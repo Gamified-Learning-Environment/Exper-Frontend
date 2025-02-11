@@ -476,7 +476,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
             description,
             questions: processedQuestions,
             category: selectedCategory,
-            userId: user?.id // user ID to connect quiz to its creator
+            userId: user?._id // user ID to connect quiz to its creator
           };
     
           const response = await fetch('http://localhost:9090/api/quiz', {

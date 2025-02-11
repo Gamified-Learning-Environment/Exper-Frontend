@@ -14,7 +14,7 @@ interface QuizResult {
     totalQuestions: number;
     percentage: number;
     created_at: string;
-    category: string; // Add category field
+    category: string;
 }
 
 const CategoryProgress = () => {
@@ -54,7 +54,23 @@ const CategoryProgress = () => {
             try {
                 const response = await fetch(`http://localhost:8070/api/results/category/${user._id}/${selectedCategory}`);
                 if (!response.ok) throw new Error('Failed to fetch results');
-                const data = await response.json();
+                let  data = await response.json();
+
+                // Process and validate data
+                data = data
+                    .map((result: QuizResult) => ({
+                        ...result,
+                        percentage: Number(result.percentage), // Ensure percentage is a number
+                        created_at: new Date(result.created_at).toISOString() // Normalize dates
+                    }))
+                    .filter((result: QuizResult) => 
+                        !isNaN(result.percentage) && 
+                        result.percentage !== null
+                    )
+                    .sort((a: QuizResult, b: QuizResult) => 
+                        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                    );
+                
                 setResults(data);
                 setError(null);
             } catch (error) {
@@ -103,7 +119,7 @@ const CategoryProgress = () => {
 
         // Line generator
         const line = d3.line<QuizResult>()
-            .defined(d => !isNaN(d.percentage)) // Handle missing or invalid values
+            .defined(d => !isNaN(d.percentage) && d.percentage !== null) // Handle missing or invalid values
             .x(d => xScale(new Date(d.created_at)))
             .y(d => yScale(d.percentage))
             .curve(d3.curveMonotoneX);
@@ -128,7 +144,7 @@ const CategoryProgress = () => {
 
         // Line path
         svg.append('path')
-            .datum(sortedResults)
+            .datum(sortedResults.filter(d => d.percentage !== null && !isNaN(d.percentage)))
             .attr('fill', 'none')
             .attr('stroke', `url(#line-gradient-${selectedCategory})`)
             .attr('stroke-width', 2)
