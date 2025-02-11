@@ -5,6 +5,7 @@ import * as d3 from 'd3';
 import { Card } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import BubbleChart from './BubbleChart';
 
 interface QuizResult {
     _id: string;
@@ -25,6 +26,38 @@ const CategoryProgress = () => {
     const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
+    const [bubbleData, setBubbleData] = useState<{ category: string; count: number; }[]>([]);
+
+    // Process data for bubble chart
+    useEffect(() => {
+        if (!user?._id) return;
+        
+        const fetchAllCategoryData = async () => {
+            try {
+                // Fetch results for all categories
+                const categoryPromises = categories.map(category =>
+                    fetch(`http://localhost:8070/api/results/category/${user._id}/${category}`)
+                        .then(res => res.json())
+                );
+                
+                const allResults = await Promise.all(categoryPromises);
+                
+                // Process data for bubble chart
+                const bubbleData = categories.map((category, index) => ({
+                    category,
+                    count: allResults[index].length
+                }));
+                
+                setBubbleData(bubbleData);
+            } catch (error) {
+                console.error('Error fetching bubble chart data:', error);
+            }
+        };
+
+        if (categories.length > 0) {
+            fetchAllCategoryData();
+        }
+    }, [categories, user?._id]);
 
     // Fetch categories
     useEffect(() => {
@@ -54,23 +87,7 @@ const CategoryProgress = () => {
             try {
                 const response = await fetch(`http://localhost:8070/api/results/category/${user._id}/${selectedCategory}`);
                 if (!response.ok) throw new Error('Failed to fetch results');
-                let  data = await response.json();
-
-                // Process and validate data
-                data = data
-                    .map((result: QuizResult) => ({
-                        ...result,
-                        percentage: Number(result.percentage), // Ensure percentage is a number
-                        created_at: new Date(result.created_at).toISOString() // Normalize dates
-                    }))
-                    .filter((result: QuizResult) => 
-                        !isNaN(result.percentage) && 
-                        result.percentage !== null
-                    )
-                    .sort((a: QuizResult, b: QuizResult) => 
-                        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                    );
-                
+                const data = await response.json();
                 setResults(data);
                 setError(null);
             } catch (error) {
@@ -228,6 +245,15 @@ const CategoryProgress = () => {
                     </SelectContent>
                 </Select>
             </div>
+
+            {!loading && !error && bubbleData.length > 0 && (
+            <div className="mt-8">
+                <h3 className="text-xl font-bold text-purple-800 mb-4">
+                    Quiz Completion Overview
+                </h3>
+                <BubbleChart data={bubbleData} />
+            </div>
+        )}
             
             {loading && (
                 <div className="flex justify-center items-center h-[400px]">
