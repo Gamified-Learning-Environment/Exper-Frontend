@@ -6,6 +6,7 @@ import { Card } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import BubbleChart from './BubbleChart';
+import PerformanceHeatmap from './PerformanceHeatmap';
 
 interface QuizResult {
     _id: string;
@@ -169,7 +170,7 @@ const CategoryProgress = () => {
 
         // Add the line path
         svg.selectAll('circle')
-            .data(results)
+            .data(sortedResults)
             .enter()
             .append('circle')
             .attr('cx', d => xScale(new Date(d.created_at)))
@@ -275,17 +276,27 @@ const CategoryProgress = () => {
             
             {!loading && !error && results.length > 0 && (
                 <>
+                    {/* Line chart */}
                     <div className="w-full overflow-x-auto">
-                        <svg 
-                            ref={chartRef} 
-                            className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md"
-                        />
+                        <svg ref={chartRef} className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md" />
                     </div>
+
+                    {/* Performance heatmap */}
+                    <div className="mt-8">
+                        <h3 className="text-xl font-bold text-purple-800 mb-4">
+                            Performance Heatmap
+                        </h3>
+                        <PerformanceHeatmap results={results} />
+                    </div>
+                    
+                    {/* Average score */}
                     <div className="text-sm text-gray-600 text-center">
                         Average Score: {Math.round(d3.mean(results, d => d.percentage) || 0)}%
                     </div>
                 </>
             )}
+
+            
         </Card>
     );
 };
