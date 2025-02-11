@@ -4,46 +4,59 @@ import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Card } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface QuizResult {
-    _Id: string;
+    _id: string;
     userId: string;
     quizId: string;
     score: number;
     totalQuestions: number;
     percentage: number;
     created_at: string;
-    category?: string; // Add category field
+    category: string; // Add category field
 }
 
-interface CategoryProgressProps {
-    category: string;
-}
-
-const CategoryProgress = ({ category }: CategoryProgressProps) => {
-    const ChartRef = useRef<SVGSVGElement>(null);
+const CategoryProgress = () => {
+    const chartRef = useRef<SVGSVGElement>(null);
     const { user } = useAuth();
     const [results, setResults] = useState<QuizResult[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>('');
 
+    // Fetch categories
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('http://localhost:9090/api/categories');
+                if (!response.ok) throw new Error('Failed to fetch categories');
+                const data = await response.json();
+                setCategories(data);
+                if (data.length > 0) {
+                    setSelectedCategory(data[0]); // Set first category as default
+                }
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Failed to fetch categories');
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    // Fetch results for selected category
     useEffect(() => {
         const fetchResults = async () => {
-            if (!user?._id) return;
+            if (!user?._id || !selectedCategory) return;
+            setLoading(true);
 
             try {
-                const response = await fetch(`http://localhost:8070/api/results/user/${user._id}`);
+                const response = await fetch(`http://localhost:8070/api/results/category/${user._id}/${selectedCategory}`);
                 if (!response.ok) throw new Error('Failed to fetch results');
-                
                 const data = await response.json();
-                // Filter results by category and sort by date
-                const categoryResults = data
-                    .filter((result: QuizResult) => result.category === category)
-                    .sort((a: QuizResult, b: QuizResult) => 
-                        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                    );
-
-                setResults(categoryResults);
+                setResults(data);
+                setError(null);
             } catch (error) {
                 setError(error instanceof Error ? error.message : 'Failed to fetch results');
             } finally {
@@ -52,29 +65,35 @@ const CategoryProgress = ({ category }: CategoryProgressProps) => {
         };
 
         fetchResults();
-    }, [user?._id, category]);
+    }, [user?._id, selectedCategory]);
 
+    // D3 chart rendering
     useEffect(() => {
-        if (!ChartRef.current || !results.length) return;
+        if (!chartRef.current || !results.length) return;
 
         // Clear existing chart
-        d3.select(ChartRef.current).selectAll('*').remove();
+        d3.select(chartRef.current).selectAll('*').remove();
 
         // Chart dimensions
-        const margin = { top: 20, right: 50, bottom: 40, left: 50 };
+        const margin = { top: 20, right: 50, bottom: 60, left: 50 };
         const width = 800 - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
 
         // Create SVG container
-        const svg = d3.select(ChartRef.current)
+        const svg = d3.select(chartRef.current)
             .attr('width', width + margin.left + margin.right)
             .attr('height', height + margin.top + margin.bottom)
             .append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
+        // Sort results by date
+        const sortedResults = [...results].sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
         // Create scales
         const xScale = d3.scaleTime()
-            .domain(d3.extent(results, d => new Date(d.created_at)) as [Date, Date])
+            .domain(d3.extent(sortedResults, d => new Date(d.created_at)) as [Date, Date])
             .range([0, width]);
 
         const yScale = d3.scaleLinear()
@@ -84,13 +103,14 @@ const CategoryProgress = ({ category }: CategoryProgressProps) => {
 
         // Line generator
         const line = d3.line<QuizResult>()
+            .defined(d => !isNaN(d.percentage)) // Handle missing or invalid values
             .x(d => xScale(new Date(d.created_at)))
             .y(d => yScale(d.percentage))
             .curve(d3.curveMonotoneX);
 
         // Add gradient
         const gradient = svg.append('linearGradient')
-            .attr('id', 'line-gradient')
+            .attr('id', `line-gradient-${selectedCategory}`)
             .attr('gradientUnits', 'userSpaceOnUse')
             .attr('x1', 0)
             .attr('y1', yScale(0))
@@ -106,16 +126,16 @@ const CategoryProgress = ({ category }: CategoryProgressProps) => {
             .attr('offset', '100%')
             .attr('stop-color', 'rgb(79, 70, 229)');
 
-        // Add the line path
+        // Line path
         svg.append('path')
-            .datum(results)
+            .datum(sortedResults)
             .attr('fill', 'none')
-            .attr('stroke', 'url(#line-gradient)')
+            .attr('stroke', `url(#line-gradient-${selectedCategory})`)
             .attr('stroke-width', 2)
             .attr('d', line);
 
-        // Add points
-        svg.append('circle')
+        // Add the line path
+        svg.selectAll('circle')
             .data(results)
             .enter()
             .append('circle')
@@ -124,12 +144,36 @@ const CategoryProgress = ({ category }: CategoryProgressProps) => {
             .attr('r', 6)
             .attr('fill', d => d.percentage >= 70 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)')
             .attr('stroke', 'white')
-            .attr('stroke-width', 2);
+            .attr('stroke-width', 2)
+            .append('title')
+            .text(d => `Score: ${d.percentage}%\nDate: ${new Date(d.created_at).toLocaleDateString()}`);
 
         // Axes
         const xAxis = d3.axisBottom(xScale)
-            .ticks(d3.timeDay.every(1))
-            .tickFormat(d3.timeFormat('%b %d'));
+            .ticks(5)
+            .tickFormat((d) => d3.timeFormat('%b %d')(d as Date));
+
+        // Add gridlines
+        svg.append('g')
+            .attr('class', 'grid')
+            .attr('transform', `translate(0,${height})`)
+            .call(d3.axisBottom(xScale)
+                .ticks(5)
+                .tickSize(-height)
+                .tickFormat(() => '')
+            )
+            .style('stroke-dasharray', '3,3')
+            .style('stroke-opacity', 0.2);
+
+        svg.append('g')
+            .attr('class', 'grid')
+            .call(d3.axisLeft(yScale)
+                .ticks(5)
+                .tickSize(-width)
+                .tickFormat(() => '')
+            )
+            .style('stroke-dasharray', '3,3')
+            .style('stroke-opacity', 0.2);
 
         svg.append('g')
             .attr('transform', `translate(0, ${height})`)
@@ -141,48 +185,67 @@ const CategoryProgress = ({ category }: CategoryProgressProps) => {
             .attr('transform', 'rotate(-45)');
 
         svg.append('g')
-            .call(d3.axisLeft(yScale));
-                .tickFormat(d => `${d}%`);
+            .call(d3.axisLeft(yScale).tickFormat(d => `${d}%`));
 
-        // Labels
-        svg.append('text')
-            .attr('x', width / 2)
-            .attr('y', height + margin.top - 5)
-            .attr('x', -height / 2)
-            .attr('y', -margin.left + 15)
-            .attr('text-anchor', 'middle')
-            .attr('fill', 'currentColor')
-            .text('Score Percentage');
-
-        // Tooltips
-        svg.selectAll('circle')
-            .append('title')
-            .text(d => `Score: ${d.percentage}%\nDate: ${new Date(d.created_at).toLocaleDateString()}`);
-
-    }, [results]);
+    }, [results, selectedCategory]);
 
     return (
-        <Card className="p-6 space-y-4">
-            <h3 className="text-xl font-bold text-purple-800">
-                Progress in {category}
-            </h3>
-            {loading && <div>Loading...</div>}
-            {error && <div className="text-red-500">Error: {error}</div>}
-            {!loading && !error && results.length === 0 && (
-                <div className="text-gray-500">No quiz results found for this category</div>
-            )}
-            <div className="w-full overflow-x-auto">
-                <svg 
-                    ref={chartRef} 
-                    className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md"
-                />
+        <Card className="p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h3 className="text-xl font-bold text-purple-800">
+                    Quiz Progress Tracker
+                </h3>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[200px] bg-white border-2 border-purple-200 hover:border-purple-400 transition-all">
+                        <SelectValue placeholder="Choose Category 📚" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {categories.map((category) => (
+                            <SelectItem 
+                                key={category} 
+                                value={category}
+                                className="flex items-center gap-2"
+                            >
+                                <span>📚</span> {category}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
-            {results.length > 0 && (
-                <div className="text-sm text-gray-600 text-center">
-                    Average Score: {Math.round(d3.mean(results, d => d.percentage) || 0)}%
+            
+            {loading && (
+                <div className="flex justify-center items-center h-[400px]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
                 </div>
+            )}
+            
+            {error && (
+                <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-200">
+                    Error: {error}
+                </div>
+            )}
+            
+            {!loading && !error && results.length === 0 && (
+                <div className="text-gray-500 text-center py-12 bg-gray-50 rounded-lg">
+                    No quiz results found for {selectedCategory}
+                </div>
+            )}
+            
+            {!loading && !error && results.length > 0 && (
+                <>
+                    <div className="w-full overflow-x-auto">
+                        <svg 
+                            ref={chartRef} 
+                            className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md"
+                        />
+                    </div>
+                    <div className="text-sm text-gray-600 text-center">
+                        Average Score: {Math.round(d3.mean(results, d => d.percentage) || 0)}%
+                    </div>
+                </>
             )}
         </Card>
     );
-
 };
+
+export default CategoryProgress;

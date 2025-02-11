@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
+import CategoryProgress from '@/components/shared/CategoryProgress';
 
 export default function Home() {
   return (
@@ -91,6 +92,10 @@ export default function Home() {
                 <p className="text-sm text-purple-600">Almost at Level 16!</p>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <CategoryProgress />
           </div>
 
           {/* Recent Achievements Preview */}

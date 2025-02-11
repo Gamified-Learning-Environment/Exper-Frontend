@@ -25,6 +25,7 @@ interface Quiz { // Quiz interface
     questions: QuizQuestion[];
     difficulty: 'beginner' | 'intermediate' | 'expert';
     userId? : string;
+    category?: string;
 }
 
 interface QuestionAttempt {
@@ -447,7 +448,8 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
                 quizId: quiz._id, 
                 score: newScore,
                 totalQuestions: quiz.questions.length,
-                questionAttempts: questionAttempts 
+                questionAttempts: questionAttempts, 
+                category: quiz.category 
             };
 
             // Add debug logging
