@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/auth.context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import BubbleChart from './BubbleChart';
 import PerformanceHeatmap from './PerformanceHeatmap';
+import RadarChart from './RadarChart';
+import BoxPlot from './BoxPlot';
 
 interface QuizResult {
     _id: string;
@@ -28,6 +30,65 @@ const CategoryProgress = () => {
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [bubbleData, setBubbleData] = useState<{ category: string; count: number; }[]>([]);
+
+    // Helper function to calculate standard deviation
+    const calculateStandardDeviation = (values: number[]): number => {
+        const mean = d3.mean(values) || 0;
+        const variance = d3.mean(values.map(x => Math.pow(x - mean, 2))) || 0;
+        return Math.sqrt(variance);
+    };
+
+    // Calculate consistency based on standard deviation of scores
+    const calculateConsistency = (results: QuizResult[]): number => {
+        if (results.length < 2) return 0;
+        const scores = results.map(r => r.percentage);
+        const stdDev = calculateStandardDeviation(scores);
+        // Convert stdDev to a 0-100 scale where lower stdDev means higher consistency
+        // Max stdDev we consider is 50 (very inconsistent)
+        const consistency = Math.max(0, 100 - (stdDev * 2));
+        return Math.round(consistency);
+    };
+
+    // Calculate improvement rate based on score progression
+    const calculateImprovementRate = (results: QuizResult[]): number => {
+        if (results.length < 2) return 0;
+        
+        // Sort results by date
+        const sortedResults = [...results].sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+        // Calculate moving average to smooth out fluctuations
+        const windowSize = 3;
+        const movingAverages = sortedResults.map((_, i) => {
+            const window = sortedResults.slice(Math.max(0, i - windowSize + 1), i + 1);
+            return d3.mean(window.map(r => r.percentage)) || 0;
+        });
+
+        // Calculate overall improvement
+        const firstAvg = movingAverages[0];
+        const lastAvg = movingAverages[movingAverages.length - 1];
+        const improvement = ((lastAvg - firstAvg) / firstAvg) * 100;
+        
+        // Convert to 0-100 scale, considering 50% improvement as maximum
+        return Math.round(Math.min(100, Math.max(0, improvement * 2)));
+    };
+
+    // Calculate completion rate
+    const calculateCompletionRate = (results: QuizResult[]): number => {
+        if (results.length === 0) return 0;
+        
+        // Calculate completion rate based on questions attempted vs questions available
+        const questionsCompleted = results.reduce((sum, result) => 
+            sum + result.totalQuestions, 0
+        );
+        
+        // Assuming a target of 100 questions per category
+        const targetQuestions = 100;
+        
+        // Convert to percentage, cap at 100
+        return Math.min(100, Math.round((questionsCompleted / targetQuestions) * 100));
+    };
 
     // Process data for bubble chart
     useEffect(() => {
@@ -292,6 +353,28 @@ const CategoryProgress = () => {
                     {/* Average score */}
                     <div className="text-sm text-gray-600 text-center">
                         Average Score: {Math.round(d3.mean(results, d => d.percentage) || 0)}%
+                    </div>
+
+                    <div className="mt-8">
+                        <h3 className="text-xl font-bold text-purple-800 mb-4">
+                        Performance Analysis
+                        </h3>
+                        <RadarChart data={[
+                        { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
+                        { metric: "Consistency", value: calculateConsistency(results) },
+                        { metric: "Improvement", value: calculateImprovementRate(results) },
+                        { metric: "Completion", value: calculateCompletionRate(results) }
+                        ]} />
+                    </div>
+
+                    <div className="mt-8">
+                        <h3 className="text-xl font-bold text-purple-800 mb-4">
+                            Score Distribution
+                        </h3>
+                        <BoxPlot results={results} />
+                        <div className="text-sm text-gray-600 text-center mt-2">
+                            Box plot showing score distribution with quartiles, median, and outliers
+                        </div>
                     </div>
                 </>
             )}
