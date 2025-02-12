@@ -189,7 +189,7 @@ const ResultsBarChart = ({ correct, incorrect}: { correct: number; incorrect: nu
         d3.select(chartRef.current).selectAll('*').remove();
 
         // Set dimensions
-        const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+        const margin = { top: 30, right: 60, bottom: 40, left: 40 };
         const width = 300 - margin.left - margin.right;
         const height = 200 - margin.top - margin.bottom;
 
@@ -200,42 +200,119 @@ const ResultsBarChart = ({ correct, incorrect}: { correct: number; incorrect: nu
             .append('g')
             .attr('transform', `translate(${margin.left},${margin.top})`);
 
-        const data = [
-            { label: 'Correct', value: correct },
-            { label: 'Incorrect', value: incorrect }
-        ];
+        // Prepare data for stacking 
+        const data = [{
+            category: 'Results',
+            correct,
+            incorrect,
+            total: correct + incorrect
+        }];
 
-        // Create scales
+        const stack = d3.stack<any>()
+            .keys(['correct', 'incorrect'])
+            .order(d3.stackOrderNone)
+            .offset(d3.stackOffsetNone);
+
+        const series = stack(data);
+
+        // Scales
         const xScale = d3.scaleBand()
             .range([0, width])
-            .padding(0.3)
-            .domain(data.map(d => d.label));
+            .domain(data.map(d => d.category))
+            .padding(0.3);
 
         const yScale = d3.scaleLinear()
             .range([height, 0])
-            .domain([0, d3.max(data, d => d.value) || 0]);
+            .domain([0, d3.max(data, d => d.total) || 0])
+            .nice();
 
-        // Add bars
-        svg.selectAll('rect')
-            .data(data)
+        // Color scale
+        const colorScale = d3.scaleOrdinal<string>()
+            .domain(['correct', 'incorrect'])
+            .range(['rgb(34, 197, 94)', 'rgb(239, 68, 68)']);
+
+        // Stacked bars
+        svg.selectAll('g.stack')
+            .data(series)
+            .enter()
+            .append('g')
+            .attr('class', 'stack')
+            .attr('fill', d => colorScale(d.key))
+            .selectAll('rect')
+            .data(d => d)
             .enter()
             .append('rect')
-            .attr('x', d => xScale(d.label) || 0)
-            .attr('y', d => yScale(d.value))
+            .attr('x', d => xScale('Results') || 0)
+            .attr('y', d => yScale(d[1]))
+            .attr('height', d => yScale(d[0]) - yScale(d[1]))
             .attr('width', xScale.bandwidth())
-            .attr('height', d => height - yScale(d.value))
-            .attr('fill', d => d.label === 'Correct' ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)');
+            .attr('rx', 4)
+            .attr('stroke', 'white')
+            .attr('stroke-width', 1);
 
-        // Add axes
-        svg.append('g')
-            .attr('transform', `translate(0,${height})`)
-            .call(d3.axisBottom(xScale));
+        // Value labels
+        svg.selectAll('.value-label')
+            .data(series)
+            .enter()
+            .append('text')
+            .attr('class', 'value-label')
+            .attr('x', d => (xScale('Results') || 0) + xScale.bandwidth() / 2)
+            .attr('y', d => yScale(d[0][1] - (d[0][1] - d[0][0]) / 2))
+            .attr('text-anchor', 'middle')
+            .attr('dy', '0.35em')
+            .attr('fill', 'white')
+            .attr('font-weight', 'bold')
+            .text(d => d[0][1] - d[0][0]);
 
+        // Y-axis
         svg.append('g')
-            .call(d3.axisLeft(yScale));
+            .call(d3.axisLeft(yScale))
+            .call(g => g.select('.domain').remove());
+
+        // Legend
+        const legend = svg.append('g')
+            .attr('transform', `translate(${width + 10}, 0)`);
+
+        const legendItems = [
+            { label: 'Correct', color: 'rgb(34, 197, 94)' },
+            { label: 'Incorrect', color: 'rgb(239, 68, 68)' }
+        ];
+
+        legend.selectAll('rect')
+            .data(legendItems)
+            .enter()
+            .append('rect')
+            .attr('y', (_, i) => i * 20)
+            .attr('width', 12)
+            .attr('height', 12)
+            .attr('fill', d => d.color)
+            .attr('rx', 2);
+
+        legend.selectAll('text')
+            .data(legendItems)
+            .enter()
+            .append('text')
+            .attr('x', 20)
+            .attr('y', (_, i) => i * 20 + 10)
+            .attr('font-size', '12px')
+            .attr('fill', 'currentColor')
+            .text(d => d.label);
+
+        // Grid lines
+        svg.append('g')
+            .attr('class', 'grid')
+            .call(d3.axisLeft(yScale)
+                .tickSize(-width)
+                .tickFormat(() => '')
+            )
+            .style('stroke-dasharray', '3,3')
+            .style('stroke-opacity', 0.2)
+            .call(g => g.select('.domain').remove());
+
+        
     }, [correct, incorrect]);
 
-    return <svg ref={chartRef} className="w-full h-[200px] bg-white rounded-lg shadow-md" />;
+    return <svg ref={chartRef} className="w-[250px] h-[200px] bg-white rounded-lg shadow-md" />;
 };
 
 // utility function for safe localstorage access in SSR
@@ -732,24 +809,29 @@ export default function Quiz({ quiz }: { quiz: Quiz }) { // Quiz type defined in
                             </div>
                         </div>
                     </div>
+
+                    {/* Progress Analytics */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white p-4 rounded-xl shadow-md">
-                        <h3 className="text-lg font-bold text-purple-800 mb-4">Question Progress</h3>
-                        <QuizProgressLine attempts={questionAttempts} />
-                        <p className="text-sm text-gray-600 mt-2 text-center">
-                        Time spent on each question (dots color indicates correct/incorrect)
-                        </p>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-md">
-                        <h3 className="text-lg font-bold text-purple-800 mb-4">Answer Distribution</h3>
-                        <ResultsBarChart 
-                        correct={score} 
-                        incorrect={quiz.questions.length - score} 
-                        />
-                        <p className="text-sm text-gray-600 mt-2 text-center">
-                        Correct vs Incorrect Answers
-                        </p>
-                    </div>
+                        {/* Question Progress */}
+                        <div className="bg-white p-4 rounded-xl shadow-md">
+                            <h3 className="text-lg font-bold text-purple-800 mb-4">Question Progress</h3>
+                            <QuizProgressLine attempts={questionAttempts} />
+                            <p className="text-sm text-gray-600 mt-2 text-center">
+                            Time spent on each question (dots color indicates correct/incorrect)
+                            </p>
+                        </div>
+
+                        {/* Answer Distribution */}
+                        <div className="bg-white p-4 rounded-xl shadow-md">
+                            <h3 className="text-lg font-bold text-purple-800 mb-4">Answer Distribution</h3>
+                            <ResultsBarChart 
+                            correct={score} 
+                            incorrect={quiz.questions.length - score} 
+                            />
+                            <p className="text-sm text-gray-600 mt-2 text-center">
+                            Correct vs Incorrect Answers
+                            </p>
+                        </div>
                     </div>
 
                     {/* Results List */}
