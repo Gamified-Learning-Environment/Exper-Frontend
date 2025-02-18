@@ -1,6 +1,6 @@
 'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
-import { QuizForm } from '@/components/shared/QuizForm'; // Quiz Form component from components/shared folder
+import QuizForm from '@/components/shared/QuizForm'; // Quiz Form component from components/shared folder
 
 export default function CreateQuizPage() { // Create Quiz Page component
   return (
