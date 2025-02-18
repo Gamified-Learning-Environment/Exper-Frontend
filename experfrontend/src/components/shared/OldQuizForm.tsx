@@ -26,7 +26,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
     description: string;
     questions: QuizQuestion[];
     difficulty: 'beginner' | 'intermediate' | 'expert';
-}
+  }
   
   interface QuizFormProps { // QuizFormProps interface, defines props
     onClose?: () => void;

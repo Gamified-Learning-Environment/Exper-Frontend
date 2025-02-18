@@ -7,6 +7,10 @@ export const headerLinks = [
       label: 'Create Quiz',
       route: '/quiz/create',
     },
+    {
+      label: 'New Create Quiz',
+      route: '/quiz/',
+    },
     { 
       label: 'Quizzes',
       route: '/quiz/quizzes',
