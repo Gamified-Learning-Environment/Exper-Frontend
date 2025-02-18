@@ -286,6 +286,7 @@ const CategoryProgress = () => {
 
     return (
         <Card className="p-6 space-y-6">
+            {/* Header section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 className="text-xl font-bold text-purple-800">
                     Quiz Progress Tracker
@@ -308,15 +309,6 @@ const CategoryProgress = () => {
                 </Select>
             </div>
 
-            {!loading && !error && bubbleData.length > 0 && (
-            <div className="mt-8">
-                <h3 className="text-xl font-bold text-purple-800 mb-4">
-                    Quiz Completion Overview
-                </h3>
-                <BubbleChart data={bubbleData} />
-            </div>
-        )}
-            
             {loading && (
                 <div className="flex justify-center items-center h-[400px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
@@ -335,51 +327,59 @@ const CategoryProgress = () => {
                 </div>
             )}
             
-            {!loading && !error && results.length > 0 && (
-                <>
-                    {/* Line chart */}
-                    <div className="w-full overflow-x-auto">
-                        <svg ref={chartRef} className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md" />
+            {!loading && !error && results.length > 0 && bubbleData.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Progress Tracker Line Chart */}
+                    <div className="md:col-span-2 space-y-4">
+                        <h3 className="text-xl font-bold text-purple-800">
+                            Progress Timeline
+                        </h3>
+                        <div className="w-full overflow-x-auto">
+                            <svg ref={chartRef} className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md" />
+                        </div>
                     </div>
 
-                    {/* Performance heatmap */}
-                    <div className="mt-8">
-                        <h3 className="text-xl font-bold text-purple-800 mb-4">
+                    {/* Quiz Completion Overview */}
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-purple-800">
+                            Quiz Completion Overview
+                        </h3>
+                        <BubbleChart data={bubbleData} />
+                    </div>
+
+                    {/* Performance Analysis */}
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-purple-800">
+                            Performance Analysis
+                        </h3>
+                        <RadarChart data={[
+                            { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
+                            { metric: "Consistency", value: calculateConsistency(results) },
+                            { metric: "Improvement", value: calculateImprovementRate(results) },
+                            { metric: "Completion", value: calculateCompletionRate(results) }
+                        ]} />
+                    </div>
+
+                    {/* Performance Heatmap */}
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-purple-800">
                             Performance Heatmap
                         </h3>
                         <PerformanceHeatmap results={results} />
                     </div>
-                    
-                    {/* Average score */}
-                    <div className="text-sm text-gray-600 text-center">
-                        Average Score: {Math.round(d3.mean(results, d => d.percentage) || 0)}%
-                    </div>
 
-                    <div className="mt-8">
-                        <h3 className="text-xl font-bold text-purple-800 mb-4">
-                        Performance Analysis
-                        </h3>
-                        <RadarChart data={[
-                        { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
-                        { metric: "Consistency", value: calculateConsistency(results) },
-                        { metric: "Improvement", value: calculateImprovementRate(results) },
-                        { metric: "Completion", value: calculateCompletionRate(results) }
-                        ]} />
-                    </div>
-
-                    <div className="mt-8">
-                        <h3 className="text-xl font-bold text-purple-800 mb-4">
+                    {/* Score Distribution */}
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-purple-800">
                             Score Distribution
                         </h3>
                         <BoxPlot results={results} />
-                        <div className="text-sm text-gray-600 text-center mt-2">
+                        <div className="text-sm text-gray-600 text-center">
                             Box plot showing score distribution with quartiles, median, and outliers
                         </div>
                     </div>
-                </>
+                </div>
             )}
-
-            
         </Card>
     );
 };

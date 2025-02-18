@@ -107,9 +107,7 @@ const PerformanceHeatmap = ({ results }: HeatmapProps) => {
                 const date = new Date(d[0]);
                 const avgScore = d3.mean(d[1], r => r.percentage) || 0;
                 const quizCount = d[1].length;
-                return `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-Quizzes Taken: ${quizCount}
-Average Score: ${avgScore.toFixed(1)}%`;
+                return `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} Quizzes Taken: ${quizCount} Average Score: ${avgScore.toFixed(1)}%`;
             });
 
         // Improved x-axis

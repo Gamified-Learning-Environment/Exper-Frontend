@@ -5,7 +5,7 @@ import { createUser, loginUser, logoutUser } from '@/lib/actions/user.actions'; 
 
 // User interface to define user data
 interface User {
-  id: string;
+  _id: string;
   email: string;
   username: string;
   firstName: string;

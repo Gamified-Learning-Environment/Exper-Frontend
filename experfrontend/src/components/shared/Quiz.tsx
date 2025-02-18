@@ -139,37 +139,6 @@ const QuizProgressLine = ({ attempts }: { attempts: QuestionAttempt[] }) => {
             .attr('stroke', 'white')
             .attr('stroke-width', 2);
 
-        // Add performance trend arrows
-        attempts.forEach((attempt, i) => {
-            if (i > 0) {
-                const prev = attempts[i - 1];
-                const x1 = xScale(prev.questionIndex);
-                const y1 = yScale(prev.timeSpent);
-                const x2 = xScale(attempt.questionIndex);
-                const y2 = yScale(attempt.timeSpent);
-
-                // Draw trend arrow
-                svg.append('path')
-                    .attr('d', `M${x2},${y2 - 15}v-10`)
-                    .attr('stroke', y2 < y1 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)')
-                    .attr('stroke-width', 2)
-                    .attr('marker-end', 'url(#arrow)');
-            }
-        });
-
-        // Add arrow marker definition
-        svg.append('defs').append('marker')
-            .attr('id', 'arrow')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 5)
-            .attr('refY', 0)
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
-            .attr('orient', 'auto')
-            .append('path')
-            .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', 'rgb(107, 114, 128)');
-
         // Add tooltip for points
         points.append('title')
             .text(d => `Question ${d.questionIndex + 1} Time: ${d.timeSpent.toFixed(1)}s ${d.isCorrect ? '✓ Correct' : '✗ Incorrect'}`);
