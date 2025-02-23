@@ -1,3 +1,5 @@
+// Handles Form logic and state management for the QuizForm component. 
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
@@ -20,6 +22,7 @@ export const useQuizForm = (quiz?: Quiz) => {
         correctAnswer: [],
         isMultiAnswer: false
     }]);
+    const [questionImages, setQuestionImages] = useState<{ [key: string]: File }>({});
 
     // AI state
     const [useAI, setUseAI] = useState(false);
@@ -27,8 +30,10 @@ export const useQuizForm = (quiz?: Quiz) => {
     const [questionCount, setQuestionCount] = useState(5);
     const [difficulty, setDifficulty] = useState<Difficulty>('intermediate');
     const [pdfUrl, setPdfUrl] = useState('');
+    const [isPdfProcessing, setIsPdfProcessing] = useState(false); // pdf processing state
     const [showPreview, setShowPreview] = useState(false);
     const [validationFeedback, setValidationFeedback] = useState<ValidationFeedback | null>(null);
+
 
     // Loading states
     const [loading, setLoading] = useState(false);
@@ -46,6 +51,12 @@ export const useQuizForm = (quiz?: Quiz) => {
             isMultiAnswer: false // Default to single answer
         }]);
     };
+
+    // Handler function for removing question
+    const handleRemoveQuestion = (index: number) => {
+        const updatedQuestions = questions.filter((_, i) => i !== index);
+        setQuestions(updatedQuestions);
+    }
 
     // Handler function for question type changing
     const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: any) => {
@@ -141,6 +152,179 @@ export const useQuizForm = (quiz?: Quiz) => {
         }
     };
 
+    // Function to generate quiz with AI
+    const generateQuizWithAI = async () => {
+      try {
+        setIsGenerating(true); // Set generating state to true
+        setIsPdfProcessing(true); // Set PDF processing state to true
+        const response = await fetch('http://localhost:9090/api/generate-quiz', { // Fetch quiz from API
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ // Send question count, difficulty, and notes along with response format
+             notes, 
+             pdfUrl,
+             parameters: {
+                questionCount,
+                difficulty,
+                includeExplanations: true, // Include explanations for answers
+             },
+             format: ` 
+             {
+                  "_id": "672cb629113b70876395c8f2",
+                  "title": "Database Management Quiz",
+                  "questions": [
+                      {
+                          "id": "1",
+                          "question": "What does the acronym CRUD stand for?",
+                          "options": [
+                              "Create, Read, Update, Delete",
+                              "Create, Restore, Undo, Delete",
+                              "Create, Read, Upload, Drop",
+                              "Compute, Replace, Undo, Delete"
+                          ],
+                          "correctAnswer": "Create, Read, Update, Delete"
+                      },
+                      {
+                          "id": "2",
+                          "question": "What percentage of the module grade is based on a project?",
+                          "options": [
+                              "30%",
+                              "10%",
+                              "50%",
+                              "60%"
+                          ],
+                          "correctAnswer": "30%"
+                      },
+                      {
+                          "id": "3",
+                          "question": "Which storage engine is typically used for memory-based temporary data?",
+                          "options": [
+                              "InnoDB",
+                              "MyISAM",
+                              "Memory",
+                              "BlackHole"
+                          ],
+                          "correctAnswer": "Memory"
+                      },
+                      {
+                          "id": "4",
+                          "question": "What does ACID in transaction management stand for?",
+                          "options": [
+                              "Access, Concurrency, Independence, Durability",
+                              "Atomicity, Consistency, Isolation, Durability",
+                              "Authentication, Confidentiality, Integrity, Distribution",
+                              "Accuracy, Currency, Isolation, Durability"
+                          ],
+                          "correctAnswer": "Atomicity, Consistency, Isolation, Durability"
+                      },
+                      {
+                          "id": "5",
+                          "question": "Which of the following is NOT a MySQL storage engine?",
+                          "options": [
+                              "InnoDB",
+                              "ISAM",
+                              "BLOB",
+                              "Memory"
+                          ],
+                          "correctAnswer": "BLOB"
+                      }
+                  ],
+                  "created_at": "2024-11-07T12:44:25.887+00:00"
+              }
+              `
+            }),
+        });
+
+        if (!response.ok) { // If response is not ok, throw an error
+          throw new Error('Failed to generate quiz with AI');
+        }
+
+        // Parse response data, set questions, and show preview
+        const data = await response.json();
+
+        // Check if we have quiz data
+        if (!data.questions) {
+          throw new Error('Invalid quiz data received');
+        }
+
+        setQuestions(data.questions);
+
+        // Handle validation feedback
+        if (data.validation) {
+          setValidationFeedback(data.validation);
+          
+          // If validation score is too low, show error
+          if (data.validation.score < 70) {
+            setError(`Quiz quality score (${data.validation.score}/100) is too low. ${data.validation.overall_feedback}`);
+            return;
+          }
+        }
+
+        setShowPreview(true);
+      } catch (error) { // Catch and handle error
+        setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
+      } finally {
+        setIsPdfProcessing(false); // Set PDF processing state to false
+        setIsGenerating(false); // Set generating state to false
+      }
+    }
+
+    // Function to handle form submission
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault(); // Prevent default form submission
+      setLoading(true); // Set loading state to true
+      setError(''); // Reset error state
+  
+      try { // Try to create quiz
+        const processedQuestions = questions.map(q => ({
+            ...q,
+            correctAnswer: q.isMultiAnswer 
+                ? (Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer])
+                : (Array.isArray(q.correctAnswer) ? q.correctAnswer[0] : q.correctAnswer)
+        }));
+
+        const quizData = {
+          title,
+          description,
+          questions: processedQuestions,
+          category: selectedCategory,
+          userId: user?._id // user ID to connect quiz to its creator
+        };
+  
+        const response = await fetch('http://localhost:9090/api/quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(quizData) // Send quiz data to API
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to create quiz');
+        }
+
+        const data = await response.json();
+        
+        // Debugging server response and quiz ID
+        console.log('Server response:', data); 
+        console.log('Quiz ID:', data.quizid); 
+
+        if (!data.quizid) { // Throw an error if no quiz ID is returned
+          throw new Error('No quiz ID returned from server');
+        }
+
+        // Redirect to the quiz page with the new ID
+        router.push(`/quiz/${data.quizid}`);
+
+      } catch (error) { // Catch and handle error
+        setError(error instanceof Error ? error.message : 'Failed to create quiz');
+      } finally {
+        setLoading(false);
+      }
+    };
+
 
     return { // Return the state and handlers to be used in the form
         formState: { // Form state object containing all the state variables
@@ -158,7 +342,9 @@ export const useQuizForm = (quiz?: Quiz) => {
           validationFeedback,
           loading,
           isGenerating,
-          error
+          error,
+          imageLoading,
+          isPdfProcessing
         },
         handlers: { // Form handlers object containing all the handler functions
             setTitle,
@@ -167,12 +353,18 @@ export const useQuizForm = (quiz?: Quiz) => {
             setQuestions,
             setUseAI,
             setNotes,
+            setQuestionCount,
+            setDifficulty,
+            setPdfUrl,
             handleAddQuestion,
             handleQuestionChange,
             handleOptionChange,
             handleAddCategory,
             handleCategoryChange,
-            handleImageUpload
+            handleImageUpload,
+            generateQuizWithAI,
+            handleSubmit,
+            handleRemoveQuestion,
             // Add more handlers here as I need
         }
     };

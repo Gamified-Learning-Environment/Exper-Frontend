@@ -103,7 +103,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
           }));
           setQuestions(processedQuestions);
       }
-  }, [quiz]);
+    }, [quiz]);
 
     // Fetch categories on component mount
     useEffect(() => {
@@ -549,7 +549,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
         <form onSubmit={handleSubmit}>
           <CardHeader className="space-y-4 text-center">
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
-              Create Your Quiz Adventure ✨
+              Create Your Quiz Adventure ✨ - Old
             </h2>
             {error && (
               <div className="bg-red-100/90 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg animate-pulse">
@@ -748,7 +748,7 @@ import { Upload, Image as ImageIcon, X } from 'lucide-react';
                 />
               </div>
 
-              {/* Add multiple answer toggle */}
+              {/* Multiple answer toggle */}
               <div className="flex items-center gap-2 mb-4">
                   <input
                       type="checkbox"

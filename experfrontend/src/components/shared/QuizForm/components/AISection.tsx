@@ -1,3 +1,5 @@
+// handles the AI section of the quiz form, which contains the form fields for generating questions with AI. Displayed when the user enables AI to generate questions.
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -15,15 +17,6 @@ interface AISectionProps {
     pdfUrl: string;
     setPdfUrl: (value: string) => void;
     isGenerating: boolean;
-    defaultPreferences: {
-      defaultQuestionCount: number;
-      categories: {
-        [key: string]: {
-          difficulty: 'beginner' | 'intermediate' | 'expert';
-          questionCount: number;
-        };
-      };
-    };
     selectedCategory: string;
     generateQuizWithAI: () => Promise<void>;
 }
@@ -40,8 +33,6 @@ export const AISection = ({
     pdfUrl,
     setPdfUrl,
     isGenerating,
-    defaultPreferences,
-    selectedCategory,
     generateQuizWithAI
   }: AISectionProps) => {
     return (
@@ -51,6 +42,7 @@ export const AISection = ({
           AI Magic
         </h3>
         
+        {/* Checkbox to enable AI */}
         <div className='space-y-4'>
           <div className='flex items-center gap-2 bg-white p-3 rounded-lg border-2 border-purple-200'>
             <input
@@ -59,11 +51,13 @@ export const AISection = ({
               onChange={() => setUseAI(!useAI)}
               className="w-5 h-5 text-purple-600"
               title="Use AI to Generate Quiz"
+              placeholder="Use AI to Generate Quiz"
             />
             <label className='text-lg font-medium text-purple-700'>Use AI to Generate Quiz</label>
           </div>
         </div>
-  
+
+        {/* AI form fields */}
         {useAI && (
           <div className="space-y-6">
             <div className="space-y-4">
@@ -76,10 +70,10 @@ export const AISection = ({
                 min={1}
                 max={20}
                 step={1}
-                className="w-full"
+                className="w-full p-3 border-2 rounded-lg focus:ring-purple-400 focus:border-purple-400 transition-all"
               />
               <span className="text-sm text-gray-500">
-                {questionCount} questions (Default: {defaultPreferences.defaultQuestionCount})
+                {questionCount} questions
               </span>
             </div>
   
@@ -95,11 +89,6 @@ export const AISection = ({
                   <SelectItem value="expert">Expert</SelectItem>
                 </SelectContent>
               </Select>
-              {selectedCategory && defaultPreferences.categories[selectedCategory] && (
-                <p className="text-sm text-gray-500">
-                  Preferred difficulty: {defaultPreferences.categories[selectedCategory].difficulty}
-                </p>
-              )}
             </div>
   
             <div className="space-y-2">
@@ -107,7 +96,7 @@ export const AISection = ({
               <textarea
                 id="notes"
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => setNotes(e.target.value)} // Set notes for AI to generate questions from
                 className="w-full p-2 border rounded"
                 placeholder="Add any notes, topics, or keywords for the AI to generate questions from"
               />

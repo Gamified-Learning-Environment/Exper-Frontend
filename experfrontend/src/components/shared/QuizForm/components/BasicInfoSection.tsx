@@ -1,3 +1,5 @@
+// Displaying the basic information section of the quiz form, contains form fields for entering the quiz title, description, and category.
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

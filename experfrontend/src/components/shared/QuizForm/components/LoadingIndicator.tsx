@@ -1,0 +1,1 @@
+// Handles a loading indicator animation for the quiz form when generating questions.

@@ -1,3 +1,5 @@
+// QuizForm type definitions and interfaces
+
 // QuizQuestion interface
 export interface QuizQuestion {
     id: string; // Unique question ID
