@@ -24,6 +24,7 @@ export interface QuizFormProps { // QuizFormProps interface, defines props for Q
     quiz?: Quiz;
 }
 
+// Difficulty type parameter
 export type Difficulty = 'beginner' | 'intermediate' | 'expert';
 
 export interface ValidationFeedback {

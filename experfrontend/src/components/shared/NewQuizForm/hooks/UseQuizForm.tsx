@@ -1,11 +1,13 @@
 // Handles Form logic and state management for the QuizForm component. 
 
+'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
 import type { QuizQuestion, Quiz, Difficulty, ValidationFeedback } from '../types';
 
-export const useQuizForm = (quiz?: Quiz) => {
+export const UseQuizForm = (quiz?: Quiz) => {
     const router = useRouter();
     const { user } = useAuth();
 
@@ -92,6 +94,67 @@ export const useQuizForm = (quiz?: Quiz) => {
         setQuestions(updatedQuestions);
     };
 
+    const renderCorrectAnswerField = (question: QuizQuestion, qIndex: number) => {
+      if (question.isMultiAnswer) {
+          return (
+              <div className="space-y-2">
+                  <label className="text-sm font-medium">Correct Answers: </label>
+                  <div className="space-y-2">
+                      {question.options.map((option, oIndex) => (
+                          option && (
+                              <div key={oIndex} className="flex items-center gap-2">
+                                  <input
+                                      type="checkbox"
+                                      title={`Select ${option} as correct answer`}
+                                      placeholder={`Select ${option} as correct answer`}
+                                      checked={Array.isArray(question.correctAnswer) && 
+                                            question.correctAnswer.includes(option)}
+                                      onChange={(e) => {
+                                        const updatedQuestions = [...questions];
+                                        const currentAnswers = Array.isArray(question.correctAnswer) 
+                                          ? question.correctAnswer 
+                                          : [];
+                                        
+                                        updatedQuestions[qIndex].correctAnswer = e.target.checked
+                                          ? [...currentAnswers, option]
+                                          : currentAnswers.filter(ans => ans !== option);
+                                        
+                                        setQuestions(updatedQuestions);
+                                      }}
+                                      className="rounded border-gray-300"
+                                  />
+                                  <span>{option}</span>
+                              </div>
+                          )
+                      ))}
+                  </div>
+              </div>
+          );
+        }
+  
+        return (
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Correct Answer</label>
+                <select
+                    title="Select the correct answer for this question"
+                    value={Array.isArray(question.correctAnswer) ? question.correctAnswer[0] || '' : question.correctAnswer}
+                    onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', [e.target.value])}
+                    className="w-full p-2 border rounded"
+                    required
+                >
+                  <option value="">Select correct answer</option>
+                  {question.options.map((option, index) => (
+                    option && (
+                      <option key={index} value={option}>
+                          {option}
+                      </option>
+                    )
+                  ))}
+                </select>
+            </div>
+        );
+  };
+
     // Handler function for adding new category
     const handleAddCategory = async () => {
         if (!newCategory) return;
@@ -163,82 +226,19 @@ export const useQuizForm = (quiz?: Quiz) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ // Send question count, difficulty, and notes along with response format
-             notes, 
-             pdfUrl,
+             notes: notes, 
+             pdfUrl: pdfUrl,
              parameters: {
-                questionCount,
-                difficulty,
+                questionCount: questionCount, // Number of questions to generate
+                difficulty: difficulty, // Difficulty level of questions
                 includeExplanations: true, // Include explanations for answers
-             },
-             format: ` 
-             {
-                  "_id": "672cb629113b70876395c8f2",
-                  "title": "Database Management Quiz",
-                  "questions": [
-                      {
-                          "id": "1",
-                          "question": "What does the acronym CRUD stand for?",
-                          "options": [
-                              "Create, Read, Update, Delete",
-                              "Create, Restore, Undo, Delete",
-                              "Create, Read, Upload, Drop",
-                              "Compute, Replace, Undo, Delete"
-                          ],
-                          "correctAnswer": "Create, Read, Update, Delete"
-                      },
-                      {
-                          "id": "2",
-                          "question": "What percentage of the module grade is based on a project?",
-                          "options": [
-                              "30%",
-                              "10%",
-                              "50%",
-                              "60%"
-                          ],
-                          "correctAnswer": "30%"
-                      },
-                      {
-                          "id": "3",
-                          "question": "Which storage engine is typically used for memory-based temporary data?",
-                          "options": [
-                              "InnoDB",
-                              "MyISAM",
-                              "Memory",
-                              "BlackHole"
-                          ],
-                          "correctAnswer": "Memory"
-                      },
-                      {
-                          "id": "4",
-                          "question": "What does ACID in transaction management stand for?",
-                          "options": [
-                              "Access, Concurrency, Independence, Durability",
-                              "Atomicity, Consistency, Isolation, Durability",
-                              "Authentication, Confidentiality, Integrity, Distribution",
-                              "Accuracy, Currency, Isolation, Durability"
-                          ],
-                          "correctAnswer": "Atomicity, Consistency, Isolation, Durability"
-                      },
-                      {
-                          "id": "5",
-                          "question": "Which of the following is NOT a MySQL storage engine?",
-                          "options": [
-                              "InnoDB",
-                              "ISAM",
-                              "BLOB",
-                              "Memory"
-                          ],
-                          "correctAnswer": "BLOB"
-                      }
-                  ],
-                  "created_at": "2024-11-07T12:44:25.887+00:00"
-              }
-              `
-            }),
+             }
+            })
         });
 
-        if (!response.ok) { // If response is not ok, throw an error
-          throw new Error('Failed to generate quiz with AI');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to generate quiz with AI');
         }
 
         // Parse response data, set questions, and show preview
@@ -270,6 +270,40 @@ export const useQuizForm = (quiz?: Quiz) => {
         setIsGenerating(false); // Set generating state to false
       }
     }
+
+    // Loader component for quiz generation process
+    const QuizGenerationLoader = () => {
+      return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 shadow-xl max-w-md w-full mx-4 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              {/* Main animated icon */}
+              <div className="relative">
+                <span className="text-6xl animate-float">🎮</span>
+                <div className="absolute inset-0 bg-purple-500/20 rounded-full animate-expand-circle" />
+              </div>
+              
+              {/* Loading text */}
+              <h3 className="text-2xl font-bold text-purple-800 animate-pulse">
+                Generating Quiz...
+              </h3>
+              
+              {/* Fun loading indicators */}
+              <div className="flex gap-2 items-center">
+                <span className="text-2xl animate-wiggle delay-100">🎲</span>
+                <span className="text-2xl animate-wiggle delay-200">📝</span>
+                <span className="text-2xl animate-wiggle delay-300">✨</span>
+              </div>
+              
+              {/* Loading message */}
+              <p className="text-purple-600">
+                Summoning knowledge powers...
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     // Function to handle form submission
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -325,6 +359,24 @@ export const useQuizForm = (quiz?: Quiz) => {
       }
     };
 
+    // Function to fetch categories
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:9090/api/categories');
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    // Fetch categories on component mount
+    useEffect(() => {
+      fetchCategories();
+    }, []);
 
     return { // Return the state and handlers to be used in the form
         formState: { // Form state object containing all the state variables
@@ -332,6 +384,7 @@ export const useQuizForm = (quiz?: Quiz) => {
           description,
           categories,
           selectedCategory,
+          newCategory,
           questions,
           useAI,
           notes,
@@ -344,7 +397,7 @@ export const useQuizForm = (quiz?: Quiz) => {
           isGenerating,
           error,
           imageLoading,
-          isPdfProcessing
+          isPdfProcessing,
         },
         handlers: { // Form handlers object containing all the handler functions
             setTitle,
@@ -365,6 +418,17 @@ export const useQuizForm = (quiz?: Quiz) => {
             generateQuizWithAI,
             handleSubmit,
             handleRemoveQuestion,
+            renderCorrectAnswerField,
+            QuizGenerationLoader,
+            setShowPreview,
+            setValidationFeedback,
+            setIsPdfProcessing,
+            setError,
+            setImageLoading,
+            setCategories,
+            setNewCategory,
+            setIsGenerating,
+            fetchCategories,
             // Add more handlers here as I need
         }
     };
