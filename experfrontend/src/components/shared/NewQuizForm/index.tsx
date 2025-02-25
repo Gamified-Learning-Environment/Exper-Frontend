@@ -1,7 +1,6 @@
 
 'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
-import { useState } from 'react'; // Import react useState hook
 import type { QuizFormProps, Difficulty } from '@/components/shared/NewQuizForm/types'; // Import types
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

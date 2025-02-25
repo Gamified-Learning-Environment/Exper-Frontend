@@ -1,4 +1,4 @@
-import Quiz from '@/components/shared/Quiz'; // Quiz component from components/shared folder
+import NewQuiz from '@/components/shared/NewQuiz'; // Quiz component from components/shared folder
 
 async function getQuiz(id: string) { // Fetch quiz data from API
     const res = await fetch(`http://localhost:9090/api/quiz/${id}`, {
@@ -20,7 +20,7 @@ export default async function QuizPage({ params }: { params: Promise<{ id: strin
           <div className='container mx-auto py-8'>
             <h1 className='text-2xl font-bold mb-4'>{quiz.title}</h1>
             <p className="mb-4">{quiz.description}</p>
-            <Quiz quiz={quiz}/> {/* Pass quiz data to component and associated User ID */}
+            <NewQuiz quiz={quiz}/> {/* Pass quiz data to component and associated User ID */}
           </div>
         );
       } catch (error) {
