@@ -7,7 +7,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import { UseQuizForm } from '@/components/shared/NewQuizForm/hooks/UseQuizForm'; // Import useQuizForm hook
 import { ImageIcon, Upload, X } from 'lucide-react'; // Import icons
-import { Slider } from '@radix-ui/react-slider';
+import { Slider } from '@/components/ui/slider'; // Import slider component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm component, takes onClose and quiz as props

@@ -14,9 +14,10 @@ interface HierarchyData {
 
 interface BubbleChartProps {
     data: BubbleData[];
+    onBubbleClick?: (category: string) => void;
 }
 
-const BubbleChart = ({ data }: BubbleChartProps) => {
+const BubbleChart = ({ data, onBubbleClick }: BubbleChartProps) => {
     const chartRef = useRef<SVGSVGElement>(null);
 
     useEffect(() => {
@@ -65,6 +66,11 @@ const BubbleChart = ({ data }: BubbleChartProps) => {
             .style('opacity', 0.7)
             .style('stroke', 'white')
             .style('stroke-width', 2)
+            .style('cursor', 'pointer') // Add pointer cursor
+            .on('click', (event, d) => {
+                const node = d.data as unknown as BubbleData;
+                onBubbleClick?.(node.category);
+            })
             .on('mouseover', function() {
                 d3.select(this)
                     .style('opacity', 1)
@@ -110,7 +116,7 @@ const BubbleChart = ({ data }: BubbleChartProps) => {
     return (
         <svg 
             ref={chartRef}
-            className="w-full h-[400px] bg-white rounded-lg shadow-md"
+            className="w-full h-full bg-white rounded-lg shadow-sm"
         />
     );
 };

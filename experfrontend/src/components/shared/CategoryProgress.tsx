@@ -170,9 +170,9 @@ const CategoryProgress = () => {
         d3.select(chartRef.current).selectAll('*').remove();
 
         // Chart dimensions
-        const margin = { top: 20, right: 50, bottom: 60, left: 50 };
-        const width = 800 - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
+        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        const width = 700 - margin.left - margin.right;
+        const height = 250 - margin.top - margin.bottom;
 
         // Create SVG container
         const svg = d3.select(chartRef.current)
@@ -285,7 +285,7 @@ const CategoryProgress = () => {
     }, [results, selectedCategory]);
 
     return (
-        <Card className="p-6 space-y-6">
+        <Card className="p-4 space-y-6">
             {/* Header section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h3 className="text-xl font-bold text-purple-800">
@@ -309,73 +309,82 @@ const CategoryProgress = () => {
                 </Select>
             </div>
 
-            {loading && (
+            {loading && ( // Loading state
                 <div className="flex justify-center items-center h-[400px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
                 </div>
             )}
             
-            {error && (
+            {error && ( // Error state
                 <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-200">
                     Error: {error}
                 </div>
             )}
             
-            {!loading && !error && results.length === 0 && (
-                <div className="text-gray-500 text-center py-12 bg-gray-50 rounded-lg">
-                    No quiz results found for {selectedCategory}
-                </div>
-            )}
-            
             {!loading && !error && results.length > 0 && bubbleData.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Progress Tracker Line Chart */}
-                    <div className="md:col-span-2 space-y-4">
-                        <h3 className="text-xl font-bold text-purple-800">
-                            Progress Timeline
+                <div className="space-y-6">
+                    {/* Bubble Chart - Full Width */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                            Category Overview
                         </h3>
-                        <div className="w-full overflow-x-auto">
-                            <svg ref={chartRef} className="w-full min-w-[800px] h-[400px] bg-white rounded-lg shadow-md" />
+                        <div className="w-full h-[180px]">
+                            <BubbleChart 
+                                data={bubbleData} 
+                                onBubbleClick={(category) => setSelectedCategory(category)}
+                            />
                         </div>
                     </div>
 
-                    {/* Quiz Completion Overview */}
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-purple-800">
-                            Quiz Completion Overview
+                    {/* Grid of Charts */}
+
+                    {/* Progress Timeline */}
+                    <div className="w-full">
+                        <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                            Progress Timeline - {selectedCategory}
                         </h3>
-                        <BubbleChart data={bubbleData} />
+                        <div className="w-full h-[250px] overflow-x-auto">
+                            <svg ref={chartRef} className="w-full h-[300px] bg-white rounded-lg shadow-md" />
+                        </div>
                     </div>
 
-                    {/* Performance Analysis */}
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-purple-800">
-                            Performance Analysis
-                        </h3>
-                        <RadarChart data={[
-                            { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
-                            { metric: "Consistency", value: calculateConsistency(results) },
-                            { metric: "Improvement", value: calculateImprovementRate(results) },
-                            { metric: "Completion", value: calculateCompletionRate(results) }
-                        ]} />
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Performance Analysis */}
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-semibold text-purple-800">
+                                Performance Analysis
+                            </h3>
+                            <div className='h-[250px]'>
+                                <RadarChart data={[
+                                    { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
+                                    { metric: "Consistency", value: calculateConsistency(results) },
+                                    { metric: "Improvement", value: calculateImprovementRate(results) },
+                                    { metric: "Completion", value: calculateCompletionRate(results) }
+                                ]} />
+                            </div>
+                        </div>
 
-                    {/* Performance Heatmap */}
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-purple-800">
-                            Performance Heatmap
-                        </h3>
-                        <PerformanceHeatmap results={results} />
-                    </div>
+                        {/* Performance Heatmap */}
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-semibold text-purple-800">
+                                Performance Heatmap
+                            </h3>
+                            <div className='h-[250px]'>
+                                <PerformanceHeatmap results={results} />
+                            </div>
+                        </div>
 
-                    {/* Score Distribution */}
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-purple-800">
-                            Score Distribution
-                        </h3>
-                        <BoxPlot results={results} />
-                        <div className="text-sm text-gray-600 text-center">
-                            Box plot showing score distribution with quartiles, median, and outliers
+                        {/* Score Distribution */}
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-semibold text-purple-800">
+                                Score Distribution
+                            </h3>
+                            <div className='h-[250px]'>
+                                <BoxPlot results={results} />
+                            </div>
+                            <div className="text-xs text-gray-600 text-center">
+                                Box plot showing score distribution with quartiles, median, and outliers
+                            </div>
                         </div>
                     </div>
                 </div>
