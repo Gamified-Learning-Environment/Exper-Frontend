@@ -32,6 +32,7 @@ export interface ValidationFeedback {
     feedback: Array<{
       question_id: string;
       score: number;
+      difficulty_rating: 'too_easy' | 'appropriate' | 'too_hard';
       issues: string[];
       suggestions: string[];
     }>;

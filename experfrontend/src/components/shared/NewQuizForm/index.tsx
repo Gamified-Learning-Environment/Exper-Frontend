@@ -361,6 +361,21 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                       )}
                     </div>
                   </div>
+
+                  {!formState.useAI && formState.questions.map((question, qIndex) => (
+                  <div key={question.id} className="bg-white p-4 rounded-lg border-2 border-green-200 space-y-4 transition-all hover:shadow-md">
+                    {/* Existing question fields... */}
+                    
+                    {/* Add validation feedback */}
+                    {formState.validationFeedback?.feedback && (
+                      <handlers.QuestionValidation 
+                        feedback={formState.validationFeedback.feedback.find(
+                          f => f.question_id === question.id
+                        )} 
+                      />
+                    )}
+                  </div>
+                ))}
                 </div>
               ))}
             </div>
@@ -375,21 +390,38 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
   
                 {formState.validationFeedback && (
                   <div className="bg-white p-4 rounded-lg shadow mb-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-2xl">📊</span>
-                      <h3 className="text-xl font-bold">
-                        Quality Score: {formState.validationFeedback.score}/100
-                      </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">📊</span>
+                        <h3 className="text-xl font-bold">
+                          Overall Quality: {formState.validationFeedback.score}/100
+                        </h3>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        formState.validationFeedback.score >= 80 ? 'bg-green-100 text-green-700' :
+                        formState.validationFeedback.score >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {formState.validationFeedback.score >= 80 ? 'Good' :
+                        formState.validationFeedback.score >= 60 ? 'Needs Improvement' :
+                        'Poor'}
+                      </span>
                     </div>
-                    <div className="mb-4">
-                      <h4 className="font-semibold text-purple-800">
-                        Difficulty Alignment: {formState.validationFeedback.difficulty_alignment}/100
-                      </h4>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-semibold text-purple-800">
+                          Difficulty Alignment
+                        </h4>
+                        <span className="text-sm font-medium">
+                          {formState.validationFeedback.difficulty_alignment}/100
+                        </span>
+                      </div>
                       <p className="text-gray-700">{formState.validationFeedback.overall_feedback}</p>
                     </div>
                   </div>
                 )}
-              
+
                 {formState.questions.map((question, qIndex) => (
                   <div 
                     key={question.id} 
@@ -435,6 +467,19 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                         </p>
                       </div>
                     </div>
+
+                    <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-purple-200 shadow-md hover:shadow-lg transition-all">
+                      {/* Existing question display... */}
+                      
+                      {/* Add validation feedback */}
+                      {formState.validationFeedback?.feedback && (
+                        <handlers.QuestionValidation 
+                          feedback={formState.validationFeedback.feedback.find(
+                            f => f.question_id === question.id
+                          )} 
+                        />
+                      )}
+                    </div>
                   </div>
                 ))}
               
@@ -473,6 +518,23 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
               Remove Question 🗑️
             </Button>
           </div>
+          <Button
+            type="button"
+            onClick={async () => {
+              try {
+                const validation = await handlers.validateQuizQuestions(
+                  formState.questions, 
+                  formState.difficulty
+                );
+                handlers.setValidationFeedback(validation);
+              } catch (error) {
+                handlers.setError('Failed to validate questions');
+              }
+            }}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
+          >
+            Validate Questions
+          </Button>
           <Button 
             type="submit" 
             disabled={formState.loading}

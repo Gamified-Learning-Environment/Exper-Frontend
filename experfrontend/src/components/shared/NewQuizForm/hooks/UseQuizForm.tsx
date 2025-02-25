@@ -310,6 +310,21 @@ export const UseQuizForm = (quiz?: Quiz) => {
       event.preventDefault(); // Prevent default form submission
       setLoading(true); // Set loading state to true
       setError(''); // Reset error state
+
+      // Validate questions before submission
+      const validationResult = await validateQuizQuestions(questions, difficulty);
+      setValidationFeedback(validationResult);
+
+      // If validation score is too low, show error but allow user to proceed
+      if (validationResult.score < 70) {
+        const proceed = window.confirm(
+          `Quiz quality score (${validationResult.score}/100) is low. ${validationResult.overall_feedback}\n\nDo you want to proceed anyway?`
+        );
+        if (!proceed) {
+          setLoading(false);
+          return;
+        }
+      }
   
       try { // Try to create quiz
         const processedQuestions = questions.map(q => ({
@@ -373,6 +388,135 @@ export const UseQuizForm = (quiz?: Quiz) => {
       }
     };
 
+    const validateQuizQuestions = async (questions: QuizQuestion[], difficulty: Difficulty) => {
+      try {
+        // Do some basic validation checks locally first
+        const basicValidation = questions.map(q => {
+          const issues: string[] = [];
+          const suggestions: string[] = [];
+          
+          // Check question length
+          if (q.question.length < 10) {
+            issues.push("Question is too short");
+            suggestions.push("Make question more detailed (at least 10 characters)");
+          }
+          
+          // Check options
+          if (q.options.some(opt => opt.length === 0)) {
+            issues.push("Empty options detected");
+            suggestions.push("Fill in all options");
+          }
+          
+          // Check correct answer is set
+          if (q.isMultiAnswer) {
+            if (!Array.isArray(q.correctAnswer) || q.correctAnswer.length === 0) {
+              issues.push("No correct answers selected");
+              suggestions.push("Select at least one correct answer");
+            }
+          } else if (!q.correctAnswer) {
+            issues.push("No correct answer selected");
+            suggestions.push("Select a correct answer");
+          }
+
+          return {
+            question_id: q.id,
+            score: issues.length === 0 ? 100 : 50,
+            difficulty_rating: 'appropriate',
+            issues,
+            suggestions
+          };
+        });
+
+    // If there are basic validation issues, return early
+    if (basicValidation.some(v => v.issues.length > 0)) {
+      return {
+        score: 0,
+        feedback: basicValidation,
+        overall_feedback: "Please fix basic validation issues",
+        difficulty_alignment: 0
+      };
+    }
+
+        // API validation request to validate quiz questions
+        const response = await fetch('http://localhost:9090/api/validate-quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            questions,
+            parameters: {
+              difficulty,
+              includeExplanations: true
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to validate quiz');
+        }
+    
+        const data = await response.json();
+        return data.validation;
+      } catch (error) {
+        console.error('Error validating quiz:', error);
+        throw error;
+      }
+    };
+
+    const QuestionValidation = ({ feedback }: { feedback: any }) => {
+      if (!feedback) return null;
+      
+      return (
+        <div className="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-200">
+          <div className="flex items-center gap-2">
+            <span className={`text-lg ${
+              feedback.score >= 80 ? 'text-green-500' : 
+              feedback.score >= 60 ? 'text-yellow-500' : 
+              'text-red-500'
+            }`}>
+              {feedback.score >= 80 ? '✓' : feedback.score >= 60 ? '⚠️' : '✗'}
+            </span>
+            <h5 className="font-semibold">Question Score: {feedback.score}/100</h5>
+          </div>
+
+          {/* Difficulty Rating */}
+          <div className="mt-2">
+            <span className={`inline-block px-2 py-1 rounded text-sm ${
+              feedback.difficulty_rating === 'appropriate' ? 'bg-green-100 text-green-700' :
+              feedback.difficulty_rating === 'too_easy' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-red-100 text-red-700'
+            }`}>
+              {feedback.difficulty_rating.replace('_', ' ')}
+            </span>
+          </div>
+
+          {/* Issues and Suggestions */}
+          {feedback.issues.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm font-medium text-red-600">Issues:</p>
+              <ul className="list-disc list-inside text-sm text-red-600">
+                {feedback.issues.map((issue: string, i: number) => (
+                  <li key={i}>{issue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {feedback.suggestions.length > 0 && (
+            <div className="mt-2">
+              <p className="text-sm font-medium text-blue-600">Suggestions:</p>
+              <ul className="list-disc list-inside text-sm text-blue-600">
+                {feedback.suggestions.map((suggestion: string, i: number) => (
+                  <li key={i}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    };
+
     // Fetch categories on component mount
     useEffect(() => {
       fetchCategories();
@@ -429,6 +573,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
             setNewCategory,
             setIsGenerating,
             fetchCategories,
+            validateQuizQuestions,
+            QuestionValidation
             // Add more handlers here as I need
         }
     };
