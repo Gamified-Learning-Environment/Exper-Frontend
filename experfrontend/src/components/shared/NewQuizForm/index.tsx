@@ -425,40 +425,49 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                 {formState.questions.map((question, qIndex) => (
                   <div 
                     key={question.id} 
-                    className="bg-white p-6 rounded-xl border-2 border-purple-200 shadow-md hover:shadow-lg transition-all"
+                    className="bg-white p-4 rounded-lg border-2 border-green-200 space-y-4 hover:shadow-md transition-all"
                   >
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">
-                        {qIndex + 1}
-                      </span>
-                      <h4 className="text-lg font-semibold text-purple-900">{question.question}</h4>
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-green-700 flex items-center gap-2">
+                        Question {qIndex + 1}
+                        {question.isGenerated && (
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                            AI Generated
+                          </span>
+                        )}
+                      </h4>
                     </div>
-              
-                    <div className="grid gap-3 mb-4 pl-11">
+
+                    {/* Question Text */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Question Text</label>
+                      <input
+                        type="text"
+                        value={question.question}
+                        onChange={(e) => handlers.handleQuestionChange(qIndex, 'question', e.target.value)}
+                        className="w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400"
+                        required
+                        placeholder="Enter your question..."
+                      />
+                    </div>
+
+                    {/* Options */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Options</label>
                       {question.options.map((option, oIndex) => (
-                        <div 
-                          key={oIndex}
-                          className={`p-3 rounded-lg border-2 transition-all
-                            ${question.correctAnswer.includes(option)
-                              ? 'border-green-200 bg-green-50 text-green-700'
-                              : 'border-gray-200 bg-gray-50 text-gray-600'
-                            }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
-                              ${oIndex === 0 ? 'bg-red-400' : 
-                                oIndex === 1 ? 'bg-blue-400' : 
-                                oIndex === 2 ? 'bg-yellow-400' : 'bg-green-400'
-                              }`}
-                            >
-                              {String.fromCharCode(65 + oIndex)}
-                            </span>
-                            <span>{option}</span>
-                          </div>
+                        <div key={oIndex} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={option}
+                            onChange={(e) => handlers.handleOptionChange(qIndex, oIndex, e.target.value)}
+                            className="flex-1 p-2 border-2 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400"
+                            placeholder={`Option ${oIndex + 1}`}
+                            required
+                          />
                         </div>
                       ))}
                     </div>
-              
+
                     <div className="pl-11">
                       <div className="flex items-center gap-2 text-green-600">
                         <span className="text-xl">✅</span>
@@ -469,7 +478,6 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                     </div>
 
                     <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-purple-200 shadow-md hover:shadow-lg transition-all">
-                      {/* Existing question display... */}
                       
                       {/* Add validation feedback */}
                       {formState.validationFeedback?.feedback && (

@@ -9,6 +9,7 @@ export interface QuizQuestion {
     imageUrl?: string; // Optional image URL
     isMultiAnswer?: boolean; // Optional multi-answer question flag
     explanation?: string; // Optional explanation for a question's answer
+    isGenerated?: boolean;
 }
 
 export interface Quiz { // Quiz interface

@@ -63,19 +63,17 @@ export const UseQuizForm = (quiz?: Quiz) => {
     // Handler function for question type changing
     const handleQuestionChange = (index: number, field: keyof QuizQuestion, value: any) => {
         const updatedQuestions = [...questions];
-        if (field === 'correctAnswer') {
-            // If it's a multiple answer question, keep array format
-            // If it's a single answer question, use string format
-            updatedQuestions[index] = {
-              ...updatedQuestions[index],
-              correctAnswer: updatedQuestions[index].isMultiAnswer ? value : value[0] || ''
-            };
-        } else {
-            updatedQuestions[index] = {
-                ...updatedQuestions[index],
-                [field]: value
-            };
-        }
+        const question = updatedQuestions[index];
+
+        // Update the field while preserving isGenerated flag
+        updatedQuestions[index] = {
+            ...question,
+            [field]: value,
+            // Keep track that this was originally generated but has been modified
+            isGenerated: question.isGenerated,
+            correctAnswer: question.correctAnswer 
+        };
+
         setQuestions(updatedQuestions);
     };
 
@@ -83,14 +81,27 @@ export const UseQuizForm = (quiz?: Quiz) => {
     const handleOptionChange = (questionIndex: number, optionIndex: number, value: string) => {
         const updatedQuestions = [...questions];
         const question = updatedQuestions[questionIndex];
-  
-        // If we're changing the option that was the correct answer, reset it
-        if (question.correctAnswer.includes(question.options[optionIndex])) {
-          question.correctAnswer = [];
+
+        // Only reset correctAnswer if we're changing the option that was the correct answer
+        const currentCorrectAnswer = Array.isArray(question.correctAnswer) 
+          ? question.correctAnswer 
+          : [question.correctAnswer];
+
+        if (currentCorrectAnswer.includes(question.options[optionIndex])) {
+          // Update the correct answer to use the new option value
+          if (question.isMultiAnswer) {
+              question.correctAnswer = currentCorrectAnswer.map(ans => 
+                  ans === question.options[optionIndex] ? value : ans
+              );
+          } else {
+              question.correctAnswer = value;
+          }
         }
         
-        // Update the option
+        // Update the option while preserving isGenerated flag
         question.options[optionIndex] = value;
+        question.isGenerated = question.isGenerated; // Preserve isGenerated flag
+
         setQuestions(updatedQuestions);
     };
 
