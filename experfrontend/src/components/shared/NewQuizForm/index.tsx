@@ -121,6 +121,33 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
             {formState.useAI && (
               <div className="space-y-6">
                 <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium">AI Model:</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handlers.setAIModel('gpt')}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          formState.aiModel === 'gpt' 
+                            ? 'bg-green-100 text-green-700 border-2 border-green-300' 
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        GPT-3.5
+                      </button>
+                      <button
+                        type="button" 
+                        onClick={() => handlers.setAIModel('claude')}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          formState.aiModel === 'claude'
+                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        Claude
+                      </button>
+                    </div>
+                </div>
                   <label className="text-sm font-medium text-purple-500 flex items-center gap-2">Number of Questions</label>
                   <Slider
                     value={[formState.questionCount]}

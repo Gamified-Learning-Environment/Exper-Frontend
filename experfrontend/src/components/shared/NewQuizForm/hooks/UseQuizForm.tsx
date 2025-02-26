@@ -28,6 +28,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
 
     // AI state
     const [useAI, setUseAI] = useState(false);
+    const [aiModel, setAIModel] = useState<'gpt' | 'claude'>('gpt');
     const [notes, setNotes] = useState('');
     const [questionCount, setQuestionCount] = useState(5);
     const [difficulty, setDifficulty] = useState<Difficulty>('intermediate');
@@ -231,7 +232,14 @@ export const UseQuizForm = (quiz?: Quiz) => {
       try {
         setIsGenerating(true); // Set generating state to true
         setIsPdfProcessing(true); // Set PDF processing state to true
-        const response = await fetch('http://localhost:9090/api/generate-quiz', { // Fetch quiz from API
+        setError('');
+
+        // Select endpoint based on chosen model
+        const endpoint = aiModel === 'claude' 
+        ? 'http://localhost:9090/api/generate-quiz-claude'
+        : 'http://localhost:9090/api/generate-quiz';
+
+        const response = await fetch(endpoint, { // Fetch quiz from API
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -249,6 +257,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
 
         if (!response.ok) {
           const errorData = await response.json();
+          console.error('Quiz generation error:', errorData);
           throw new Error(errorData.message || 'Failed to generate quiz with AI');
         }
 
@@ -276,6 +285,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
         setShowPreview(true);
       } catch (error) { // Catch and handle error
         setError(error instanceof Error ? error.message : 'Failed to generate quiz with AI');
+        console.error('Quiz generation error:', error);
       } finally {
         setIsPdfProcessing(false); // Set PDF processing state to false
         setIsGenerating(false); // Set generating state to false
@@ -553,6 +563,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
           error,
           imageLoading,
           isPdfProcessing,
+          aiModel
         },
         handlers: { // Form handlers object containing all the handler functions
             setTitle,
@@ -585,7 +596,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
             setIsGenerating,
             fetchCategories,
             validateQuizQuestions,
-            QuestionValidation
+            QuestionValidation,
+            setAIModel
             // Add more handlers here as I need
         }
     };

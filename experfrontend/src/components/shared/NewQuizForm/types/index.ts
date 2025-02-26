@@ -18,6 +18,7 @@ export interface Quiz { // Quiz interface
     description: string;
     questions: QuizQuestion[];
     difficulty: 'beginner' | 'intermediate' | 'expert';
+    aiModel?: AIModel;
 }
 
 export interface QuizFormProps { // QuizFormProps interface, defines props for QuizForm component
@@ -40,4 +41,6 @@ export interface ValidationFeedback {
     overall_feedback: string;
     difficulty_alignment: number;
 }
+
+export type AIModel = 'gpt' | 'claude';
 
