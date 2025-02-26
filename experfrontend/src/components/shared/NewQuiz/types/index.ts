@@ -18,6 +18,7 @@ export interface Quiz { // Quiz interface
     difficulty: 'beginner' | 'intermediate' | 'expert';
     userId? : string;
     category?: string;
+    aiModel?: AIModel;
 }
 
 export interface QuestionAttempt {
@@ -50,3 +51,5 @@ export interface QuestionTypeBreakdownProps {
 export interface QuizProps {
     quiz: Quiz;
 }
+
+export type AIModel = 'gpt' | 'claude';

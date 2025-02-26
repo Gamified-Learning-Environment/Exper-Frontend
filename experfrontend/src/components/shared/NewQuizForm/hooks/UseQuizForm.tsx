@@ -360,7 +360,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
           description,
           questions: processedQuestions,
           category: selectedCategory,
-          userId: user?._id // user ID to connect quiz to its creator
+          userId: user?._id, // user ID to connect quiz to its creator
+          aiModel: useAI ? aiModel : undefined
         };
   
         const response = await fetch('http://localhost:9090/api/quiz', {
