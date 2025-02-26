@@ -23,18 +23,17 @@ const BubbleChart = ({ data, onBubbleClick }: BubbleChartProps) => {
     useEffect(() => {
         if (!chartRef.current || !data.length) return;
 
+        const svgElement = chartRef.current;
+        const width = svgElement.clientWidth;
+        const height = svgElement.clientHeight;
+
         // Clear existing chart
         d3.select(chartRef.current).selectAll('*').remove();
 
-        // Chart dimensions
-        const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-        const width = 600 - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
-
         // Create SVG container
         const svg = d3.select(chartRef.current)
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
+            .attr('width', width)
+            .attr('height', height)
             .append('g')
             .attr('transform', `translate(${width/2},${height/2})`);
 
@@ -43,7 +42,7 @@ const BubbleChart = ({ data, onBubbleClick }: BubbleChartProps) => {
             .sum((d) => (d as unknown as BubbleData).count);
 
         const pack = d3.pack<HierarchyData>()
-            .size([width, height])
+            .size([width * 0.95, height])
             .padding(3);
 
         const nodes = pack(root).leaves();
@@ -111,7 +110,7 @@ const BubbleChart = ({ data, onBubbleClick }: BubbleChartProps) => {
                 return `${node.category}: ${node.count} quizzes completed`;
             });
 
-    }, [data]);
+    }, [data, chartRef.current?.clientWidth]);
 
     return (
         <svg 

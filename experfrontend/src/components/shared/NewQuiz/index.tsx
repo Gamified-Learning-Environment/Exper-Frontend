@@ -8,6 +8,7 @@ import { PerformanceTimeline } from './components/PerformanceTimeline';
 import { QuizProgressLine } from './components/QuizProgressLine';
 import { ResultsBarChart } from './components/ResultsBarChart';
 import { QuestionTypeBreakdown } from './components/QuestionTypeBreakdown';
+import { WinLossRatioChart } from './components/WinLossRatioChart';
 import { useQuiz } from './hooks/useQuiz';
 import { QuizProps, QuizProgressLineProps, ResultsBarChartProps, QuestionTypeBreakdownProps } from './types';
 
@@ -319,14 +320,16 @@ export default function Quiz({ quiz }: QuizProps) {
                         {/* Question Types */}
                         <div className="bg-white p-4 rounded-xl shadow-md">
                             <h3 className="text-lg font-bold text-purple-800 mb-4">
-                                Question Types
+                                Win/Loss Ratio
                             </h3>
-                            <QuestionTypeBreakdown 
-                                questions={quiz.questions}
-                                selectedAnswers={quizState.selectedAnswers}
+                            <WinLossRatioChart 
+                                score={quizState.score}
+                                totalQuestions={quiz.questions.length}
+                                winThreshold={75}
+                                lossThreshold={40}
                             />
                             <p className="text-sm text-gray-600 mt-2 text-center">
-                                Performance by question type
+                                75%+ is a win, below 40% is a loss
                             </p>
                         </div>
 

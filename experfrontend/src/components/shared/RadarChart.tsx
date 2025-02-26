@@ -23,10 +23,11 @@ const RadarChart = ({ data, maxValue = 100 }: RadarChartProps) => {
     d3.select(chartRef.current).selectAll('*').remove();
 
     // Chart dimensions
-    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
-    const width = 500 - margin.left - margin.right;
-    const height = 500 - margin.top - margin.bottom;
-    const radius = Math.min(width, height) / 2;
+    const margin = { top: 10, right: 30, bottom: 10, left: 30 };
+    const containerWidth = chartRef.current?.clientWidth || 300;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 200;
+    const radius = Math.min(width, height) / 2 - 20;
 
     // Create SVG
     const svg = d3.select(chartRef.current)
@@ -139,7 +140,7 @@ const RadarChart = ({ data, maxValue = 100 }: RadarChartProps) => {
     points.append('title')
       .text((_, i) => `${data[i].metric}: ${data[i].value}%`);
 
-  }, [data, maxValue]);
+  }, [data, maxValue, chartRef.current?.clientWidth]);
 
   return (
     <div className="w-full overflow-x-auto">

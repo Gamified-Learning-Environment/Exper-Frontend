@@ -31,6 +31,19 @@ const CategoryProgress = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [bubbleData, setBubbleData] = useState<{ category: string; count: number; }[]>([]);
 
+    // State to track window width for responsiveness
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
+
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const chartGridCols = windowWidth < 1024 ? 
+        (windowWidth < 768 ? "grid-cols-1" : "grid-cols-2") : 
+        "grid-cols-3";
+
     // Helper function to calculate standard deviation
     const calculateStandardDeviation = (values: number[]): number => {
         const mean = d3.mean(values) || 0;
@@ -169,10 +182,14 @@ const CategoryProgress = () => {
         // Clear existing chart
         d3.select(chartRef.current).selectAll('*').remove();
 
+        // Responsive dimensions based on container width
+        const svgElement = chartRef.current;
+        const containerWidth = svgElement.clientWidth || 700;
+
         // Chart dimensions
-        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-        const width = 700 - margin.left - margin.right;
-        const height = 250 - margin.top - margin.bottom;
+        const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+        const width = containerWidth - margin.left - margin.right;
+        const height = 220 - margin.top - margin.bottom;
 
         // Create SVG container
         const svg = d3.select(chartRef.current)
@@ -277,17 +294,28 @@ const CategoryProgress = () => {
             .style('text-anchor', 'end')
             .attr('dx', '-.8em')
             .attr('dy', '.15em')
-            .attr('transform', 'rotate(-45)');
+            .attr('transform', 'rotate(-35)');
 
         svg.append('g')
             .call(d3.axisLeft(yScale).tickFormat(d => `${d}%`));
 
+        const handleResize = () => {
+            // Re-render chart by clearing and redrawing
+            if (chartRef.current) {
+                d3.select(chartRef.current).selectAll('*').remove();
+                // Trigger a re-render by forcing a state update
+                setResults([...results]);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, [results, selectedCategory]);
 
     return (
-        <Card className="p-4 space-y-6">
-            {/* Header section */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <Card className="p-6 bg-white/50 backdrop-blur-sm">
+            {/* Header section with title and category selector */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h3 className="text-xl font-bold text-purple-800">
                     Quiz Progress Tracker
                 </h3>
@@ -322,13 +350,13 @@ const CategoryProgress = () => {
             )}
             
             {!loading && !error && results.length > 0 && bubbleData.length > 0 && (
-                <div className="space-y-6">
-                    {/* Bubble Chart - Full Width */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                <div className="space-y-8">
+                    {/* Bubble Chart */}
+                    <div className="bg-white rounded-xl shadow-sm p-4">
+                        <h3 className="text-lg font-semibold text-purple-800 mb-3">
                             Category Overview
                         </h3>
-                        <div className="w-full h-[180px]">
+                        <div className="w-full h-[130px]">
                             <BubbleChart 
                                 data={bubbleData} 
                                 onBubbleClick={(category) => setSelectedCategory(category)}
@@ -336,53 +364,51 @@ const CategoryProgress = () => {
                         </div>
                     </div>
 
-                    {/* Grid of Charts */}
-
                     {/* Progress Timeline */}
-                    <div className="w-full">
-                        <h3 className="text-lg font-semibold text-purple-800 mb-2">
+                    <div className="bg-white rounded-xl shadow-sm p-4">
+                        <h3 className="text-lg font-semibold text-purple-800 mb-3">
                             Progress Timeline - {selectedCategory}
                         </h3>
-                        <div className="w-full h-[250px] overflow-x-auto">
-                            <svg ref={chartRef} className="w-full h-[300px] bg-white rounded-lg shadow-md" />
+                        <div className="w-full">
+                            <svg ref={chartRef} className="w-full h-[220px]" />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className={`grid ${chartGridCols} grid-cols-1 md:grid-cols-3 gap-6`}>
                         {/* Performance Analysis */}
-                        <div className="space-y-2">
-                            <h3 className="text-lg font-semibold text-purple-800">
-                                Performance Analysis
+                        <div className="bg-white rounded-xl shadow-sm p-4">
+                            <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                            Performance Analysis
                             </h3>
-                            <div className='h-[250px]'>
-                                <RadarChart data={[
-                                    { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
-                                    { metric: "Consistency", value: calculateConsistency(results) },
-                                    { metric: "Improvement", value: calculateImprovementRate(results) },
-                                    { metric: "Completion", value: calculateCompletionRate(results) }
-                                ]} />
+                            <div className='h-[220px]'>
+                            <RadarChart data={[
+                                { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
+                                { metric: "Consistency", value: calculateConsistency(results) },
+                                { metric: "Improvement", value: calculateImprovementRate(results) },
+                                { metric: "Completion", value: calculateCompletionRate(results) }
+                            ]} />
                             </div>
                         </div>
 
                         {/* Performance Heatmap */}
-                        <div className="space-y-2">
-                            <h3 className="text-lg font-semibold text-purple-800">
+                        <div className="bg-white rounded-xl shadow-sm p-4">
+                            <h3 className="text-lg font-semibold text-purple-800 mb-3">
                                 Performance Heatmap
                             </h3>
-                            <div className='h-[250px]'>
+                            <div className='h-[220px]'>
                                 <PerformanceHeatmap results={results} />
                             </div>
                         </div>
 
                         {/* Score Distribution */}
-                        <div className="space-y-2">
-                            <h3 className="text-lg font-semibold text-purple-800">
+                        <div className="bg-white rounded-xl shadow-sm p-4">
+                            <h3 className="text-lg font-semibold text-purple-800 mb-3">
                                 Score Distribution
                             </h3>
-                            <div className='h-[250px]'>
+                            <div className='h-[190px]'>
                                 <BoxPlot results={results} />
                             </div>
-                            <div className="text-xs text-gray-600 text-center">
+                            <div className="text-xs text-gray-600 text-center mt-2">
                                 Box plot showing score distribution with quartiles, median, and outliers
                             </div>
                         </div>

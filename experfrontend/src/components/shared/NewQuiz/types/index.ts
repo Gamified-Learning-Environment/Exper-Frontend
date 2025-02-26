@@ -48,6 +48,13 @@ export interface QuestionTypeBreakdownProps {
     selectedAnswers: (string | string[])[];
 }
 
+export interface WinLossRatioChartProps {
+    score: number;
+    totalQuestions: number;
+    winThreshold?: number;
+    lossThreshold?: number;
+}
+
 export interface QuizProps {
     quiz: Quiz;
 }
