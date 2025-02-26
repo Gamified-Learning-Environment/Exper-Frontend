@@ -9,6 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from '@/contexts/auth.context';
+import { UserIcon, StarIcon, PencilIcon, TrashIcon } from 'lucide-react';
 
 // Quiz Question interface
 interface QuizQuestion {
@@ -41,6 +42,9 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const router = useRouter();
   const { user } = useAuth();
+
+  // Filter view mode
+  const [viewMode, setViewMode] = useState<'all' | 'mine' | 'community'>('all');
 
   // QuizList header colors
   const gradientColors = [
@@ -83,6 +87,49 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
       router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete quiz');
+    }
+  };
+
+  const handleClone = async (quizToClone: Quiz) => {
+    try {
+      // Create a clone object without the ID fields
+      const cloneData = {
+        title: `Copy of ${quizToClone.title}`,
+        description: quizToClone.description,
+        category: quizToClone.category,
+        difficulty: quizToClone.difficulty,
+        userId: user?._id, // Set current user as owner
+        questions: quizToClone.questions.map(q => ({
+          ...q,
+          id: undefined // Let backend generate new IDs
+        }))
+      };
+      
+      // Make API call to create the cloned quiz
+      const response = await fetch('http://localhost:9090/api/quiz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cloneData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to clone quiz');
+      }
+  
+      const clonedQuiz = await response.json();
+      
+      // Close modal if open
+      if (isModalOpen) {
+        setIsModalOpen(false);
+      }
+      
+      // Show success message and redirect to edit page
+      alert('Quiz cloned successfully! You can now edit your copy.');
+      router.push(`/quiz/edit/${clonedQuiz._id}`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to clone quiz');
     }
   };
 
@@ -157,136 +204,338 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
   }
 
   return (
-    <div className="space-y-8">
-      {/* Category Filter Section */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-md">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🎮</span>
-            <h2 className="text-xl font-bold text-purple-800">
-              {selectedCategory ? selectedCategory : 'All Categories'}
-            </h2>
-          </div>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[200px] bg-white border-2 border-purple-200 hover:border-purple-400 transition-all">
-              <SelectValue placeholder="Choose Category 📚" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="flex items-center gap-2">
-                <span>🌟</span> All Categories
-              </SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category} value={category} className="flex items-center gap-2">
-                  <span>📚</span> {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Quiz Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {quizzes.map((quiz) => (
-          <Card key={quiz._id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-            <CardHeader className={`bg-gradient-to-br ${gradientColors[Math.floor(Math.random() * gradientColors.length)]} text-white`}>
-              <CardTitle className="flex items-center gap-2">
-                <span className="text-2xl">✨</span>
-                {quiz.title}
-              </CardTitle>
-              {quiz.category && (
-                <Badge className="bg-white/20 hover:bg-white/30 transition-colors text-white">
-                  {quiz.category}
-                </Badge>
-              )}
-            </CardHeader>
-            <CardContent className="pt-6">
-            <CardDescription className="text-gray-600">
-              {quiz.description}
-            </CardDescription>
-              {/* Additional quiz info */}
-              <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <span>📝</span> {quiz.questions?.length || 0} Questions
-                </span>
-                <span className="flex items-center gap-1">
-                  <span>🎯</span> {quiz.difficulty || 'Mixed'} Level
-                </span>
-              </div>
-            </CardContent>
-            <CardFooter className="bg-gray-50 flex justify-between p-4">
-              <Button 
-                onClick={() => handlePreview(quiz)}
-                variant="outline"
-                className="hover:bg-purple-50"
-              >
-                Preview 👀
-              </Button>
-              <Button 
-                onClick={() => router.push(`/quiz/${quiz._id}`)}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
-              >
-                Start Quiz 🚀
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      {/* Preview Modal */}
-      {isModalOpen && selectedQuiz && (
-        <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-purple-800 flex items-center gap-2">
-                <span>🎮</span> {selectedQuiz.title}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <p className="text-gray-600">{selectedQuiz.description}</p>
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-purple-800">Preview Questions</h3>
-                <ul className="space-y-4">
-                  {selectedQuiz.questions?.slice(0,3).map((question, idx) => (
-                    <li key={idx} className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
-                      <p className="font-medium text-purple-900 mb-2">
-                        <span className="text-purple-500">#{idx + 1}</span> {question.question}
-                      </p>
-                      <ul className="grid grid-cols-2 gap-2">
-                        {question.options.map((option, index) => (
-                          <li key={index} className="bg-white p-2 rounded border border-purple-200 text-sm">
-                            {option}
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
+      <div className="space-y-8">
+        {/* Category and View Mode Filter Section */}
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-md">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🎮</span>
+              <h2 className="text-xl font-bold text-purple-800">
+                {selectedCategory ? selectedCategory : 'All Categories'}
+              </h2>
+            </div>
+            <div className="flex gap-3">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[200px] bg-white border-2 border-purple-200 hover:border-purple-400 transition-all">
+                  <SelectValue placeholder="Choose Category 📚" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="flex items-center gap-2">
+                    <span>🌟</span> All Categories
+                  </SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category} className="flex items-center gap-2">
+                      <span>📚</span> {category}
+                    </SelectItem>
                   ))}
-                </ul>
-                {(selectedQuiz.questions?.length ?? 0) > 3 && (
-                  <p className="text-sm text-gray-500 italic">
-                    Showing first 3 of {selectedQuiz.questions?.length} questions
-                  </p>
-                )}
-              </div>
-
-              {/* Action Buttons - Only shows edit and delete for user's own quizzes */}
-              <div className="flex justify-end space-x-2 mt-4">
-                {user && selectedQuiz.userId === user._id && (
-                  <>
-                    <Button onClick={() => router.push(`/quiz/edit/${selectedQuiz._id}`)}>
-                      Edit ✏️
-                    </Button>
-                    <Button onClick={() => handleDelete(selectedQuiz._id)} className="bg-red-500 hover:bg-red-600 text-white">
-                      Delete 🗑️
-                    </Button>
-                  </>
-                )}
-                <Button onClick={handleCloseModal}>Close</Button>
+                </SelectContent>
+              </Select>
+    
+              {/* View Mode Selector */}
+              {user && (
+                <div className="bg-white rounded-md border-2 border-purple-200 p-1 flex">
+                  <button
+                    onClick={() => setViewMode('all')}
+                    className={`px-3 py-1 rounded-md text-sm transition-all ${
+                      viewMode === 'all' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'hover:bg-purple-50'
+                    }`}
+                  >
+                    All Quizzes
+                  </button>
+                  <button
+                    onClick={() => setViewMode('mine')}
+                    className={`px-3 py-1 rounded-md text-sm transition-all ${
+                      viewMode === 'mine' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'hover:bg-purple-50'
+                    }`}
+                  >
+                    My Quizzes
+                  </button>
+                  <button
+                    onClick={() => setViewMode('community')}
+                    className={`px-3 py-1 rounded-md text-sm transition-all ${
+                      viewMode === 'community' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'hover:bg-purple-50'
+                    }`}
+                  >
+                    Community
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+    
+          {/* Conditional section headers */}
+          {user && viewMode === 'mine' && (
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-3 mt-4 flex items-center gap-3">
+              <span className="p-2 bg-yellow-200 rounded-full">👑</span>
+              <div>
+                <h3 className="font-bold text-yellow-800">My Created Quizzes</h3>
+                <p className="text-sm text-yellow-700">Quizzes you've created for the community</p>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  );
-}
+          )}
+        </div>
+    
+        {/* Quiz Groups - My Quizzes and Community Quizzes */}
+        <div className="space-y-10">
+          {/* Quiz Grid */}
+          {(!user || viewMode !== 'community') && (
+            <div className="space-y-4">
+              {user && viewMode === 'all' && (
+                <h3 className="text-xl font-bold text-purple-800 flex items-center gap-2">
+                  <StarIcon className="h-5 w-5" /> My Quizzes
+                </h3>
+              )}
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {quizzes
+                  .filter(quiz => {
+                    if (!user) return true;
+                    if (viewMode === 'mine') return quiz.userId === user._id;
+                    if (viewMode === 'all' && !userOnly) return quiz.userId === user._id;
+                    return (viewMode === 'all' || viewMode === 'community');
+                  })
+                  .map((quiz) => {
+                    const isOwnQuiz = user && quiz.userId === user._id;
+                    
+                    // If we're in 'all' mode and this isn't the user's quiz, don't show it in this section
+                    if (viewMode === 'all' && !isOwnQuiz && !userOnly) return null;
+                    
+                    return (
+                      <Card 
+                        key={quiz._id} 
+                        className={`group transition-all duration-300 hover:-translate-y-1 overflow-hidden ${
+                          isOwnQuiz 
+                            ? 'hover:shadow-xl hover:shadow-yellow-200/30 border-2 border-yellow-200' 
+                            : 'hover:shadow-xl'
+                        }`}
+                      >
+                        <CardHeader className={`bg-gradient-to-br ${gradientColors[Math.floor(Math.random() * gradientColors.length)]} text-white`}>
+                          <div className="flex justify-between items-start">
+                            <CardTitle className="flex items-center gap-2">
+                              {isOwnQuiz && <span className="text-lg">👑</span>}
+                              <span>{quiz.title}</span>
+                            </CardTitle>
+                            
+                            {isOwnQuiz && (
+                              <div className="bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                <UserIcon className="h-3 w-3" /> My Quiz
+                              </div>
+                            )}
+                          </div>
+                          
+                          {quiz.category && (
+                            <Badge className="bg-white/20 hover:bg-white/30 transition-colors text-white">
+                              {quiz.category}
+                            </Badge>
+                          )}
+                        </CardHeader>
+                        
+                        <CardContent className="pt-6">
+                          <CardDescription className="text-gray-600">
+                            {quiz.description}
+                          </CardDescription>
+                          {/* Additional quiz info */}
+                          <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <span>📝</span> {quiz.questions?.length || 0} Questions
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span>🎯</span> {quiz.difficulty || 'Mixed'} Level
+                            </span>
+                          </div>
+                        </CardContent>
+                        
+                        <CardFooter className={`${isOwnQuiz ? 'bg-yellow-50' : 'bg-gray-50'} p-4`}>
+                          <div className="flex justify-between items-center w-full">
+                            <Button 
+                              onClick={() => handlePreview(quiz)}
+                              variant="outline"
+                              className="hover:bg-purple-50"
+                            >
+                              Preview 👀
+                            </Button>
+                            <Button
+                              onClick={() => handleClone(quiz)}
+                              variant="outline"
+                              className="border-blue-200 hover:bg-blue-50 text-blue-700"
+                            >
+                              <span className="flex items-center gap-1">
+                                📋 Clone
+                              </span>
+                            </Button>
+
+                            {isOwnQuiz ? (
+                              <div className="flex gap-2">
+                                <Button 
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-9 w-9 border-yellow-300 hover:bg-yellow-50"
+                                  onClick={() => router.push(`/quiz/edit/${quiz._id}`)}
+                                >
+                                  <PencilIcon className="h-4 w-4 text-yellow-600" />
+                                </Button>
+                                <Button 
+                                  onClick={() => router.push(`/quiz/${quiz._id}`)}
+                                  className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:from-yellow-600 hover:to-amber-600"
+                                >
+                                  Start 🚀
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button 
+                                onClick={() => router.push(`/quiz/${quiz._id}`)}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                              >
+                                Start Quiz 🚀
+                              </Button>
+                            )}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })
+                  .filter(Boolean)} {/* Filter out any null elements */}
+              </div>
+            </div>
+          )}
+    
+          {/* Community Quizzes */}
+          {user && (viewMode === 'all' || viewMode === 'community') && !userOnly && (
+            <div className="space-y-4">
+              {viewMode === 'all' && (
+                <h3 className="text-xl font-bold text-purple-800 flex items-center gap-2 pt-6">
+                  <span>🌍</span> Community Quizzes
+                </h3>
+              )}
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {quizzes
+                  .filter(quiz => !user || quiz.userId !== user._id)
+                  .map((quiz) => (
+                    <Card 
+                      key={quiz._id} 
+                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                    >
+                      <CardHeader className={`bg-gradient-to-br ${gradientColors[Math.floor(Math.random() * gradientColors.length)]} text-white`}>
+                        <CardTitle className="flex items-center gap-2">
+                          <span className="text-2xl">✨</span>
+                          {quiz.title}
+                        </CardTitle>
+                        {quiz.category && (
+                          <Badge className="bg-white/20 hover:bg-white/30 transition-colors text-white">
+                            {quiz.category}
+                          </Badge>
+                        )}
+                      </CardHeader>
+                      
+                      <CardContent className="pt-6">
+                        <CardDescription className="text-gray-600">
+                          {quiz.description}
+                        </CardDescription>
+                        <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <span>📝</span> {quiz.questions?.length || 0} Questions
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span>🎯</span> {quiz.difficulty || 'Mixed'} Level
+                          </span>
+                        </div>
+                      </CardContent>
+                      
+                      <CardFooter className="bg-gray-50 flex justify-between p-4">
+                        <Button 
+                          onClick={() => handlePreview(quiz)}
+                          variant="outline"
+                          className="hover:bg-purple-50"
+                        >
+                          Preview 👀
+                        </Button>
+                        {user && (
+                          <Button
+                            onClick={() => handleClone(quiz)}
+                            variant="outline"
+                            className="border-blue-200 hover:bg-blue-50 text-blue-700"
+                          >
+                            <span className="flex items-center gap-1">
+                              📋 Clone
+                            </span>
+                          </Button>
+                        )}
+                        <Button 
+                          onClick={() => router.push(`/quiz/${quiz._id}`)}
+                          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                        >
+                          Start Quiz 🚀
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+    
+        {/* Preview Modal (unchanged) */}
+        {/* Preview Modal */}
+        {isModalOpen && selectedQuiz && (
+          <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-purple-800 flex items-center gap-2">
+                  <span>🎮</span> {selectedQuiz.title}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <p className="text-gray-600">{selectedQuiz.description}</p>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-purple-800">Preview Questions</h3>
+                  <ul className="space-y-4">
+                    {selectedQuiz.questions?.slice(0,3).map((question, idx) => (
+                      <li key={idx} className="bg-purple-50 p-4 rounded-lg border-2 border-purple-100">
+                        <p className="font-medium text-purple-900 mb-2">
+                          <span className="text-purple-500">#{idx + 1}</span> {question.question}
+                        </p>
+                        <ul className="grid grid-cols-2 gap-2">
+                          {question.options.map((option, index) => (
+                            <li key={index} className="bg-white p-2 rounded border border-purple-200 text-sm">
+                              {option}
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ul>
+                  {(selectedQuiz.questions?.length ?? 0) > 3 && (
+                    <p className="text-sm text-gray-500 italic">
+                      Showing first 3 of {selectedQuiz.questions?.length} questions
+                    </p>
+                  )}
+                </div>
+
+                {/* Action Buttons - Only shows edit and delete for user's own quizzes */}
+                <div className="flex justify-end space-x-2 mt-4">
+                  {user && selectedQuiz.userId === user._id && (
+                    <>
+                      <Button onClick={() => router.push(`/quiz/edit/${selectedQuiz._id}`)}>
+                        Edit ✏️
+                      </Button>
+                      <Button onClick={() => handleDelete(selectedQuiz._id)} className="bg-red-500 hover:bg-red-600 text-white">
+                        Delete 🗑️
+                      </Button>
+                    </>
+                  )}
+                  <Button onClick={handleCloseModal}>Close</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    );
+  }
