@@ -16,6 +16,9 @@ import LoginForm from './LoginForm';
 import { Progress } from '../ui/progress'; 
 import { Crown, Star, Target, Trophy, Flame, Zap } from 'lucide-react';
 
+// Lottie animation import for logo
+import ExperCompassAnim from "../animations/ExperCompassAnim";
+
 const AchievementBanner = () => {  // Placeholder achievements
   const achievements = [ 
     { icon: Crown, label: 'Quiz Master', color: 'text-yellow-400' },
@@ -84,16 +87,10 @@ const Header = () => { // Header component
       <div className="wrapper flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="relative w-38 transform transition hover:scale-105">
-        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg -m-2"></div>
-          <div className="relative">
-            <Image 
-              src="/assets/images/logo.svg" 
-              alt="Exper logo" 
-              width={128} 
-              height={38}
-              className="drop-shadow-lg filter brightness-105 rounded-lg" 
-            />
-          </div>
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg -m-2"></div>
+            <div className="logo-container h-16 w-16 flex items-center justify-center">
+              <ExperCompassAnim />
+            </div>
         </Link>
 
         {/* Desktop Navigation */}

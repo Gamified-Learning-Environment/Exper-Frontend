@@ -5,6 +5,10 @@ import { useState, useEffect, useRef } from 'react'; // React hooks
 import { Quiz, QuestionAttempt, ProgressData } from '../types'; // Importing the Quiz and ProgressData interfaces from the types file
 import { useAuth } from '@/contexts/auth.context';
 
+import { triggerConfetti, triggerAchievementConfetti, 
+    triggerPerfectScoreConfetti, triggerLevelUpConfetti, 
+    triggerStreakConfetti } from '@/components/shared/effects/Confetti';
+
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
 
@@ -189,6 +193,15 @@ export const useQuiz = (quiz: Quiz ) => {
                 description: "Score 80% or higher",
                 icon: "🎯"
             });
+        }
+
+        // Score-based confetti
+        if (newScore === quiz.questions.length) {
+            // Perfect score
+            triggerPerfectScoreConfetti();
+        } else if (newScore >= quiz.questions.length * 0.75) {
+            // Good score
+            triggerConfetti();
         }
 
         setScore(newScore);

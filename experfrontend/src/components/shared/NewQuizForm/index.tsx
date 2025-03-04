@@ -9,6 +9,8 @@ import { ImageIcon, Upload, X } from 'lucide-react'; // Import icons
 import { Slider } from '@/components/ui/slider'; // Import slider component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+import AIToggleAnim from "@/components/animations/AIToggleAnim";
+
 export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm component, takes onClose and quiz as props
     const {
           formState,
@@ -99,7 +101,9 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
             {/* AI integration */}
             <div className='bg-purple-50 p-6 rounded-xl border-2 border-purple-200 space-y-4 transition-all hover:shadow-md'>
               <h3 className="text-xl font-bold text-purple-700 flex items-center gap-2">
-                <span className="bg-purple-200 p-2 rounded-lg">🤖</span>
+                <span className="bg-purple-200 p-2 rounded-lg flex items-center justify-center">
+                  <AIToggleAnim />
+                </span>
                 AI Magic
               </h3>
               <div className='space-y-4'>
