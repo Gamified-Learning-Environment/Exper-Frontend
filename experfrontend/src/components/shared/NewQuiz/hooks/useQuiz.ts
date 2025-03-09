@@ -9,6 +9,8 @@ import { triggerConfetti, triggerAchievementConfetti,
     triggerPerfectScoreConfetti, triggerLevelUpConfetti, 
     triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 
+import { GamificationService } from '@/services/gamification.service';
+
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
 
@@ -252,6 +254,70 @@ export const useQuiz = (quiz: Quiz ) => {
         
         } catch (error) {
             console.error('Error saving result:', error);
+        }
+
+        // Update gamification data
+        try {
+            const userId = user?._id;
+            if (!userId) {
+                console.error('Missing userId:', userId + " no user ID found");
+                throw new Error('No userId provided');
+            }
+
+            // Add experience based on score and difficulty
+            const gamificationResponse = await GamificationService.addExperience(
+                userId, 
+                xpGained, 
+                quiz.category
+            );
+            
+            // Update streak (category specific or generalised streak)
+            const streakResponse = await GamificationService.updateStreak(
+                userId, 
+                quiz.category
+            );
+
+            // Check achievements
+            if (newScore === quiz.questions.length) {
+                try {
+                    const achievementResponse = await GamificationService.awardAchievement(
+                        userId, 
+                        'perfect_score_achievement'
+                    );
+                    
+                    if (achievementResponse.level_up) {
+                        triggerLevelUpConfetti();
+                        // Display level up message
+                        setLevelProgress({
+                            current: achievementResponse.new_level,
+                            next: achievementResponse.new_level + 1,
+                            xp: gamificationResponse.new_xp,
+                            required: (achievementResponse.new_level + 1) * 500
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error awarding achievement:', error);
+                }
+            }
+
+            // Update state gamification results
+            setLevelProgress({
+                current: gamificationResponse.level,
+                next: gamificationResponse.level + 1,
+                xp: gamificationResponse.xp,
+                required: (gamificationResponse.level + 1) * 500
+            });
+
+            if (gamificationResponse.level_up) {
+                triggerLevelUpConfetti();
+            }
+
+            if(streakResponse.current_streak % 7 === 0){
+                triggerStreakConfetti();
+                setStreakDays(streakResponse.current_streak);
+            }
+        } catch (error) {
+            console.error('Error updating gamification data:', error);
         }
 
     }

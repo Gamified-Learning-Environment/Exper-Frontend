@@ -1,7 +1,10 @@
+'use client';
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
 import CategoryProgress from '@/components/shared/CategoryProgress';
+import Dashboard from "@/components/shared/Dashboard";
 
 export default function Home() {
   return (
@@ -96,6 +99,10 @@ export default function Home() {
 
           <div className="grid grid-cols-1 gap-6">
             <CategoryProgress />
+          </div>
+
+          <div>
+            <Dashboard />
           </div>
 
           {/* Recent Achievements Preview */}

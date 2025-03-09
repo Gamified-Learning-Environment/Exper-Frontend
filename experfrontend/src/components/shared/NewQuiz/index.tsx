@@ -11,12 +11,40 @@ import { QuestionTypeBreakdown } from './components/QuestionTypeBreakdown';
 import { WinLossRatioChart } from './components/WinLossRatioChart';
 import { useQuiz } from './hooks/useQuiz';
 import { QuizProps, QuizProgressLineProps, ResultsBarChartProps, QuestionTypeBreakdownProps } from './types';
+import { useGamification } from '@/components/shared/GamificationNotification'; // Import the Gamification context
+import { useEffect } from 'react';
 
 export default function Quiz({ quiz }: QuizProps) {
     const {
         quizState,
         handlers
     } = useQuiz(quiz);
+    const {
+        showNotification
+    } = useGamification();
+
+    // Listen for level-ups, achievements, etc.
+    useEffect(() => {
+        if (quizState.levelProgress && quizState.levelProgress.current > 0) {
+        showNotification({
+            message: `Leveled up to ${quizState.levelProgress.current}!`,
+            icon: '🏆',
+            type: 'level'
+        });
+        }
+    }, [quizState.levelProgress?.current]);
+    
+    useEffect(() => {
+        if (quizState.achievements.length > 0) {
+        quizState.achievements.forEach(achievement => {
+            showNotification({
+            message: `Achievement: ${achievement.title}`,
+            icon: achievement.icon,
+            type: 'achievement'
+            });
+        });
+        }
+    }, [quizState.achievements]);
 
     return (
         <Card className="mx-auto bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl border-2 border-indigo-100">
@@ -290,6 +318,47 @@ export default function Quiz({ quiz }: QuizProps) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Gamification elements */}
+                    {quizState.showResults && (
+                        <div className="mt-6 space-y-6">
+                        {/* XP Gained */}
+                        <div className="p-4 bg-purple-100 rounded-lg">
+                            <h4 className="font-bold">Experience Gained</h4>
+                            <div className="text-3xl font-bold text-purple-700">+{quizState.experienceGained} XP</div>
+                        </div>
+                        
+                        {/* Level Progress */}
+                        <div>
+                            <div className="flex justify-between text-sm mb-1">
+                            <span>Level {quizState.levelProgress.current}</span>
+                            <span>Level {quizState.levelProgress.next}</span>
+                            </div>
+                            <Progress 
+                            value={(quizState.levelProgress.xp / quizState.levelProgress.required) * 100} 
+                            className="h-3 bg-purple-100" 
+                            />
+                        </div>
+                        
+                        {/* Achievements */}
+                        {quizState.achievements.length > 0 && (
+                            <div className="space-y-2">
+                            <h4 className="font-bold">Achievements Unlocked</h4>
+                            <div className="grid grid-cols-1 gap-2">
+                                {quizState.achievements.map((achievement, i) => (
+                                <div key={i} className="flex items-center gap-3 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+                                    <div className="text-2xl">{achievement.icon}</div>
+                                    <div>
+                                    <div className="font-bold">{achievement.title}</div>
+                                    <div className="text-sm">{achievement.description}</div>
+                                    </div>
+                                </div>
+                                ))}
+                            </div>
+                            </div>
+                        )}
+                        </div>
+                    )}
 
                     {/* Progress Analytics - Row 1*/}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
