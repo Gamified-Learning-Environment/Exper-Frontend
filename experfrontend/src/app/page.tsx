@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
 import CategoryProgress from '@/components/shared/CategoryProgress';
 import Dashboard from "@/components/shared/Dashboard";
+import Achievements from "@/components/shared/Achievements";
 
 export default function Home() {
   return (
@@ -124,6 +125,12 @@ export default function Home() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+      <section className="py-12">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-purple-900 mb-6">My Achievements</h1>
+            <Achievements />
         </div>
       </section>
 
