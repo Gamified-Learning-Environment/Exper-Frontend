@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createContext, useContext, ReactNode } from 'react';
+import AchievementPopup from '../AchievementPopup';
 
 interface NotificationProps {
   message: string;
@@ -11,32 +12,65 @@ interface NotificationProps {
   type: 'achievement' | 'level' | 'streak' | 'badge';
 }
 
-export const GamificationContext = createContext({
-  showNotification: (notification: NotificationProps) => {},
+interface AchievementPopupProps {
+  title: string;
+  description: string;
+  icon: string;
+  xp_reward: number;
+}
+
+interface GamificationContextProps {
+  showNotification: (notification: NotificationProps) => void;
+  showAchievement: (achievement: AchievementPopupProps) => void;
+}
+
+export const GamificationContext = createContext<GamificationContextProps>({
+  showNotification: () => {},
+  showAchievement: () => {},
 });
 
 export function GamificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
+  const [achievements, setAchievements] = useState<AchievementPopupProps[]>([]);
   
+  // Handle normal notifications
   const showNotification = (notification: NotificationProps) => {
     setNotifications(prev => [...prev, notification]);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n !== notification));
-    }, 5000);
   };
   
+  // Handle PlayStation-style achievement popups
+  const showAchievement = (achievement: AchievementPopupProps) => {
+    // Play achievement sound
+    const achievementSound = new Audio('/sounds/achievement.mp3');
+    achievementSound.volume = 0.5;
+    achievementSound.play().catch(e => console.log('Audio play prevented:', e));
+    
+    setAchievements(prev => [...prev, achievement]);
+  };
+  
+  // Remove notifications after 5 seconds
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const timer = setTimeout(() => {
+        setNotifications(prev => prev.slice(1));
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notifications]);
+  
   return (
-    <GamificationContext.Provider value={{ showNotification }}>
+    <GamificationContext.Provider value={{ showNotification, showAchievement }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+
+      {/* Regular notifications */}
+      <div className="fixed bottom-4 right-4 z-40 space-y-2">
         <AnimatePresence>
-          {notifications.map((notification, i) => (
+          {notifications.map((notification, index) => (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 50, scale: 0.3 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              key={index}
+              initial={{ opacity: 0, scale: 0.5, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.5, y: 20 }}
               className={`
                 p-4 rounded-lg shadow-lg flex items-center gap-3 
@@ -52,6 +86,17 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Achievement popups */}
+      <AnimatePresence>
+        {achievements.map((achievement, index) => (
+          <AchievementPopup
+            key={index}
+            achievement={achievement}
+            onClose={() => setAchievements(prev => prev.filter((_, i) => i !== index))}
+          />
+        ))}
+      </AnimatePresence>
     </GamificationContext.Provider>
   );
 }

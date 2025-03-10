@@ -10,6 +10,7 @@ import { triggerConfetti, triggerAchievementConfetti,
     triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 
 import { GamificationService } from '@/services/gamification.service';
+import AchievementPopup from '@/components/shared/AchievementPopup';
 
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
@@ -32,6 +33,14 @@ export const useQuiz = (quiz: Quiz ) => {
     const [levelProgress, setLevelProgress] = useState({ current: 15, next: 16, xp: 2750, required: 3000 });
     const [achievements, setAchievements] = useState<{ title: string; description: string; icon: string }[]>([]);
     const [streakDays, setStreakDays] = useState(7);
+    const [currentAchievement, setCurrentAchievement] = useState<{ title: string; description: string; icon: string; xp_reward?: number } | null>(null);
+    
+    // Function to show achievement popup
+    const showAchievement = (achievement: { title: string; description: string; icon: string; xp_reward?: number }) => {
+        setCurrentAchievement(achievement);
+        // You may want to reset this after a delay to hide the popup
+        setTimeout(() => setCurrentAchievement(null), 5000);
+    };
 
     // Load from localStorage after mount if available
     useEffect(() => {
@@ -265,11 +274,15 @@ export const useQuiz = (quiz: Quiz ) => {
             }
 
             console.log('Updating gamification data for user:', userId);
+            
+            // Declare these variables in the outer scope
+            let gamificationResponse: any = null;
+            let streakResponse: any = null;
 
             try {
                 // Add experience based on score and difficulty
                 console.log('Adding experience:', xpGained, 'for category:', quiz.category);
-                const gamificationResponse = await GamificationService.addExperience(
+                gamificationResponse = await GamificationService.addExperience(
                     userId, 
                     xpGained, 
                     quiz.category
@@ -297,7 +310,7 @@ export const useQuiz = (quiz: Quiz ) => {
             try {
                 // Update streak (category specific or generalised streak)
                 console.log('Updating streak for category:', quiz.category);
-                const streakResponse = await GamificationService.updateStreak(
+                streakResponse = await GamificationService.updateStreak(
                     userId, 
                     quiz.category
                 );
@@ -312,29 +325,52 @@ export const useQuiz = (quiz: Quiz ) => {
                 // Continue with other requests even if this one fails
             }
         
-            // Check achievements
-            if (newScore === quiz.questions.length) {
-                try {
-                    console.log('Awarding perfect score achievement');
-                    const achievementResponse = await GamificationService.awardAchievement(
-                        userId, 
-                        'perfect_score_achievement'
-                    );
-                    console.log('Achievement awarded successfully:', achievementResponse);
-                    
-                    if (achievementResponse && achievementResponse.level_up) {
-                        triggerLevelUpConfetti();
-                        // Display level up message
-                        setLevelProgress({
-                            current: achievementResponse.new_level,
-                            next: achievementResponse.new_level + 1,
-                            xp: achievementResponse.xp_earned || 0,
-                            required: (achievementResponse.new_level + 1) * 500
-                        });
-                    }
-                } catch (achieveError) {
-                    console.error('Error awarding achievement:', achieveError);
-                }
+            // Check for achievements based on this quiz result
+            const achievementCheckData = {
+                quiz_completed: true,
+                perfect_score: newScore === quiz.questions.length,
+                completion_time: questionAttempts.reduce((total, attempt) => total + attempt.timeSpent, 0),
+                category: quiz.category
+            };
+            
+            const achievementResponse = await GamificationService.checkAchievements(userId, achievementCheckData);
+            
+            // Handle newly awarded achievements
+            if (achievementResponse?.awarded_achievements?.length > 0) {
+                // Store achievements in state for displaying in the UI
+                const newAchievements = achievementResponse.awarded_achievements.map((item: { achievement: { title: string; description: string; icon: string; xp_reward: number } }) => ({
+                    title: item.achievement.title,
+                    description: item.achievement.description,
+                    icon: item.achievement.icon,
+                    xp_reward: item.achievement.xp_reward
+                }));
+                
+                setAchievements(newAchievements);
+                
+                // Show trophy notification for each achievement (slight delay between each)
+                newAchievements.forEach((achievement: { title: string; description: string; icon: string; xp_reward: number }, index: number) => {
+                    setTimeout(() => {
+                        showAchievement(achievement);
+                        triggerAchievementConfetti();
+                    }, index * 2000); // 2 second delay between achievements
+                });
+            }
+            
+            // Handle level-up
+            if (gamificationResponse?.level_up) {
+                triggerLevelUpConfetti();
+                setLevelProgress({
+                    current: gamificationResponse.new_level,
+                    next: gamificationResponse.new_level + 1,
+                    xp: gamificationResponse.new_xp,
+                    required: (gamificationResponse.new_level + 1) * 500
+                });
+            }
+            
+            // Handle streak milestones
+            if (streakResponse?.current_streak && streakResponse.current_streak % 7 === 0) {
+                triggerStreakConfetti();
+                setStreakDays(streakResponse.current_streak);
             }
         } catch (error) {
             console.error('Error updating gamification data:', error);

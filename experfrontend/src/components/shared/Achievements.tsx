@@ -16,6 +16,7 @@ interface Achievement {
     requirement: string;
     xp_reward: number;
     dateUnlocked?: string; // Optional, only present if achievement is unlocked
+    achievement_id?: string; // Optional, used when comparing achievements
 }
 
 // Achievements component
@@ -67,7 +68,7 @@ export default function Achievements() {
 
     // check if an achievement is earned
     const isAchievementEarned = (achievementId: string) => { 
-        return userAchievements.some(a => a._id === achievementId); // .some returns true if at least one element in the array passes the test
+        return userAchievements.some(a => a.achievement_id === achievementId || a._id === achievementId); // .some returns true if at least one element in the array passes the test
     };
 
     // Get the date of unlocking for an achievement

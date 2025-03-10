@@ -105,6 +105,30 @@ export class GamificationService {
         return [];
       }
     }
+
+    static async checkAchievements(userId: string, data: any): Promise<any> {
+      try {
+        console.log('Checking achievements with data:', data);
+        const response = await fetch(`${API_URL}/player/${userId}/check-achievements`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server response error:', response.status, errorText);
+          // Return empty data instead of throwing to prevent quiz flow from breaking
+          return { awarded_achievements: [] };
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error checking achievements:', error);
+        return { awarded_achievements: [] };
+      }
+    }
     
     static async awardAchievement(userId: string, achievementId: string): Promise<any> {
       try {
