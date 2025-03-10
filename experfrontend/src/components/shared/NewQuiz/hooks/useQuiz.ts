@@ -264,60 +264,82 @@ export const useQuiz = (quiz: Quiz ) => {
                 throw new Error('No userId provided');
             }
 
-            // Add experience based on score and difficulty
-            const gamificationResponse = await GamificationService.addExperience(
-                userId, 
-                xpGained, 
-                quiz.category
-            );
-            
-            // Update streak (category specific or generalised streak)
-            const streakResponse = await GamificationService.updateStreak(
-                userId, 
-                quiz.category
-            );
+            console.log('Updating gamification data for user:', userId);
 
+            try {
+                // Add experience based on score and difficulty
+                console.log('Adding experience:', xpGained, 'for category:', quiz.category);
+                const gamificationResponse = await GamificationService.addExperience(
+                    userId, 
+                    xpGained, 
+                    quiz.category
+                );
+                console.log('Experience added successfully:', gamificationResponse);
+                
+                // Update levelProgress based on response
+                if (gamificationResponse) {
+                    setLevelProgress({
+                        current: gamificationResponse.new_level || 1,
+                        next: (gamificationResponse.new_level || 1) + 1,
+                        xp: gamificationResponse.new_xp || 0,
+                        required: ((gamificationResponse.new_level || 1) + 1) * 500
+                    });
+                    
+                    if (gamificationResponse.level_up) {
+                        triggerLevelUpConfetti();
+                    }
+                }
+            } catch (expError) {
+                console.error('Error adding experience:', expError);
+                // Continue with other requests even if this one fails
+            }
+            
+            try {
+                // Update streak (category specific or generalised streak)
+                console.log('Updating streak for category:', quiz.category);
+                const streakResponse = await GamificationService.updateStreak(
+                    userId, 
+                    quiz.category
+                );
+                console.log('Streak updated successfully:', streakResponse);
+                
+                if (streakResponse && streakResponse.current_streak % 7 === 0) {
+                    triggerStreakConfetti();
+                    setStreakDays(streakResponse.current_streak);
+                }
+            } catch (streakError) {
+                console.error('Error updating streak:', streakError);
+                // Continue with other requests even if this one fails
+            }
+        
             // Check achievements
             if (newScore === quiz.questions.length) {
                 try {
+                    console.log('Awarding perfect score achievement');
                     const achievementResponse = await GamificationService.awardAchievement(
                         userId, 
                         'perfect_score_achievement'
                     );
+                    console.log('Achievement awarded successfully:', achievementResponse);
                     
-                    if (achievementResponse.level_up) {
+                    if (achievementResponse && achievementResponse.level_up) {
                         triggerLevelUpConfetti();
                         // Display level up message
                         setLevelProgress({
                             current: achievementResponse.new_level,
                             next: achievementResponse.new_level + 1,
-                            xp: gamificationResponse.new_xp,
+                            xp: achievementResponse.xp_earned || 0,
                             required: (achievementResponse.new_level + 1) * 500
                         });
                     }
-                } catch (error) {
-                    console.error('Error awarding achievement:', error);
+                } catch (achieveError) {
+                    console.error('Error awarding achievement:', achieveError);
                 }
-            }
-
-            // Update state gamification results
-            setLevelProgress({
-                current: gamificationResponse.level,
-                next: gamificationResponse.level + 1,
-                xp: gamificationResponse.xp,
-                required: (gamificationResponse.level + 1) * 500
-            });
-
-            if (gamificationResponse.level_up) {
-                triggerLevelUpConfetti();
-            }
-
-            if(streakResponse.current_streak % 7 === 0){
-                triggerStreakConfetti();
-                setStreakDays(streakResponse.current_streak);
             }
         } catch (error) {
             console.error('Error updating gamification data:', error);
+            // Don't let gamification errors prevent the quiz from completing
+            // We'll still show the results even if gamification fails
         }
 
     }

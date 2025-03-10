@@ -1,4 +1,4 @@
-// src/components/GamificationNotification/index.tsx
+// GamificationNotification component is used to show notifications for achievements, levels, streaks, and badges. It uses the GamificationContext to show notifications. The notifications are shown at the bottom right of the screen and are removed after 5 seconds.
 'use client';
 
 import { useState, useEffect } from 'react';
