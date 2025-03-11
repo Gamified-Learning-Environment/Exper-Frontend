@@ -40,8 +40,9 @@ const CategoryProgress = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Responsive grid columns for chart sections based on window width
     const chartGridCols = windowWidth < 1024 ? 
-        (windowWidth < 768 ? "grid-cols-1" : "grid-cols-2") : 
+        (windowWidth < 768 ? "grid-cols-1" : "grid-cols-3") : 
         "grid-cols-3";
 
     // Helper function to calculate standard deviation
@@ -374,8 +375,9 @@ const CategoryProgress = () => {
                         </div>
                     </div>
 
-                    <div className={`grid ${chartGridCols} grid-cols-1 md:grid-cols-2 gap-6`}>
-                        {/* Performance Analysis */}
+                    <div className={`grid ${chartGridCols} grid-cols-1 md:grid-cols-3 gap-6`}>
+                        
+                        {/* Performance Analysis - RadarChart */}
                         <div className="bg-white rounded-xl shadow-sm p-4">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">
                             Performance Analysis
@@ -391,7 +393,7 @@ const CategoryProgress = () => {
                         </div>
 
                         {/* Performance Heatmap */}
-                        <div className="bg-white rounded-xl shadow-sm p-4">
+                        <div className="col-span-2 bg-white rounded-xl shadow-sm p-4">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">
                                 Performance Heatmap
                             </h3>

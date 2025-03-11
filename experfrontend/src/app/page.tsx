@@ -3,11 +3,70 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/auth.context';
+import { GamificationService } from '@/services/gamification.service';
 import CategoryProgress from '@/components/shared/CategoryProgress';
 import Dashboard from "@/components/shared/Dashboard";
 import Achievements from "@/components/shared/Achievements";
 
 export default function Home() {
+  const { user } = useAuth();
+  const [playerStats, setPlayerStats] = useState<any>(null);
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [trackedChallenges, setTrackedChallenges] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGamificationData = async () => {
+      if (!user?._id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Get player stats (level, xp, streak)
+        const stats = await GamificationService.getPlayerStats(user._id);
+        setPlayerStats(stats);
+        
+        // Get active challenges
+        const activeChallenges = await GamificationService.getActiveChallenges();
+        setChallenges(activeChallenges);
+        
+        // Get tracked challenges
+        const userTrackedChallenges = await GamificationService.getTrackedChallenges(user._id);
+        setTrackedChallenges(userTrackedChallenges);
+      } catch (err) {
+        console.error("Error fetching gamification data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchGamificationData();
+  }, [user?._id]);
+
+  // Calculate values for cards
+  const challengesCompleted = trackedChallenges.filter(c => c.progress === 100).length;
+  const totalDailyChallenges = Math.min(3, challenges.filter(c => c.category === 'Daily').length);
+  const challengePercentage = totalDailyChallenges > 0 
+    ? Math.round((challengesCompleted / totalDailyChallenges) * 100) 
+    : 0;
+    
+  // Calculate the streak values
+  const currentStreak = playerStats?.streakDays || 0;
+  const nextMilestone = Math.ceil(currentStreak / 7) * 7;
+  const streakProgress = ((currentStreak % 7) / 7) * 100;
+  const daysToMilestone = nextMilestone - currentStreak;
+  
+  // Calculate level progress
+  const level = playerStats?.level || 1;
+  const currentXP = playerStats?.xp || 0;
+  const requiredXP = playerStats?.totalXpRequired || 500;
+  const levelProgress = Math.round((currentXP / requiredXP) * 100);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-100 to-purple-100">
       {/* Hero Section */}
@@ -54,12 +113,25 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-yellow-700">Daily Challenges</h3>
-                  <p className="text-sm text-yellow-600">2/3 completed today</p>
+                  <p className="text-sm text-yellow-600">
+                    {loading 
+                      ? "Loading..." 
+                      : `${challengesCompleted}/${totalDailyChallenges} completed today`}
+                  </p>
                 </div>
               </CardHeader>
               <CardContent>
-                <Progress value={66} className="h-2 mb-2" />
-                <p className="text-sm text-yellow-600">Complete one more for bonus XP!</p>
+              <Progress 
+                  value={loading ? 0 : challengePercentage} 
+                  className="h-2 mb-2" 
+                />
+                <p className="text-sm text-yellow-600">
+                  {loading 
+                    ? "Loading challenges..." 
+                    : totalDailyChallenges - challengesCompleted > 0 
+                      ? `Complete ${totalDailyChallenges - challengesCompleted} more for bonus XP!`
+                      : "All challenges completed! Well done!"}
+                </p>
               </CardContent>
             </Card>
 
@@ -71,12 +143,23 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-red-700">Current Streak</h3>
-                  <p className="text-sm text-red-600">7 Days! 🔥</p>
+                  <p className="text-sm text-red-600">
+                    {loading ? "Loading..." : `${currentStreak} Days! 🔥`}
+                  </p>
                 </div>
               </CardHeader>
               <CardContent>
-                <Progress value={70} className="h-2 mb-2" />
-                <p className="text-sm text-red-600">3 days until next reward!</p>
+              <Progress 
+                  value={loading ? 0 : streakProgress} 
+                  className="h-2 mb-2" 
+                />
+                <p className="text-sm text-red-600">
+                  {loading 
+                    ? "Loading streak data..." 
+                    : daysToMilestone > 0
+                      ? `${daysToMilestone} days until next reward!`
+                      : "You've hit a streak milestone! Claim your reward!"}
+                </p>
               </CardContent>
             </Card>
 
@@ -87,23 +170,35 @@ export default function Home() {
                   <Brain className="w-8 h-8 text-purple-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-purple-700">Level 15</h3>
-                  <p className="text-sm text-purple-600">2,750 / 3,000 XP</p>
+                <h3 className="text-xl font-bold text-purple-700">
+                    {loading ? "Level" : `Level ${level}`}
+                  </h3>
+                  <p className="text-sm text-purple-600">
+                    {loading ? "Loading..." : `${currentXP} / ${requiredXP} XP`}
+                  </p>
                 </div>
               </CardHeader>
               <CardContent>
-                <Progress value={92} className="h-2 mb-2" />
-                <p className="text-sm text-purple-600">Almost at Level 16!</p>
+              <Progress 
+                  value={loading ? 0 : levelProgress} 
+                  className="h-2 mb-2" 
+                />
+                <p className="text-sm text-purple-600">
+                  {loading 
+                    ? "Loading level data..." 
+                    : levelProgress >= 90
+                      ? `Almost at Level ${level + 1}!`
+                      : `${requiredXP - currentXP} XP needed for Level ${level + 1}`}
+                </p>
               </CardContent>
             </Card>
+          </div>
+          <div>
+            <Dashboard />
           </div>
 
           <div className="grid grid-cols-1 gap-6">
             <CategoryProgress />
-          </div>
-
-          <div>
-            <Dashboard />
           </div>
 
           {/* Recent Achievements Preview */}

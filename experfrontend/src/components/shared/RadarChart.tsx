@@ -23,18 +23,20 @@ const RadarChart = ({ data, maxValue = 100 }: RadarChartProps) => {
     d3.select(chartRef.current).selectAll('*').remove();
 
     // Chart dimensions
-    const margin = { top: 10, right: 30, bottom: 10, left: 30 };
+    const margin = { top: 10, right: 30, bottom: 30, left: 30 };
     const containerWidth = chartRef.current?.clientWidth || 300;
     const width = containerWidth - margin.left - margin.right;
-    const height = 200;
-    const radius = Math.min(width, height) / 2 - 20;
+    const height = 250;
+    const radius = Math.min(width, height) / 2 - 30;
 
     // Create SVG
     const svg = d3.select(chartRef.current)
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
+      .attr('viewBox', `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
       .append('g')
-      .attr('transform', `translate(${(width + margin.left + margin.right) / 2},${(height + margin.top + margin.bottom) / 2})`);
+      // Center the chart
+      .attr('transform', `translate(${(width + margin.left + margin.right) / 2},${(height + margin.top) / 2})`);
 
     // Scale for radius
     const rScale = d3.scaleLinear()
@@ -80,9 +82,21 @@ const RadarChart = ({ data, maxValue = 100 }: RadarChartProps) => {
       .enter()
       .append('text')
       .attr('class', 'axis-label')
-      .attr('x', (_, i) => (radius + 20) * Math.cos(angleSlice * i - Math.PI / 2))
-      .attr('y', (_, i) => (radius + 20) * Math.sin(angleSlice * i - Math.PI / 2))
-      .style('text-anchor', 'middle')
+      .attr('x', (_, i) => {
+        const angle = angleSlice * i - Math.PI / 2;
+        const labelRadius = radius + 25; 
+        return labelRadius * Math.cos(angle);
+      })
+      .attr('y', (_, i) => {
+        const angle = angleSlice * i - Math.PI / 2;
+        const labelRadius = radius + 25; 
+        return labelRadius * Math.sin(angle);
+      })
+      .style('text-anchor', (_, i) => {
+        const angle = angleSlice * i - Math.PI / 2;
+        if (Math.abs(angle) < 0.1 || Math.abs(angle - Math.PI) < 0.1) return 'middle';
+        return angle > 0 && angle < Math.PI ? 'start' : 'end';
+      })
       .style('font-size', '12px')
       .style('fill', 'rgb(107, 114, 128)')
       .text(d => d.metric);
@@ -143,10 +157,11 @@ const RadarChart = ({ data, maxValue = 100 }: RadarChartProps) => {
   }, [data, maxValue, chartRef.current?.clientWidth]);
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full h-full overflow-x-auto">
       <svg
         ref={chartRef}
-        className="w-full bg-white rounded-lg shadow-md p-4"
+        className="w-full h-full bg-white rounded-lg shadow-md p-4"
+        style={{ minHeight: "280px"}}
       />
     </div>
   );
