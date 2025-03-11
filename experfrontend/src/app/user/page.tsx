@@ -6,8 +6,9 @@ import { useAuth } from '@/contexts/auth.context';
 import PlayerProfile from "@/components/shared/PlayerProfile";
 import Achievements from "@/components/shared/Achievements";
 import CategoryProgress from "@/components/shared/CategoryProgress";
+import Campaigns from "@/components/shared/Campaigns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, ChartLine, User } from 'lucide-react';
+import { Trophy, ChartLine, User, Sword } from 'lucide-react';
 
 // ProfilePage component
 export default function ProfilePage() {
@@ -36,6 +37,9 @@ export default function ProfilePage() {
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="w-4 h-4" /> Profile
           </TabsTrigger>
+          <TabsTrigger value="campaigns" className="flex items-center gap-2">
+            <Sword className="w-4 h-4" /> Campaigns
+          </TabsTrigger>
           <TabsTrigger value="achievements" className="flex items-center gap-2">
             <Trophy className="w-4 h-4" /> Achievements
           </TabsTrigger>
@@ -47,6 +51,10 @@ export default function ProfilePage() {
         {/* Profile, achievements, and category progress content */}
         <TabsContent value="profile" className="space-y-6">
           <PlayerProfile />
+        </TabsContent>
+
+        <TabsContent value="campaigns">
+          <Campaigns />
         </TabsContent>
         
         <TabsContent value="achievements">
