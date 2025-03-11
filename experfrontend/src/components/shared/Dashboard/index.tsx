@@ -193,7 +193,6 @@ export default function Dashboard() {
           {Object.keys(categorizedChallenges).map(category => (
             <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
           ))}
-          <TabsTrigger value="achievements">Achievements</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all">
@@ -276,33 +275,7 @@ export default function Dashboard() {
           </TabsContent>
         ))}
         
-        <TabsContent value="achievements">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {achievements.map(achievement => (
-              <Card key={achievement._id} className="p-4 border-2 border-yellow-200 bg-yellow-50">
-                <div className="flex items-start gap-3">
-                  <div className="p-3 bg-yellow-100 rounded-xl">
-                    {getIconForAchievement(achievement.icon)}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-yellow-700">{achievement.title}</h3>
-                    <p className="text-gray-600 text-sm">{achievement.description}</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Unlocked: {new Date(achievement.dateUnlocked).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-            
-            {achievements.length === 0 && (
-              <div className="col-span-full text-center py-12 text-gray-500">
-                <p>No achievements unlocked yet.</p>
-                <p className="text-sm mt-2">Complete challenges and quizzes to earn achievements!</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
+        
       </Tabs>
     </div>
   );

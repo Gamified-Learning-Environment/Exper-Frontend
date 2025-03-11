@@ -17,6 +17,15 @@ interface Achievement {
     xp_reward: number;
     dateUnlocked?: string; // Optional, only present if achievement is unlocked
     achievement_id?: string; // Optional, used when comparing achievements
+    condition?: { // Optional, used to check if the achievement is earned, aids with progress
+      quizzes_completed?: number;
+      perfect_scores?: number;
+      streak_days?: number;
+      unique_categories?: number;
+      level?: number;
+      time_under?: number;
+      perfect_score?: boolean;
+  };
 }
 
 // Achievements component
@@ -94,6 +103,41 @@ export default function Achievements() {
         );
     }
 
+    const calculateProgress = (achievement: Achievement): number => {
+      if (!achievement.condition || !user?._id) return 0;
+      if (isAchievementEarned(achievement._id)) return 100;
+      
+      const { condition } = achievement;
+      
+      // Get the relevant stats
+      const stats = {
+          quizzes_completed: userAchievements.length,
+          perfect_scores: userAchievements.filter(a => a.title.includes("Perfect")).length,
+          streak_days: userAchievements.find(a => a.title.includes("Streak"))?.dateUnlocked ? 
+              parseInt(userAchievements.find(a => a.title.includes("Streak"))?.description.match(/\d+/)?.[0] || "0") : 0,
+          unique_categories: new Set(userAchievements.map(a => a.achievement_id?.split('-')[0])).size,
+          level: parseInt(userAchievements.find(a => a.title.includes("Level"))?.description.match(/\d+/)?.[0] || "1"),
+      };
+      
+      // Calculate progress based on condition type
+      if (condition.quizzes_completed) {
+          return Math.min(100, Math.round((stats.quizzes_completed / condition.quizzes_completed) * 100));
+      } else if (condition.perfect_scores) {
+          return Math.min(100, Math.round((stats.perfect_scores / condition.perfect_scores) * 100));
+      } else if (condition.streak_days) {
+          return Math.min(100, Math.round((stats.streak_days / condition.streak_days) * 100));
+      } else if (condition.unique_categories) {
+          return Math.min(100, Math.round((stats.unique_categories / condition.unique_categories) * 100));
+      } else if (condition.level) {
+          return Math.min(100, Math.round((stats.level / condition.level) * 100));
+      } else if (condition.perfect_score) {
+          // Binary condition - either 0% or 100%
+          return 0;
+      }
+      
+      return 0;
+    };
+
     return ( // Display the achievements
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-md">
@@ -144,6 +188,21 @@ export default function Achievements() {
                             {earned && <span className="ml-2 text-sm">✓</span>}
                           </h3>
                           <p className="text-gray-600 text-sm">{achievement.description}</p>
+
+                          {/* Progress bar */}
+                          {!earned && (
+                            <div className="mt-2 mb-1">
+                              <div className="flex justify-between items-center text-xs text-gray-500">
+                                <span>Progress</span>
+                                <span>{calculateProgress(achievement)}%</span>
+                              </div>
+                              <Progress 
+                                value={calculateProgress(achievement)} 
+                                className={`h-2 mt-1 ${calculateProgress(achievement) > 0 ? "bg-gradient-to-r from-purple-500 to-indigo-500" : "bg-gray-300"}`}
+                              />
+                            </div>
+                          )}
+
                           <div className="mt-2 flex items-center justify-between">
                             <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
                               +{achievement.xp_reward} XP
@@ -151,6 +210,11 @@ export default function Achievements() {
                             {unlockDate && (
                               <span className="text-xs text-gray-500">
                                 Unlocked: {unlockDate}
+                              </span>
+                            )}
+                            {!earned && (
+                              <span className="text-xs text-gray-500">
+                                {achievement.requirement}
                               </span>
                             )}
                           </div>
@@ -203,27 +267,44 @@ export default function Achievements() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {achievements
                   .filter(achievement => !isAchievementEarned(achievement._id))
-                  .map(achievement => (
-                    <Card key={achievement._id} className="p-4 border-2 border-gray-200 hover:border-purple-200">
-                      <div className="flex items-start gap-3">
-                        <div className="p-3 bg-gray-100 rounded-xl">
-                          {getIconForAchievement(achievement.icon)}
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-700">{achievement.title}</h3>
-                          <p className="text-gray-600 text-sm">{achievement.description}</p>
-                          <div className="mt-2 flex items-center justify-between">
-                            <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
-                              +{achievement.xp_reward} XP
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {achievement.requirement}
-                            </span>
+                  .map(achievement => {
+                    const progress = calculateProgress(achievement);
+
+                    return (
+                      <Card key={achievement._id} className="p-4 border-2 border-gray-200 hover:border-purple-200">
+                        <div className="flex items-start gap-3">
+                          <div className="p-3 bg-gray-100 rounded-xl">
+                            {getIconForAchievement(achievement.icon)}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-700">{achievement.title}</h3>
+                            <p className="text-gray-600 text-sm">{achievement.description}</p>
+
+                            {/* Progress bar */}
+                            <div className="mt-2 mb-1">
+                              <div className="flex justify-between items-center text-xs text-gray-500">
+                                <span>Progress</span>
+                                <span>{progress}%</span>
+                              </div>
+                              <Progress 
+                                value={progress} 
+                                className={`h-2 mt-1 ${progress > 0 ? "bg-gradient-to-r from-purple-500 to-indigo-500" : "bg-gray-300"}`}
+                              />
+                            </div>
+
+                            <div className="mt-2 flex items-center justify-between">
+                              <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                                +{achievement.xp_reward} XP
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {achievement.requirement}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
               </div>
             </TabsContent>
           </Tabs>

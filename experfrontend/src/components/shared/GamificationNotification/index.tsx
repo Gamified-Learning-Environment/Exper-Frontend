@@ -1,17 +1,19 @@
 // GamificationNotification component is used to show notifications for achievements, levels, streaks, and badges. It uses the GamificationContext to show notifications. The notifications are shown at the bottom right of the screen and are removed after 5 seconds.
-'use client';
+'use client'; 
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createContext, useContext, ReactNode } from 'react';
 import AchievementPopup from '../AchievementPopup';
 
+// Notification props for different types of notifications
 interface NotificationProps {
   message: string;
   icon: string;
   type: 'achievement' | 'level' | 'streak' | 'badge';
 }
 
+// Achievement popup props for displaying achievements
 interface AchievementPopupProps {
   title: string;
   description: string;
@@ -19,16 +21,19 @@ interface AchievementPopupProps {
   xp_reward: number;
 }
 
+// Context for showing notifications and achievements
 interface GamificationContextProps {
   showNotification: (notification: NotificationProps) => void;
   showAchievement: (achievement: AchievementPopupProps) => void;
 }
 
+// Gamification context
 export const GamificationContext = createContext<GamificationContextProps>({
   showNotification: () => {},
   showAchievement: () => {},
 });
 
+// Gamification provider for showing notifications and achievements
 export function GamificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const [achievements, setAchievements] = useState<AchievementPopupProps[]>([]);
@@ -40,11 +45,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   
   // Handle PlayStation-style achievement popups
   const showAchievement = (achievement: AchievementPopupProps) => {
-    // Play achievement sound
-    const achievementSound = new Audio('/sounds/achievement.mp3');
-    achievementSound.volume = 0.5;
-    achievementSound.play().catch(e => console.log('Audio play prevented:', e));
-    
+    console.log('GamificationProvider: Showing achievement popup:', achievement);
     setAchievements(prev => [...prev, achievement]);
   };
   
@@ -61,7 +62,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   
   return (
     <GamificationContext.Provider value={{ showNotification, showAchievement }}>
-      {children}
+      {children} 
 
       {/* Regular notifications */}
       <div className="fixed bottom-4 right-4 z-40 space-y-2">

@@ -4,13 +4,9 @@
 import { useState, useEffect, useRef } from 'react'; // React hooks
 import { Quiz, QuestionAttempt, ProgressData } from '../types'; // Importing the Quiz and ProgressData interfaces from the types file
 import { useAuth } from '@/contexts/auth.context';
-
-import { triggerConfetti, triggerAchievementConfetti, 
-    triggerPerfectScoreConfetti, triggerLevelUpConfetti, 
-    triggerStreakConfetti } from '@/components/shared/effects/Confetti';
-
+import { triggerConfetti, triggerAchievementConfetti, triggerPerfectScoreConfetti, triggerLevelUpConfetti, triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 import { GamificationService } from '@/services/gamification.service';
-import AchievementPopup from '@/components/shared/AchievementPopup';
+import { useGamification } from '@/components/shared/GamificationNotification'; // Add this import
 
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
@@ -19,9 +15,7 @@ export const useQuiz = (quiz: Quiz ) => {
     const { user } = useAuth();
 
     const [currentQuestion, setCurrentQuestion] = useState<number>(0); 
-    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>(
-        new Array(quiz.questions.length).fill('')
-    );
+    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>(new Array(quiz.questions.length).fill(''));
     const [showResults, setShowResults] = useState<boolean>(false);
     const [score, setScore] = useState<number>(0);
     const [questionAttempts, setQuestionAttempts] = useState<QuestionAttempt[]>([]);
@@ -30,17 +24,11 @@ export const useQuiz = (quiz: Quiz ) => {
 
     // Placeholder gamification
     const [experienceGained, setExperienceGained] = useState(0);
-    const [levelProgress, setLevelProgress] = useState({ current: 15, next: 16, xp: 2750, required: 3000 });
+    const [levelProgress, setLevelProgress] = useState({ current: 1, next: 2, xp: 0, required: 500 });
     const [achievements, setAchievements] = useState<{ title: string; description: string; icon: string }[]>([]);
     const [streakDays, setStreakDays] = useState(7);
     const [currentAchievement, setCurrentAchievement] = useState<{ title: string; description: string; icon: string; xp_reward?: number } | null>(null);
-    
-    // Function to show achievement popup
-    const showAchievement = (achievement: { title: string; description: string; icon: string; xp_reward?: number }) => {
-        setCurrentAchievement(achievement);
-        // You may want to reset this after a delay to hide the popup
-        setTimeout(() => setCurrentAchievement(null), 5000);
-    };
+    const { showAchievement } = useGamification();
 
     // Load from localStorage after mount if available
     useEffect(() => {
@@ -333,8 +321,10 @@ export const useQuiz = (quiz: Quiz ) => {
                 category: quiz.category
             };
             
+            console.log('Checking for achievements with data:', achievementCheckData);
             const achievementResponse = await GamificationService.checkAchievements(userId, achievementCheckData);
-            
+            console.log('Achievement check response:', achievementResponse);
+                        
             // Handle newly awarded achievements
             if (achievementResponse?.awarded_achievements?.length > 0) {
                 // Store achievements in state for displaying in the UI

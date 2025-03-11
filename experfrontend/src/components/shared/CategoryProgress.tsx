@@ -374,7 +374,7 @@ const CategoryProgress = () => {
                         </div>
                     </div>
 
-                    <div className={`grid ${chartGridCols} grid-cols-1 md:grid-cols-3 gap-6`}>
+                    <div className={`grid ${chartGridCols} grid-cols-1 md:grid-cols-2 gap-6`}>
                         {/* Performance Analysis */}
                         <div className="bg-white rounded-xl shadow-sm p-4">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">
@@ -400,7 +400,7 @@ const CategoryProgress = () => {
                             </div>
                         </div>
 
-                        {/* Score Distribution */}
+                        {/* Score Distribution 
                         <div className="bg-white rounded-xl shadow-sm p-4">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">
                                 Score Distribution
@@ -412,6 +412,8 @@ const CategoryProgress = () => {
                                 Box plot showing score distribution with quartiles, median, and outliers
                             </div>
                         </div>
+
+                        */}
                     </div>
                 </div>
             )}

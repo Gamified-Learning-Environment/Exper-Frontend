@@ -5,6 +5,7 @@ import Footer from "../components/shared/Footer";
 import { Poppins } from "next/font/google";
 import { createUser } from "@/lib/actions/user.actions";
 import { AuthProvider } from "@/contexts/auth.context";
+import { GamificationProvider } from '@/components/shared/GamificationNotification';
 
 const poppins = Poppins({ // Poppins font from Google Fonts
   subsets: ["latin"],
@@ -25,13 +26,15 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
   return (
     <html lang="en">
       <body className={poppins.variable}>
-        <AuthProvider>
-          <div className="flex h-screen flex-col"> 
-            <Header />
-                <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </AuthProvider>
+        <GamificationProvider>
+          <AuthProvider>
+            <div className="flex h-screen flex-col"> 
+              <Header />
+                  <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </AuthProvider>
+        </GamificationProvider>
       </body>
     </html>
   );

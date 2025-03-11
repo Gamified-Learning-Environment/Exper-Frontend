@@ -19,32 +19,6 @@ export default function Quiz({ quiz }: QuizProps) {
         quizState,
         handlers
     } = useQuiz(quiz);
-    const {
-        showNotification
-    } = useGamification();
-
-    // Listen for level-ups, achievements, etc.
-    useEffect(() => {
-        if (quizState.levelProgress && quizState.levelProgress.current > 0) {
-        showNotification({
-            message: `Leveled up to ${quizState.levelProgress.current}!`,
-            icon: '🏆',
-            type: 'level'
-        });
-        }
-    }, [quizState.levelProgress?.current]);
-    
-    useEffect(() => {
-        if (quizState.achievements.length > 0) {
-        quizState.achievements.forEach(achievement => {
-            showNotification({
-            message: `Achievement: ${achievement.title}`,
-            icon: achievement.icon,
-            type: 'achievement'
-            });
-        });
-        }
-    }, [quizState.achievements]);
 
     return (
         <Card className="mx-auto bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl border-2 border-indigo-100">
@@ -252,72 +226,7 @@ export default function Quiz({ quiz }: QuizProps) {
                             Try Again 🔄
                         </Button>
                     </div>
-                    {/* XP Gained Animation */}
-                    <div className="text-center animate-bounce">
-                        <span className="text-2xl font-bold text-yellow-500">+{quizState.experienceGained} XP</span>
-                    </div>
-
-                    {/* Level Progress */}
-                    <div className="bg-white p-4 rounded-xl shadow-md space-y-3">
-                        <div className="flex justify-between items-center">
-                            <span className="text-purple-700 font-semibold">Level {quizState.levelProgress.current}</span>
-                            <span className="text-purple-700 font-semibold">Level {quizState.levelProgress.next}</span>
-                        </div>
-                        <Progress 
-                            value={(quizState.levelProgress.xp + quizState.experienceGained) / quizState.levelProgress.required * 100}
-                            className="h-3"
-                        />
-                        <p className="text-sm text-center text-gray-600">
-                            {quizState.levelProgress.xp + quizState.experienceGained} / {quizState.levelProgress.required} XP
-                        </p>
-                    </div>
-
-                    {/* Achievements Unlocked */}
-                    {quizState.achievements.length > 0 && (
-                        <div className="bg-white p-4 rounded-xl shadow-md space-y-3">
-                            <h3 className="text-lg font-bold text-purple-800 flex items-center gap-2">
-                                <span>🎉</span> Achievements Unlocked!
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                {quizState.achievements.map((achievement, index) => (
-                                    <div key={index} 
-                                        className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-lg border-2 border-purple-200">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-3xl">{achievement.icon}</span>
-                                            <div>
-                                                <p className="font-semibold text-purple-900">{achievement.title}</p>
-                                                <p className="text-sm text-purple-600">{achievement.description}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Streak Progress */}
-                    <div className="bg-white p-4 rounded-xl shadow-md">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="text-2xl">🔥</span>
-                                <div>
-                                    <p className="font-semibold text-purple-900">{quizState.streakDays} Day Streak</p>
-                                    <p className="text-sm text-purple-600">Keep it up!</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-1">
-                                {[...Array(7)].map((_, i) => (
-                                    <div 
-                                        key={i}
-                                        className={`w-3 h-8 rounded-full ${
-                                            i < quizState.streakDays ? 'bg-gradient-to-t from-orange-500 to-yellow-500' 
-                                            : 'bg-gray-200'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     {/* Gamification elements */}
                     {quizState.showResults && (

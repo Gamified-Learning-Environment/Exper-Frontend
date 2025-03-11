@@ -5,6 +5,7 @@ import Image from 'next/image'
 import React, { useState} from 'react'
 import NavItems from './NavItems'
 import MobileNav from './MobileNav'
+import { useEffect } from 'react';
 
 // Auth imports
 import { useAuth } from '@/contexts/auth.context';
@@ -15,6 +16,7 @@ import LoginForm from './LoginForm';
 // level widget & achievements imports
 import { Progress } from '../ui/progress'; 
 import { Crown, Star, Target, Trophy, Flame, Zap } from 'lucide-react';
+import { GamificationService } from '@/services/gamification.service';
 
 // Lottie animation import for logo
 import ExperCompassAnim from "../animations/ExperCompassAnim";
@@ -49,27 +51,63 @@ const AchievementBanner = () => {  // Placeholder achievements
   );
 };
 
-const LevelWidget = () => { // placeholder Level widget component
-  // Level and percentage progress, hardcoded for now
-  const level = 15;
-  const progress = 65;
+// Level Widget for displaying user level and progress
+const LevelWidget = () => {
+  const { user } = useAuth();
+  const [playerStats, setPlayerStats] = useState<{
+    level: number;
+    xp: number;
+    totalXpRequired: number;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  return ( // return Level widget
+  useEffect(() => { // Fetch player stats on component mount
+    const fetchPlayerStats = async () => {
+      if (!user?._id) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        // Get player stats from gamification service
+        const stats = await GamificationService.getPlayerStats(user._id);
+        setPlayerStats(stats);
+      } catch (err) {
+        console.error("Error fetching player level stats:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPlayerStats();
+  }, [user?._id]);
+
+  // Calculate progress percentage
+  const progressPercentage = playerStats 
+    ? Math.round((playerStats.xp / playerStats.totalXpRequired) * 100)
+    : 0;
+
+  // If no user is logged in or stats are loading, return empty
+  if (!user || isLoading) {
+    return null;
+  }
+
+  return ( // Return level widget
     <div className="hidden md:flex items-center gap-3 rounded-full bg-white/20 px-6 py-3 backdrop-blur-sm">
       {/* Level number */}
       <span className="text-3xl font-bold text-white">
-        {level}
+        {playerStats?.level || 1}
       </span>
       
       {/* Progress container */}
       <div className="flex flex-col justify-center min-w-[160px]">
         <Progress 
-          value={progress}
+          value={progressPercentage}
           className="h-1.5 w-full"
         />
         {/* Progress text */}
         <span className="text-xs text-white/70 mt-1">
-          {progress}% to next level
+          {progressPercentage}% to level {(playerStats?.level || 1) + 1}
         </span>
       </div>
     </div>
@@ -101,7 +139,7 @@ const Header = () => { // Header component
         {/* Achievements Banner */}
         <AchievementBanner />
         
-        {/* Add Level Widget here */}
+        {/* Level Widget here */}
         <LevelWidget />
 
        {/* Auth Buttons */}
