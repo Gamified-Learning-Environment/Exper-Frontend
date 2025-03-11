@@ -65,6 +65,7 @@ export default function ProfilePage() {
           <CategoryProgress />
         </TabsContent>
       </Tabs>
+      
     </div>
   );
 }

@@ -174,7 +174,13 @@ export class GamificationService {
       });
       
       if (!response.ok) throw new Error('Failed to fetch campaigns');
-      return await response.json();
+      const campaigns = await response.json();
+
+      // Ensure each campaign has the expected ID field
+      return campaigns.map((campaign: any) => ({
+        ...campaign,
+        id: campaign.campaign_id || campaign._id,
+      }));
     } catch (error) {
         console.error('Error fetching campaigns:', error);
         return [];
@@ -194,53 +200,40 @@ export class GamificationService {
         
       // Find the active campaign
       const activeCampaign = campaigns.find((campaign: any) => campaign.isActive === true);
+      console.log("Found active campaign:", activeCampaign);
 
       if (!activeCampaign) return null;
+
+      // Make sure quests is an array
+      const quests = activeCampaign.quests || activeCampaign.campaign?.quests || [];
         
-        // Format to match frontend interface
-        return {
-            id: activeCampaign.campaign.campaign_id,
-            title: activeCampaign.campaign.title,
-            description: activeCampaign.campaign.description,
-            theme: {
-                primaryColor: activeCampaign.campaign.theme.primaryColor,
-                secondaryColor: activeCampaign.campaign.theme.secondaryColor,
-                backgroundImage: activeCampaign.campaign.theme.backgroundImage || '',
-                icon: ''
-            },
-            quests: activeCampaign.quests.map((q: any) => ({
-                id: q.id,
-                title: q.title,
-                description: q.description,
-                completed: q.completed,
-                locked: q.order > activeCampaign.currentQuestIndex,
-                progress: q.completed ? 100 : 0,
-                objectives: [],
-                rewards: { xp: 0 }
-            })),
-            progress: activeCampaign.progress,
-            currentQuestIndex: activeCampaign.currentQuestIndex,
-            completed: false
-        };
+      // Format to match frontend interface
+      return {
+        id: activeCampaign.campaign?.campaign_id || activeCampaign.campaign_id,
+        title: activeCampaign.campaign?.title || activeCampaign.title,
+        description: activeCampaign.campaign?.description || activeCampaign.description,
+        theme: {
+            primaryColor: activeCampaign.campaign?.theme?.primaryColor || '#6366f1',
+            secondaryColor: activeCampaign.campaign?.theme?.secondaryColor || '#8b5cf6',
+            backgroundImage: activeCampaign.campaign?.theme?.backgroundImage || '',
+            icon: ''
+        },
+        quests: Array.isArray(quests) ? quests.map((q: any) => ({
+            id: q.quest_id || q.id,
+            title: q.title,
+            description: q.description,
+            completed: q.completed || false,
+            locked: q.order > (activeCampaign.currentQuestIndex || 0),
+            progress: q.completed ? 100 : 0,
+            objectives: q.objectives || []
+        })) : [],
+        progress: activeCampaign.progress || 0,
+        currentQuestIndex: activeCampaign.currentQuestIndex || 0,
+        completed: activeCampaign.completed || false
+    };
     } catch (error) {
       console.error('Error fetching user campaigns:', error);
       return [];
-    }
-  }
-  
-  static async setActiveCampaign(userId: string, campaignId: string): Promise<any> {
-    try {
-      const response = await fetch(`${API_URL}/users/${userId}/campaigns/${campaignId}/activate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) throw new Error('Failed to activate campaign');
-      return await response.json();
-    } catch (error) {
-      console.error('Error activating campaign:', error);
-      return { success: false, error: 'Failed to activate campaign' };
     }
   }
   
@@ -263,14 +256,53 @@ export class GamificationService {
 
   static async activateCampaign(userId: string, campaignId: string): Promise<any> {
     try {
+        console.log(`Activating campaign ${campaignId} for user ${userId}`);
+
+        // Get the complete campaign object first to get the correct ID
+        const response1 = await fetch(`${API_URL}/campaigns/${campaignId}`, {
+          credentials: 'include'
+        });
+
+        if (!response1.ok) {
+          // If direct access fails, try alternate endpoint
+          const campaigns = await this.getCampaigns(userId);
+          const campaign = campaigns.find(c => c._id === campaignId || c.id === campaignId || c.campaign_id === campaignId);
+          
+          if (campaign) {
+            // Use the proper campaign_id from the found campaign
+            campaignId = campaign.campaign_id || campaignId;
+          }
+        } else {
+          // Use campaign_id from response if available
+          const campaignData = await response1.json();
+          if (campaignData.campaign_id) {
+            campaignId = campaignData.campaign_id;
+          }
+        }
+        
+        // Now use the proper ID for activation
+        console.log(`Using campaign ID for activation: ${campaignId}`);
         const response = await fetch(`${API_URL}/users/${userId}/campaigns/${campaignId}/activate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
         });
         
-        if (!response.ok) throw new Error('Failed to activate campaign');
-        return await response.json();
+        const data = await response.text();
+        console.log("API response:", data);
+        
+        
+        if (!response.ok) {
+          console.error(`Failed to activate campaign: ${response.status} ${response.statusText}`);
+          console.error("Response data:", data);
+          throw new Error(`Failed to activate campaign: ${response.status}`);
+        }
+        // Try to parse as JSON if possible
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          return { success: true, message: data };
+        }
     } catch (error) {
         console.error('Error activating campaign:', error);
         return { success: false, error: 'Failed to activate campaign' };

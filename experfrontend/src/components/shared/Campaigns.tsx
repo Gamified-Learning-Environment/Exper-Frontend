@@ -14,6 +14,9 @@ import { CampaignMap } from './CampaignMap';
 import { QuestCard } from './QuestCard';
 import { RewardDisplay } from './RewardDisplay';
 import { CampaignCard } from './CampaignCard';
+import { CampaignSelector } from './CampaignSelector';
+import { QuestRewardPopup } from './QuestRewardPopup';
+import { motion } from 'framer-motion';
 
 // Campaign and quest interfaces
 interface Quest {
@@ -32,6 +35,7 @@ interface Quest {
       type: string;
       id: string;
       name: string;
+      icon: string;
     }[];
   };
   completed: boolean;
@@ -60,6 +64,13 @@ export default function Campaigns() {
     const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("active");
+    const [rewardPopup, setRewardPopup] = useState<{
+      isOpen: boolean;
+      quest: any;
+    }>({
+      isOpen: false,
+      quest: null
+    });
 
     useEffect(() => { // Load campaigns and active campaign on component mount
         const loadCampaigns = async () => {
@@ -88,17 +99,28 @@ export default function Campaigns() {
     }, [user?._id]);
 
     const activateCampaign = async (campaignId: string) => {
-        if (!user?._id) return;
+        if (!user?._id) {
+          console.error("Cannot activate campaign: User ID is undefined");
+          return;
+        }
+
+        console.log(`Activating campaign ${campaignId} for user ${user._id}`);
         
         try {
-            await GamificationService.activateCampaign(user._id, campaignId);
-            
-            // Refresh the active campaign
-            const updatedActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);
-            setActiveCampaign(updatedActiveCampaign);
-            setActiveTab("active");
+          setIsLoading(true);
+          const result = await GamificationService.activateCampaign(user._id, campaignId);
+          console.log("Activation result:", result);
+          
+          // Refresh the active campaign
+          const updatedActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);
+          console.log("Updated active campaign:", updatedActiveCampaign);
+          
+          setActiveCampaign(updatedActiveCampaign);
+          setActiveTab("active");
         } catch (err) {
             console.error("Error activating campaign:", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -255,20 +277,15 @@ export default function Campaigns() {
             
             {/* Available Campaigns Tab */}
             <TabsContent value="available" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {campaigns
-                  .filter(c => !c.completed)
-                  .map((campaign, index) => (
-                    <CampaignCard 
-                      key={campaign.id || `campaign-${index}`} 
-                      campaign={campaign} 
-                      isActive={activeCampaign?.id === campaign.id}
-                      onActivate={activateCampaign}
-                    />
-                  ))}
-              </div>
-              
-              {campaigns.filter(c => !c.completed).length === 0 && (
+              {campaigns.filter(c => !c.completed).length > 0 ? (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-purple-100">
+                  <CampaignSelector 
+                    campaigns={campaigns.filter(c => !c.completed)} 
+                    onSelect={activateCampaign} 
+                    activeId={activeCampaign?.id} 
+                  />
+                </div>
+              ) : (
                 <div className="text-center py-16 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border-2 border-dashed border-purple-200">
                   <MapPin className="w-16 h-16 text-purple-300 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold text-purple-800">No Campaigns Available</h3>
@@ -300,6 +317,15 @@ export default function Campaigns() {
               )}
             </TabsContent>
           </Tabs>
+
+          {rewardPopup.quest && (
+            <QuestRewardPopup
+              isOpen={rewardPopup.isOpen}
+              onClose={() => setRewardPopup({ isOpen: false, quest: rewardPopup.quest })}
+              quest={rewardPopup.quest}
+            />
+          )}
+
         </div>
       );
     }
