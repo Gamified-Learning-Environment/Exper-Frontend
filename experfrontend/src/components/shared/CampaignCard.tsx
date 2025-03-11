@@ -3,97 +3,129 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Play, CheckCircle2 } from 'lucide-react';
-
-// CampaignCard props interface
+import { CheckCircle2, Star, Trophy, ArrowRight } from 'lucide-react';
 
 interface CampaignCardProps {
     campaign: {
-      id: string;
-      title: string;
-      description: string;
-      theme: {
-        primaryColor: string;
-        secondaryColor: string;
-        icon: string;
-        backgroundImage: string;
-      };
-      progress: number;
-      quests: any[];
+        id: string;
+        title: string;
+        description: string;
+        theme: {
+            primaryColor: string;
+            secondaryColor: string;
+            icon?: string;
+            backgroundImage?: string;
+        };
+        progress: number;
+        completed: boolean;
+        category?: string;
+        requiredLevel?: number;
     };
     isActive?: boolean;
     isCompleted?: boolean;
     onActivate?: (campaignId: string) => void;
-  }
+}
 
-  export function CampaignCard({ campaign, isActive, isCompleted, onActivate }: CampaignCardProps) {
+export function CampaignCard({
+    campaign,
+    isActive = false,
+    isCompleted = false,
+    onActivate
+}: CampaignCardProps) {
+    // Default background if none provided
+    const backgroundImage = campaign.theme.backgroundImage || 
+        `linear-gradient(45deg, ${campaign.theme.primaryColor}88, ${campaign.theme.secondaryColor}88)`;
+
     return (
-      <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
-        <div 
-          className="h-40 bg-cover bg-center relative" 
-          style={{ 
-            backgroundImage: `url(${campaign.theme.backgroundImage})`,
-            backgroundColor: campaign.theme.primaryColor 
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-          {isActive && (
-            <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
-              <Play className="w-3 h-3 mr-1" /> Active
+        <Card className="overflow-hidden transition-all hover:shadow-lg">
+            <div 
+                className="h-32 bg-cover bg-center relative"
+                style={{ 
+                    backgroundImage: `url(${campaign.theme.backgroundImage})`,
+                    backgroundColor: campaign.theme.primaryColor
+                }}
+            >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                
+                {/* Status badge */}
+                {(isActive || isCompleted) && (
+                    <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium
+                        ${isActive ? 'bg-yellow-400 text-yellow-900' : 'bg-green-500 text-white'}`}>
+                        <div className="flex items-center gap-1">
+                            {isActive ? (
+                                <>
+                                    <Star className="h-3 w-3" />
+                                    <span>Active</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    <span>Completed</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+                
+                {/* Category & Level tag */}
+                <div className="absolute bottom-3 left-4 flex gap-2">
+                    {campaign.category && (
+                        <div className="bg-black/40 backdrop-blur-sm text-xs px-2 py-1 rounded-full text-white">
+                            {campaign.category}
+                        </div>
+                    )}
+                    
+                    {campaign.requiredLevel && (
+                        <div className="bg-black/40 backdrop-blur-sm text-xs px-2 py-1 rounded-full text-white flex items-center gap-1">
+                            <Trophy className="h-3 w-3" />
+                            Level {campaign.requiredLevel}+
+                        </div>
+                    )}
+                </div>
             </div>
-          )}
-          {isCompleted && (
-            <div className="absolute top-3 right-3 bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
-              <Trophy className="w-3 h-3 mr-1" /> Completed
+            
+            <div className="p-4">
+                <h3 className="text-xl font-bold text-purple-900">{campaign.title}</h3>
+                <p className="mt-1 text-gray-600 line-clamp-2">{campaign.description}</p>
+                
+                {/* Progress bar (if not completed) */}
+                {!isCompleted && (
+                    <div className="mt-4">
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Progress</span>
+                            <span>{campaign.progress}%</span>
+                        </div>
+                        <Progress 
+                            value={campaign.progress} 
+                            className="h-2" 
+                        />
+                    </div>
+                )}
+                
+                {/* Action button */}
+                <div className="mt-4">
+                    {isActive ? (
+                        <Button 
+                            className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-amber-900"
+                        >
+                            Continue Campaign <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                    ) : isCompleted ? (
+                        <Button 
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-500"
+                        >
+                            View Achievements <Trophy className="h-4 w-4 ml-2" />
+                        </Button>
+                    ) : onActivate ? (
+                        <Button 
+                            className="w-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                            onClick={() => onActivate(campaign.id)}
+                        >
+                            Start Campaign <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                    ) : null}
+                </div>
             </div>
-          )}
-        </div>
-        
-        <div className="p-5">
-          <h3 className="text-xl font-bold text-purple-900 mb-2">{campaign.title}</h3>
-          <p className="text-gray-600 text-sm mb-4">{campaign.description}</p>
-          
-          <div className="flex justify-between text-sm text-gray-500 mb-1">
-            <span>{campaign.quests.length} quests</span>
-            <span>{campaign.progress}% complete</span>
-          </div>
-          <Progress 
-            value={campaign.progress} 
-            className="h-2 mb-4" 
-            style={{ 
-              backgroundColor: `${campaign.theme.secondaryColor}30`,
-              color: campaign.theme.primaryColor
-            }} 
-          />
-          
-          {!isActive && !isCompleted && onActivate && (
-            <Button 
-              onClick={() => onActivate(campaign.id)}
-              className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white"
-            >
-              Start Campaign
-            </Button>
-          )}
-          
-          {isActive && (
-            <Button 
-              variant="outline" 
-              className="w-full border-2 border-purple-200 text-purple-700"
-            >
-              Continue
-            </Button>
-          )}
-          
-          {isCompleted && (
-            <Button 
-              variant="outline" 
-              className="w-full border-2 border-yellow-200 text-yellow-700"
-              disabled
-            >
-              <CheckCircle2 className="w-4 h-4 mr-2" /> Completed
-            </Button>
-          )}
-        </div>
-      </Card>
+        </Card>
     );
-  }
+}

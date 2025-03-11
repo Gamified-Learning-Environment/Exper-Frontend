@@ -165,36 +165,74 @@ export class GamificationService {
 
   static async getCampaigns(userId: string): Promise<any[]> {
     try {
-      const response = await fetch(`${API_URL}/campaigns?user_id=${userId}`, {
-        credentials: 'include'
+      const url = userId 
+          ? `${API_URL}/campaigns?user_id=${userId}`
+          : `${API_URL}/campaigns`;
+          
+      const response = await fetch(url, {
+          credentials: 'include'
       });
       
       if (!response.ok) throw new Error('Failed to fetch campaigns');
       return await response.json();
     } catch (error) {
-      console.error('Error fetching campaigns:', error);
-      return [];
+        console.error('Error fetching campaigns:', error);
+        return [];
     }
   }
   
-  static async getUserCampaigns(userId: string): Promise<any[]> {
+  static async getUserActiveCampaign(userId: string): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/users/${userId}/campaigns`, {
         credentials: 'include'
       });
       
       if (!response.ok) throw new Error('Failed to fetch user campaigns');
-      return await response.json();
+
+      // Get all campaigns
+      const campaigns = await response.json();
+        
+      // Find the active campaign
+      const activeCampaign = campaigns.find((campaign: any) => campaign.isActive === true);
+
+      if (!activeCampaign) return null;
+        
+        // Format to match frontend interface
+        return {
+            id: activeCampaign.campaign.campaign_id,
+            title: activeCampaign.campaign.title,
+            description: activeCampaign.campaign.description,
+            theme: {
+                primaryColor: activeCampaign.campaign.theme.primaryColor,
+                secondaryColor: activeCampaign.campaign.theme.secondaryColor,
+                backgroundImage: activeCampaign.campaign.theme.backgroundImage || '',
+                icon: ''
+            },
+            quests: activeCampaign.quests.map((q: any) => ({
+                id: q.id,
+                title: q.title,
+                description: q.description,
+                completed: q.completed,
+                locked: q.order > activeCampaign.currentQuestIndex,
+                progress: q.completed ? 100 : 0,
+                objectives: [],
+                rewards: { xp: 0 }
+            })),
+            progress: activeCampaign.progress,
+            currentQuestIndex: activeCampaign.currentQuestIndex,
+            completed: false
+        };
     } catch (error) {
       console.error('Error fetching user campaigns:', error);
       return [];
     }
   }
   
-  static async activateCampaign(userId: string, campaignId: string): Promise<any> {
+  static async setActiveCampaign(userId: string, campaignId: string): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/users/${userId}/campaigns/${campaignId}/activate`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
       
@@ -220,6 +258,22 @@ export class GamificationService {
     } catch (error) {
       console.error('Error updating quest progress:', error);
       return { success: false, error: 'Failed to update quest progress' };
+    }
+  }
+
+  static async activateCampaign(userId: string, campaignId: string): Promise<any> {
+    try {
+        const response = await fetch(`${API_URL}/users/${userId}/campaigns/${campaignId}/activate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) throw new Error('Failed to activate campaign');
+        return await response.json();
+    } catch (error) {
+        console.error('Error activating campaign:', error);
+        return { success: false, error: 'Failed to activate campaign' };
     }
   }
 }

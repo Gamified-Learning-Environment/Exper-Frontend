@@ -30,14 +30,7 @@ export default function Home() {
         // Get player stats (level, xp, streak)
         const stats = await GamificationService.getPlayerStats(user._id);
         setPlayerStats(stats);
-        
-        // Get active challenges
-        const activeChallenges = await GamificationService.getActiveChallenges();
-        setChallenges(activeChallenges);
-        
-        // Get tracked challenges
-        const userTrackedChallenges = await GamificationService.getTrackedChallenges(user._id);
-        setTrackedChallenges(userTrackedChallenges);
+      
       } catch (err) {
         console.error("Error fetching gamification data:", err);
       } finally {
@@ -47,14 +40,6 @@ export default function Home() {
     
     fetchGamificationData();
   }, [user?._id]);
-
-  // Calculate values for cards
-  const challengesCompleted = trackedChallenges.filter(c => c.progress === 100).length;
-  const totalDailyChallenges = Math.min(3, challenges.filter(c => c.category === 'Daily').length);
-  const challengePercentage = totalDailyChallenges > 0 
-    ? Math.round((challengesCompleted / totalDailyChallenges) * 100) 
-    : 0;
-    
   // Calculate the streak values
   const currentStreak = playerStats?.streakDays || 0;
   const nextMilestone = Math.ceil(currentStreak / 7) * 7;
@@ -105,36 +90,7 @@ export default function Home() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {/* Daily Challenges Card */}
-            <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <div className="p-3 bg-yellow-100 rounded-xl">
-                  <Star className="w-8 h-8 text-yellow-500" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-yellow-700">Daily Challenges</h3>
-                  <p className="text-sm text-yellow-600">
-                    {loading 
-                      ? "Loading..." 
-                      : `${challengesCompleted}/${totalDailyChallenges} completed today`}
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent>
-              <Progress 
-                  value={loading ? 0 : challengePercentage} 
-                  className="h-2 mb-2" 
-                />
-                <p className="text-sm text-yellow-600">
-                  {loading 
-                    ? "Loading challenges..." 
-                    : totalDailyChallenges - challengesCompleted > 0 
-                      ? `Complete ${totalDailyChallenges - challengesCompleted} more for bonus XP!`
-                      : "All challenges completed! Well done!"}
-                </p>
-              </CardContent>
-            </Card>
-
+            
             {/* Current Streak Card */}
             <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200">
               <CardHeader className="flex flex-row items-center gap-4">
@@ -193,6 +149,7 @@ export default function Home() {
               </CardContent>
             </Card>
           </div>
+
           <div>
             <Dashboard />
           </div>

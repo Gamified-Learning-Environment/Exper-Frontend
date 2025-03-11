@@ -17,35 +17,34 @@ import { CampaignCard } from './CampaignCard';
 
 // Campaign and quest interfaces
 interface Quest {
-    id: string;
-    title: string;
+  id: string;
+  title: string;
+  description: string;
+  objectives?: {
+    type: string;
     description: string;
-    objectives: {
-        type: string;
-        target: number;
-        category?: string;
-    };
-    rewards: {
-        xp: number;
-        customization?: {
-            type: string;
-            itemId: string;
-            name: string;
-            icon: string;
-        }[];
-    };
-    completed: boolean;
-    progress: number;
-    locked: boolean;
+    current: number;
+    required: number;
+  }[];
+  rewards?: {
+    xp: number;
+    customization?: {
+      type: string;
+      id: string;
+      name: string;
+    }[];
+  };
+  completed: boolean;
+  locked: boolean;
 }
 
 interface Campaign {
     id: string;
     title: string;
     description: string;
-    them: {
-        primaryColour: string;
-        secondaryColour: string;
+    theme: {
+        primaryColor: string;
+        secondaryColor: string;
         icon: string;
         backgroundImage: string;
     };
@@ -69,13 +68,15 @@ export default function Campaigns() {
           try {
             setIsLoading(true);
             // Get all available campaigns
-            const availableCampaigns = await GamificationService.getCampaigns();
+            const availableCampaigns = await GamificationService.getCampaigns(user._id);
+            setCampaigns(availableCampaigns || []);
             
             // Get user's active campaign
-            const userActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);
-            
-            setCampaigns(availableCampaigns);
+            const userActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);      
             setActiveCampaign(userActiveCampaign);
+
+            console.log('Loaded campaigns:', availableCampaigns);
+            console.log('Active campaign:', userActiveCampaign);
           } catch (err) {
             console.error("Error loading campaigns:", err);
           } finally {
@@ -93,11 +94,28 @@ export default function Campaigns() {
             await GamificationService.activateCampaign(user._id, campaignId);
             
             // Refresh the active campaign
-            const userActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);
-            setActiveCampaign(userActiveCampaign);
+            const updatedActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);
+            setActiveCampaign(updatedActiveCampaign);
             setActiveTab("active");
         } catch (err) {
             console.error("Error activating campaign:", err);
+        }
+    };
+
+    const refreshCampaigns = async () => {
+        if (!user?._id) return;
+        
+        try {
+            setIsLoading(true);
+            const availableCampaigns = await GamificationService.getCampaigns(user._id);
+            const userActiveCampaign = await GamificationService.getUserActiveCampaign(user._id);
+            
+            setCampaigns(availableCampaigns);
+            setActiveCampaign(userActiveCampaign);
+        } catch (err) {
+            console.error("Error refreshing campaigns:", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -118,7 +136,16 @@ export default function Campaigns() {
             <p className="mt-2 text-white/90">Embark on quests, earn rewards, and become a quiz legend!</p>
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs 
+                value={activeTab} 
+                onValueChange={(value) => {
+                    setActiveTab(value);
+                    if (value === "active" || value === "completed") {
+                        refreshCampaigns();
+                    }
+                }} 
+                className="w-full"
+            >
             <TabsList className="mb-6">
               <TabsTrigger value="active" className="flex items-center gap-2">
                 <Star className="w-4 h-4" /> Active Campaign
@@ -231,9 +258,9 @@ export default function Campaigns() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {campaigns
                   .filter(c => !c.completed)
-                  .map(campaign => (
+                  .map((campaign, index) => (
                     <CampaignCard 
-                      key={campaign.id} 
+                      key={campaign.id || `campaign-${index}`} 
                       campaign={campaign} 
                       isActive={activeCampaign?.id === campaign.id}
                       onActivate={activateCampaign}
@@ -255,9 +282,9 @@ export default function Campaigns() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {campaigns
                   .filter(c => c.completed)
-                  .map(campaign => (
+                  .map((campaign, index) => (
                     <CampaignCard 
-                      key={campaign.id} 
+                      key={campaign.id || `campaign-${index}`} 
                       campaign={campaign} 
                       isCompleted
                     />

@@ -386,6 +386,38 @@ export const UseQuizForm = (quiz?: Quiz) => {
           throw new Error('No quiz ID returned from server');
         }
 
+        // If user has an active campaign, check for create_quiz objectives
+        if (user?._id) {
+          try {
+              const activeUserCampaign = await GamificationService.getUserActiveCampaign(user._id);
+              
+              if (activeUserCampaign) {
+                  const currentQuest = activeUserCampaign.quests.find(
+                      q => !q.completed && q.id === activeUserCampaign.currentQuestId
+                  );
+                  
+                  if (currentQuest) {
+                      // Check for create_quiz objective type
+                      if (currentQuest.objectives.some(obj => 
+                          obj.type === 'create_quiz' || 
+                          (formState.useAI && obj.type === 'create_ai_quiz')
+                      )) {
+                          const objectiveType = formState.useAI ? 'create_ai_quiz' : 'create_quiz';
+                          
+                          await GamificationService.updateQuestProgress(
+                              user._id,
+                              currentQuest.id,
+                              objectiveType,
+                              1
+                          );
+                      }
+                  }
+              }
+          } catch (error) {
+              console.error('Error updating quest progress:', error);
+          }
+        }
+
         // Redirect to the quiz page with the new ID
         router.push(`/quiz/${data.quizid}`);
 

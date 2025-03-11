@@ -362,6 +362,42 @@ export const useQuiz = (quiz: Quiz ) => {
                 triggerStreakConfetti();
                 setStreakDays(streakResponse.current_streak);
             }
+
+            try {
+                // Update quest progress if there's an active campaign
+                const activeUserCampaign = await GamificationService.getUserActiveCampaign(userId);
+                
+                if (activeUserCampaign) {
+                    const currentQuest = activeUserCampaign.quests.find(
+                        q => !q.completed && q.id === activeUserCampaign.currentQuestId
+                    );
+                    
+                    if (currentQuest) {
+                        // Update appropriate objective types based on quiz completion
+                        if (quiz.category && currentQuest.objectives.some(
+                            obj => obj.type.includes('category') && obj.category === quiz.category
+                        )) {
+                            // Category-specific quest progress
+                            await GamificationService.updateQuestProgress(
+                                userId, 
+                                currentQuest.id, 
+                                `complete_category_quiz${newScore === quiz.questions.length ? '_perfect' : ''}`,
+                                1
+                            );
+                        } else {
+                            // General quiz completion
+                            await GamificationService.updateQuestProgress(
+                                userId,
+                                currentQuest.id,
+                                `complete_quiz${newScore === quiz.questions.length ? '_perfect' : ''}`,
+                                1
+                            );
+                        }
+                    }
+                }
+            } catch (questError) {
+                console.error('Error updating quest progress:', questError);
+            }
         } catch (error) {
             console.error('Error updating gamification data:', error);
             // Don't let gamification errors prevent the quiz from completing
