@@ -17,6 +17,7 @@ import { CampaignCard } from './CampaignCard';
 import { CampaignSelector } from './CampaignSelector';
 import { QuestRewardPopup } from './QuestRewardPopup';
 import { motion } from 'framer-motion';
+import { QuestProgressManager } from '@/services/QuestProgressManager';
 
 // Campaign and quest interfaces
 interface Quest {
@@ -141,6 +142,27 @@ export default function Campaigns() {
         }
     };
 
+    const startQuest = async (questId: string) => {
+      if (!user?._id || !activeCampaign) return;
+      
+      try {
+        // If the quest is the current quest, you can use this to track 
+        // a "start_quest" action if needed
+        if (activeCampaign.quests[activeCampaign.currentQuestIndex].id === questId) {
+          await QuestProgressManager.trackAction({
+            userId: user._id,
+            actionType: 'start_quest' as any,
+            metadata: { questId }
+          });
+          
+          // Refresh campaigns to get updated quest progress
+          refreshCampaigns();
+        }
+      } catch (error) {
+        console.error("Error starting quest:", error);
+      }
+    };
+
     if (isLoading) {
         return (
           <div className="flex justify-center py-12">
@@ -219,6 +241,7 @@ export default function Campaigns() {
                       quest={activeCampaign.quests[activeCampaign.currentQuestIndex]}
                       index={activeCampaign.currentQuestIndex}
                       themeColor={activeCampaign.theme.primaryColor}
+                      onStartQuest={startQuest}
                     />
                     
                     {activeCampaign.currentQuestIndex > 0 && (

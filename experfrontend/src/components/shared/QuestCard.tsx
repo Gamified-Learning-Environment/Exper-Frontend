@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { CheckCircle2, Lock, Star, Gift, Target, ArrowRight, ListChecks } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 
 interface QuestCardProps {
     quest: {
@@ -48,6 +49,22 @@ export function QuestCard({
     const progress = quest.progress || (isCompleted ? 100 : 0);
     const actuallyLocked = isLocked || quest.locked;
     const actuallyCompleted = isCompleted || quest.completed;
+
+    useEffect(() => { 
+        // Track if objectives changed to completed state
+        const completedObjectives = quest.objectives?.filter(obj => 
+          obj.current >= obj.required
+        ).length || 0;
+        
+        if (completedObjectives > 0 && !quest.completed) {
+          // Show completion animation
+          toast({
+            title: "Objective Completed!",
+            description: `You've completed an objective in the quest "${quest.title}"`,
+            variant: "success",
+          });
+        }
+    }, [quest.objectives]);
     
     return (
         <Card className={`overflow-hidden border ${

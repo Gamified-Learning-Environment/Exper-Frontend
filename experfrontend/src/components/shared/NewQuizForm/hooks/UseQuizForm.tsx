@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
 import type { QuizQuestion, Quiz, Difficulty, ValidationFeedback } from '../types';
+import { GamificationService } from '@/services/gamification.service';
+import { QuestProgressManager } from '@/services/QuestProgressManager';
 
 export const UseQuizForm = (quiz?: Quiz) => {
     const router = useRouter();
@@ -380,46 +382,31 @@ export const UseQuizForm = (quiz?: Quiz) => {
         
         // Debugging server response and quiz ID
         console.log('Server response:', data); 
-        console.log('Quiz ID:', data.quizid); 
+        console.log('Quiz ID:', data._id); 
 
-        if (!data.quizid) { // Throw an error if no quiz ID is returned
+        if (!data._id) { // Throw an error if no quiz ID is returned
           throw new Error('No quiz ID returned from server');
         }
 
         // If user has an active campaign, check for create_quiz objectives
         if (user?._id) {
           try {
-              const activeUserCampaign = await GamificationService.getUserActiveCampaign(user._id);
-              
-              if (activeUserCampaign) {
-                  const currentQuest = activeUserCampaign.quests.find(
-                      q => !q.completed && q.id === activeUserCampaign.currentQuestId
-                  );
-                  
-                  if (currentQuest) {
-                      // Check for create_quiz objective type
-                      if (currentQuest.objectives.some(obj => 
-                          obj.type === 'create_quiz' || 
-                          (formState.useAI && obj.type === 'create_ai_quiz')
-                      )) {
-                          const objectiveType = formState.useAI ? 'create_ai_quiz' : 'create_quiz';
-                          
-                          await GamificationService.updateQuestProgress(
-                              user._id,
-                              currentQuest.id,
-                              objectiveType,
-                              1
-                          );
-                      }
-                  }
-              }
+            const progressResult = await QuestProgressManager.trackQuizCreation(
+              user._id,
+              useAI // boolean indicating if AI was used for generation
+            );
+            
+            if (progressResult.questCompleted) {
+              // Handle quest completion UI feedback
+              console.log('Quest completed:', progressResult.questCompleted);
+            }
           } catch (error) {
               console.error('Error updating quest progress:', error);
           }
         }
 
         // Redirect to the quiz page with the new ID
-        router.push(`/quiz/${data.quizid}`);
+        router.push(`/quiz/${data._id}`);
 
       } catch (error) { // Catch and handle error
         setError(error instanceof Error ? error.message : 'Failed to create quiz');

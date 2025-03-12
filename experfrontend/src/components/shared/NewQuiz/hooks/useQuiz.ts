@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth.context';
 import { triggerConfetti, triggerAchievementConfetti, triggerPerfectScoreConfetti, triggerLevelUpConfetti, triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 import { GamificationService } from '@/services/gamification.service';
 import { useGamification } from '@/components/shared/GamificationNotification'; // Add this import
+import { QuestProgressManager } from '@/services/QuestProgressManager'; // Add this import
 
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
@@ -365,36 +366,17 @@ export const useQuiz = (quiz: Quiz ) => {
 
             try {
                 // Update quest progress if there's an active campaign
-                const activeUserCampaign = await GamificationService.getUserActiveCampaign(userId);
-                
-                if (activeUserCampaign) {
-                    const currentQuest = activeUserCampaign.quests.find(
-                        q => !q.completed && q.id === activeUserCampaign.currentQuestId
-                    );
-                    
-                    if (currentQuest) {
-                        // Update appropriate objective types based on quiz completion
-                        if (quiz.category && currentQuest.objectives.some(
-                            obj => obj.type.includes('category') && obj.category === quiz.category
-                        )) {
-                            // Category-specific quest progress
-                            await GamificationService.updateQuestProgress(
-                                userId, 
-                                currentQuest.id, 
-                                `complete_category_quiz${newScore === quiz.questions.length ? '_perfect' : ''}`,
-                                1
-                            );
-                        } else {
-                            // General quiz completion
-                            await GamificationService.updateQuestProgress(
-                                userId,
-                                currentQuest.id,
-                                `complete_quiz${newScore === quiz.questions.length ? '_perfect' : ''}`,
-                                1
-                            );
-                        }
-                    }
-                }
+                const progressResult = await QuestProgressManager.trackQuizCompletion(
+                    userId,
+                    newScore,
+                    quiz.questions.length,
+                    quiz.category
+                  );
+                  
+                  if (progressResult.questCompleted) {
+                    triggerConfetti();
+                    // Show quest completion notification
+                  }
             } catch (questError) {
                 console.error('Error updating quest progress:', questError);
             }

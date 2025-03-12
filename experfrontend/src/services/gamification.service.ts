@@ -308,4 +308,45 @@ export class GamificationService {
         return { success: false, error: 'Failed to activate campaign' };
     }
   }
+
+  // Check and update quest progress based on objective type and category
+  static async checkAndUpdateQuestProgress(userId: string, objectiveType: string, progress = 1, category?: string): Promise<any> {
+    try {
+      // Get active campaign and current quest
+      const activeCampaign = await this.getUserActiveCampaign(userId);
+      if (!activeCampaign || !activeCampaign.quests || activeCampaign.quests.length === 0) return;
+      
+      // Find current quest
+      const currentQuest = activeCampaign.quests.find(
+        ( q: { completed: any; id: any; }) => !q.completed && q.id === activeCampaign.currentQuestId
+      );
+      
+      if (!currentQuest) return;
+      
+      // Check if quest has this objective type
+      const hasObjective = currentQuest.objectives?.some((obj: { type: string | string[]; category: string; }) => {
+        // Check if category-specific objective
+        if (category && obj.type.includes('category') && obj.category === category) {
+          return true;
+        }
+        // Check regular objective
+        return obj.type === objectiveType;
+      });
+      
+      if (hasObjective) {
+        // Determine correct objective type including category if needed
+        const finalObjectiveType = category ? `${objectiveType}_category_${category}` : objectiveType;
+        
+        // Update quest progress
+        await this.updateQuestProgress(userId, currentQuest.id, finalObjectiveType, progress);
+        console.log(`Updated progress for ${finalObjectiveType}`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Failed to check and update quest progress:", error);
+      return false;
+    }
+  }
 }
