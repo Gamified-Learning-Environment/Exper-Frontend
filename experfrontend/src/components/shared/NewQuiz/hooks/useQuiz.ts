@@ -269,7 +269,7 @@ export const useQuiz = (quiz: Quiz ) => {
             let streakResponse: any = null;
 
             try {
-                // Add experience based on score and difficulty
+                // Add experience based on score and difficulty (global XP)
                 console.log('Adding experience:', xpGained, 'for category:', quiz.category);
                 gamificationResponse = await GamificationService.addExperience(
                     userId, 
@@ -277,6 +277,39 @@ export const useQuiz = (quiz: Quiz ) => {
                     quiz.category
                 );
                 console.log('Experience added successfully:', gamificationResponse);
+
+                // Add category-specific XP if category exists
+                if (quiz.category) {
+                    // Calculate category XP (can be different from global XP)
+                    const categoryXP = Math.round(xpGained * 1.2); // 20% bonus for specific categories
+                    
+                    try {
+                    const categoryResponse = await GamificationService.addCategoryExperience(
+                        userId,
+                        categoryXP,
+                        quiz.category
+                    );
+                    
+                    console.log('Category XP added successfully:', categoryResponse);
+                    
+                    // Show category level-up notification if applicable
+                    if (categoryResponse.level_up) {
+                        // Show category level up notification
+                        showAchievement({
+                        title: `${quiz.category} Level Up!`,
+                        description: `You reached level ${categoryResponse.new_level} in ${quiz.category}`,
+                        icon: "📚",
+                        xp_reward: categoryResponse.new_xp
+                        });
+                        
+                        triggerConfetti();
+                    }
+                    } catch (categoryError) {
+                    console.error('Error adding category XP:', categoryError);
+                    // Non-critical, continue execution
+                    }
+                }
+
                 
                 // Update levelProgress based on response
                 if (gamificationResponse) {

@@ -139,27 +139,45 @@ export default function PlayerProfile() {
             </div>
           </div>
         </div>
-        
-        {/* Category Progress */}
-        {playerStats.categoryProgress.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="font-semibold text-purple-800">Category Progress</h3>
-            <div className="space-y-3">
-              {playerStats.categoryProgress.map((category, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium">{category.category}</span>
-                    <span>Level {category.level}</span>
+
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <h3 className="text-xl font-bold text-purple-800 mb-4">Category Mastery</h3>
+          
+          {playerStats?.categoryProgress && playerStats.categoryProgress.length > 0 ? (
+            <div className="space-y-4">
+              {playerStats.categoryProgress
+                .sort((a, b) => b.level - a.level) // Sort by level, highest first
+                .map((category) => (
+                  <div key={category.category} className="bg-purple-50 p-3 rounded-lg">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">📚</span>
+                        <div>
+                          <h4 className="font-bold text-purple-800">{category.category}</h4>
+                          <span className="text-sm text-purple-600">Level {category.level}</span>
+                        </div>
+                      </div>
+                      <span className="bg-purple-100 px-2 py-1 rounded-full text-sm font-medium">
+                        {category.xp} / {category.totalXpRequired} XP
+                      </span>
+                    </div>
+                    
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-indigo-600"
+                        style={{ width: `${(category.xp / category.totalXpRequired) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <Progress 
-                    value={(category.xp / category.totalXpRequired) * 100}
-                    className="h-2"
-                  />
-                </div>
-              ))}
+                ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center p-6 text-gray-500">
+              <p>Complete quizzes in different categories to see your mastery levels!</p>
+            </div>
+          )}
+        </div>
+        
       </CardContent>
     </Card>
   );

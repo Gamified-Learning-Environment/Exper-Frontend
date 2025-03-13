@@ -56,6 +56,28 @@ export class GamificationService {
       };
     }
   }
+
+  static async addCategoryExperience(userId: string, xpAmount: number, category: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_URL}/player/${userId}/category/${category}/xp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ xp: xpAmount }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add category XP');
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding category XP:', error);
+      throw error;
+    }
+  }
     
   static async updateStreak(userId: string, category?: string): Promise<any> {
     try {
