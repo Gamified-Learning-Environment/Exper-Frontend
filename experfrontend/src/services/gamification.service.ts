@@ -78,6 +78,25 @@ export class GamificationService {
       throw error;
     }
   }
+
+  static async getLeaderboard(sortBy?: string, category?: string, limit: number = 100) {
+    try {
+      let url = `${API_URL}/leaderboard?limit=${limit}`;
+      if (sortBy) url += `&sort_by=${sortBy}`;
+      if (category) url += `&category=${encodeURIComponent(category)}`;
+      
+      const response = await fetch(url, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch leaderboard');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      // Return empty array as fallback
+      return [];
+    }
+  }
     
   static async updateStreak(userId: string, category?: string): Promise<any> {
     try {
