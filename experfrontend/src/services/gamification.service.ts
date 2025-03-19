@@ -10,7 +10,11 @@ export class GamificationService {
         credentials: 'include'
       });
       
-      if (!response.ok) throw new Error('Failed to fetch player stats');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response error:', response.status, errorText);
+        throw new Error(`Server error ${response.status}: ${errorText}`);
+      }
       return await response.json();
     } catch (error) {
       console.error('Error fetching player stats:', error);
