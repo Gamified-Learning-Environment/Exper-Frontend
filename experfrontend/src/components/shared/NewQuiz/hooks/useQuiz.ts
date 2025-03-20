@@ -351,32 +351,34 @@ export const useQuiz = (quiz: Quiz ) => {
             const achievementCheckData = {
                 quiz_completed: true,
                 perfect_score: newScore === quiz.questions.length,
+                score_percentage: (newScore / quiz.questions.length) * 100,
                 completion_time: questionAttempts.reduce((total, attempt) => total + attempt.timeSpent, 0),
-                category: quiz.category
+                category: quiz.category,
+                difficulty: quiz.difficulty
             };
             
             console.log('Checking for achievements with data:', achievementCheckData);
             const achievementResponse = await GamificationService.checkAchievements(userId, achievementCheckData);
             console.log('Achievement check response:', achievementResponse);
                         
-            // Handle newly awarded achievements
+            // Show achievement notifications with proper timing and effects
             if (achievementResponse?.awarded_achievements?.length > 0) {
                 // Store achievements in state for displaying in the UI
-                const newAchievements = achievementResponse.awarded_achievements.map((item: { achievement: { title: string; description: string; icon: string; xp_reward: number } }) => ({
+                const newAchievements = achievementResponse.awarded_achievements.map((item: any) => ({
                     title: item.achievement.title,
                     description: item.achievement.description,
                     icon: item.achievement.icon,
                     xp_reward: item.achievement.xp_reward
                 }));
                 
-                setAchievements(newAchievements);
+                setAchievements(prevAchievements => [...prevAchievements, ...newAchievements]);
                 
                 // Show trophy notification for each achievement (slight delay between each)
                 newAchievements.forEach((achievement: { title: string; description: string; icon: string; xp_reward: number }, index: number) => {
                     setTimeout(() => {
                         showAchievement(achievement);
                         triggerAchievementConfetti();
-                    }, index * 2000); // 2 second delay between achievements
+                    }, 1000 + (index * 2000)); // Initial 1 s delay followed by 2 second delays between each
                 });
             }
             

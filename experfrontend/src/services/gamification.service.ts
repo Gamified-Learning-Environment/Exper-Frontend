@@ -82,25 +82,6 @@ export class GamificationService {
       throw error;
     }
   }
-
-  static async getLeaderboard(sortBy?: string, category?: string, limit: number = 100) {
-    try {
-      let url = `${API_URL}/leaderboard?limit=${limit}`;
-      if (sortBy) url += `&sort_by=${sortBy}`;
-      if (category) url += `&category=${encodeURIComponent(category)}`;
-      
-      const response = await fetch(url, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch leaderboard');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-      // Return empty array as fallback
-      return [];
-    }
-  }
     
   static async updateStreak(userId: string, category?: string): Promise<any> {
     try {
@@ -139,12 +120,19 @@ export class GamificationService {
     
   static async getUserAchievements(userId: string): Promise<any[]> {
     try {
-      const response = await fetch(`${API_URL}/users/${userId}/achievements`, {
+      console.log(`Fetching achievements for user ${userId}`);
+      const response = await fetch(`${API_URL}/player/${userId}/achievements`, {
         credentials: 'include'
       });
       
-      if (!response.ok) throw new Error('Failed to fetch user achievements');
-      return await response.json();
+      if (!response.ok) {
+        console.error(`Failed to fetch user achievements: ${response.status}`);
+        throw new Error('Failed to fetch user achievements');
+      }
+      
+      const achievements = await response.json();
+      console.log(`Fetched ${achievements.length} achievements:`, achievements);
+      return achievements;
     } catch (error) {
       console.error('Error fetching user achievements:', error);
       return [];
@@ -154,6 +142,7 @@ export class GamificationService {
   static async checkAchievements(userId: string, data: any): Promise<any> {
     try {
       console.log('Checking achievements with data:', data);
+      
       const response = await fetch(`${API_URL}/player/${userId}/check-achievements`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

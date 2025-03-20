@@ -1,5 +1,5 @@
 // Achievements component to display all achievements, unlocked achievements and locked achievements
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { GamificationService } from '@/services/gamification.service';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +15,6 @@ interface Achievement {
     icon: string;
     requirement: string;
     xp_reward: number;
-    dateUnlocked?: string; // Optional, only present if achievement is unlocked
     achievement_id?: string; // Optional, used when comparing achievements
     condition?: { // Optional, used to check if the achievement is earned, aids with progress
       quizzes_completed?: number;
@@ -31,6 +30,7 @@ interface Achievement {
 // Achievements component
 export default function Achievements() {
     const { user } = useAuth(); // Get the user from the auth context
+    const [playerStats, setPlayerStats] = useState<any>(null);
     const [achievements, setAchievements] = useState<Achievement[]>([]); // State to store all achievements
     const [userAchievements, setUserAchievements] = useState<Achievement[]>([]); // State to store user's earned achievements
     const [isLoading, setIsLoading] = useState(true);
@@ -42,14 +42,37 @@ export default function Achievements() {
 
             try {
                 setIsLoading(true);
+                console.log("Fetching achievements for user:", user._id);
 
                 // Get all achievements from gamification service
                 const allAchievements = await GamificationService.getAchievements();
+                console.log("All achievements:", allAchievements);
                 setAchievements(allAchievements);
 
                 // Get user's earned achievements
-                const earned = await GamificationService.getUserAchievements(user._id);
-                setUserAchievements(earned);
+                const earnedAchievementIds = await GamificationService.getUserAchievements(user._id);
+                console.log("User earned achievement IDs:", earnedAchievementIds);
+                // Map IDs to full achievement objects
+                let earnedAchievements;
+                
+                // Check if we received full objects or just IDs
+                if (earnedAchievementIds.length > 0 && typeof earnedAchievementIds[0] === 'object' && 'title' in earnedAchievementIds[0]) {
+                    // We have full objects already
+                    earnedAchievements = earnedAchievementIds;
+                } else {
+                    // Map IDs to full achievement objects
+                    earnedAchievements = allAchievements.filter(achievement => 
+                        earnedAchievementIds.includes(achievement.achievement_id)
+                    );
+                }
+                
+                console.log("Processed user achievements:", earnedAchievements);
+                setUserAchievements(earnedAchievements);
+
+                // Get player stats for accurate progress calculation
+                const stats = await GamificationService.getPlayerStats(user._id);
+                //console.log("Player stats:", stats);
+                setPlayerStats(stats);
 
             } catch (err) {
                 console.error("Error fetching achievements:", err);
@@ -75,16 +98,147 @@ export default function Achievements() {
         }
     };
 
-    // check if an achievement is earned
-    const isAchievementEarned = (achievementId: string) => { 
-        return userAchievements.some(a => a.achievement_id === achievementId || a._id === achievementId); // .some returns true if at least one element in the array passes the test
-    };
+    // Memoize expensive calculations - for performance optimization
+    const userAchievementIds = useMemo(() => { 
+      const ids = new Set<string>();
+      
+      if (!userAchievements || userAchievements.length === 0) return ids;
+      
+      // Handle if userAchievements contains objects
+      if (typeof userAchievements[0] === 'object') {
+        userAchievements.forEach(a => {
+          if (a.achievement_id) ids.add(a.achievement_id);
+          if (a._id) ids.add(a._id);
+        });
+        return ids;
+      }
+      
+      // Handle if userAchievements contains strings (achievement_ids)
+      userAchievements.forEach(id => ids.add(id));
+      
+      // Also add the corresponding _id values from achievements array
+      achievements.forEach(a => {
+        if (userAchievements.includes(a.achievement_id)) {
+          ids.add(a._id);
+        }
+      });
+      
+      return ids;
+    }, [userAchievements, achievements]);
 
-    // Get the date of unlocking for an achievement
-    const getUnlockDate = (achievementId: string) => {
-        const achievement = userAchievements.find(a => a._id === achievementId);
-        return achievement?.dateUnlocked ? new Date(achievement.dateUnlocked).toLocaleDateString() : null;
-    };
+    // check if an achievement is earned, memoized for performance
+    const isAchievementEarned = useCallback((achievementId: string) => { 
+      console.log(`Checking if achievement ${achievementId} is earned among:`, 
+        userAchievements.map(ua => ({id: ua.achievement_id, _id: ua._id}))
+      );
+      
+      if (!userAchievements || userAchievements.length === 0) return false;
+
+      // Find the achievement by ID
+      const achievement = achievements.find(a => 
+        a._id === achievementId || a.achievement_id === achievementId
+      );
+      
+      if (!achievement) return false;
+      
+      // Get the achievement ID we need to check for
+      const targetId = achievement.achievement_id || achievement._id;
+      
+      // Check if this ID exists in user's earned achievements
+      return userAchievements.some(ua => {
+          if (typeof ua === 'string') {
+              // If userAchievements contains string IDs
+              return ua === targetId;
+          } else {
+              // If userAchievements contains objects
+              return ua.achievement_id === targetId || ua._id === targetId;
+          }
+      });
+    }, [userAchievements, achievements]);
+
+    useEffect(() => {
+      // Add this after setting userAchievements
+      if (userAchievements && userAchievements.length > 0) {
+        console.log("User achievement format check:", {
+          isArray: Array.isArray(userAchievements),
+          firstItemType: typeof userAchievements[0],
+          sample: userAchievements[0],
+          allAchievementsSample: achievements.length > 0 ? achievements[0] : null
+        });
+        
+        // Check for any potential matches
+        if (achievements.length > 0) {
+          const firstUserAchievement = typeof userAchievements[0] === 'string' 
+            ? userAchievements[0]
+            : userAchievements[0].achievement_id;
+            
+          const matchingAchievement = achievements.find(a => a.achievement_id === firstUserAchievement);
+          console.log("First achievement match check:", {
+            userAchievementId: firstUserAchievement,
+            matchFound: !!matchingAchievement,
+            matchDetails: matchingAchievement
+          });
+        }
+      }
+    }, [userAchievements, achievements]);
+
+    // Memoize progress calculations
+    const progressMap = useMemo(() => {
+        const map = new Map<string, number>();
+        
+        if (!user?._id) return map;
+        
+        for (const achievement of achievements) {
+            if (userAchievementIds.has(achievement._id)) {
+                map.set(achievement._id, 100);
+                continue;
+            }
+            
+            if (!achievement.condition) {
+                map.set(achievement._id, 0);
+                continue;
+            }
+            
+            // Calculate progress with existing logic
+            const { condition } = achievement;
+            
+            // Get stats once and store
+            const streakAchievement = userAchievements.find(a => a?.title?.includes("Streak"));
+            const levelAchievement = userAchievements.find(a => a?.title?.includes("Level"));
+            
+            const stats = playerStats || {
+              quizzes_completed: 0,
+              perfect_scores: 0,
+              streak_days: 0,
+              level: 1,
+              unique_categories: 0
+          };
+            
+            let progress = 0;
+            
+            // Your existing progress calculations
+            if (condition.quizzes_completed) {
+                progress = Math.min(100, Math.round((stats.quizzes_completed / condition.quizzes_completed) * 100));
+            } else if (condition.perfect_scores) {
+                progress = Math.min(100, Math.round((stats.perfect_scores / condition.perfect_scores) * 100));
+            } else if (condition.streak_days) {
+                progress = Math.min(100, Math.round((stats.streak_days / condition.streak_days) * 100));
+            } else if (condition.unique_categories) {
+                progress = Math.min(100, Math.round((stats.unique_categories / condition.unique_categories) * 100));
+            } else if (condition.level) {
+                progress = Math.min(100, Math.round((stats.level / condition.level) * 100));
+            } 
+            
+            map.set(achievement._id, progress);
+        }
+        
+        return map;
+    }, [achievements, userAchievements, user?._id, userAchievementIds]);
+
+    // Function to calculate progress for an achievement based on its conditions and user stats
+    const calculateProgress = useCallback((achievement: Achievement): number => {
+      return progressMap.get(achievement._id) || 0;
+    }, [progressMap]);
 
     // Loading state while fetching achievements
     if (isLoading) {
@@ -102,41 +256,6 @@ export default function Achievements() {
           </div>
         );
     }
-
-    const calculateProgress = (achievement: Achievement): number => {
-      if (!achievement.condition || !user?._id) return 0;
-      if (isAchievementEarned(achievement._id)) return 100;
-      
-      const { condition } = achievement;
-      
-      // Get the relevant stats
-      const stats = {
-          quizzes_completed: userAchievements.length,
-          perfect_scores: userAchievements.filter(a => a.title.includes("Perfect")).length,
-          streak_days: userAchievements.find(a => a.title.includes("Streak"))?.dateUnlocked ? 
-              parseInt(userAchievements.find(a => a.title.includes("Streak"))?.description.match(/\d+/)?.[0] || "0") : 0,
-          unique_categories: new Set(userAchievements.map(a => a.achievement_id?.split('-')[0])).size,
-          level: parseInt(userAchievements.find(a => a.title.includes("Level"))?.description.match(/\d+/)?.[0] || "1"),
-      };
-      
-      // Calculate progress based on condition type
-      if (condition.quizzes_completed) {
-          return Math.min(100, Math.round((stats.quizzes_completed / condition.quizzes_completed) * 100));
-      } else if (condition.perfect_scores) {
-          return Math.min(100, Math.round((stats.perfect_scores / condition.perfect_scores) * 100));
-      } else if (condition.streak_days) {
-          return Math.min(100, Math.round((stats.streak_days / condition.streak_days) * 100));
-      } else if (condition.unique_categories) {
-          return Math.min(100, Math.round((stats.unique_categories / condition.unique_categories) * 100));
-      } else if (condition.level) {
-          return Math.min(100, Math.round((stats.level / condition.level) * 100));
-      } else if (condition.perfect_score) {
-          // Binary condition - either 0% or 100%
-          return 0;
-      }
-      
-      return 0;
-    };
 
     return ( // Display the achievements
         <div className="space-y-6">
@@ -165,13 +284,13 @@ export default function Achievements() {
             
             <TabsContent value="all">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {achievements.map(achievement => {
+                {achievements.map((achievement, index) => {
                   const earned = isAchievementEarned(achievement._id);
-                  const unlockDate = getUnlockDate(achievement._id);
+                  const progress = !earned ? calculateProgress(achievement) : 100;
                   
                   return (
                     <Card 
-                      key={achievement._id} 
+                      key={achievement.achievement_id || achievement._id || `all-achievement-${index}`} 
                       className={`p-4 border-2 transition-colors ${
                         earned 
                           ? 'border-yellow-400 bg-yellow-50' 
@@ -194,11 +313,11 @@ export default function Achievements() {
                             <div className="mt-2 mb-1">
                               <div className="flex justify-between items-center text-xs text-gray-500">
                                 <span>Progress</span>
-                                <span>{calculateProgress(achievement)}%</span>
+                                <span>{progress}%</span>
                               </div>
                               <Progress 
-                                value={calculateProgress(achievement)} 
-                                className={`h-2 mt-1 ${calculateProgress(achievement) > 0 ? "bg-gradient-to-r from-purple-500 to-indigo-500" : "bg-gray-300"}`}
+                                value={progress} 
+                                className={`h-2 mt-1 ${progress > 0 ? "bg-gradient-to-r from-purple-500 to-indigo-500" : "bg-gray-300"}`}
                               />
                             </div>
                           )}
@@ -207,11 +326,6 @@ export default function Achievements() {
                             <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
                               +{achievement.xp_reward} XP
                             </span>
-                            {unlockDate && (
-                              <span className="text-xs text-gray-500">
-                                Unlocked: {unlockDate}
-                              </span>
-                            )}
                             {!earned && (
                               <span className="text-xs text-gray-500">
                                 {achievement.requirement}
@@ -229,8 +343,11 @@ export default function Achievements() {
             <TabsContent value="unlocked">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {userAchievements.length > 0 ? (
-                  userAchievements.map(achievement => (
-                    <Card key={achievement._id} className="p-4 border-2 border-yellow-400 bg-yellow-50">
+                  userAchievements.map((achievement, index) => (
+                    <Card 
+                      key={achievement.achievement_id || achievement._id || `achievement-${index}`} 
+                      className="p-4 border-2 border-yellow-400 bg-yellow-50"
+                    >
                       <div className="flex items-start gap-3">
                         <div className="p-3 bg-yellow-100 rounded-xl">
                           {getIconForAchievement(achievement.icon)}
@@ -244,11 +361,7 @@ export default function Achievements() {
                             <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
                               +{achievement.xp_reward} XP
                             </span>
-                            {achievement.dateUnlocked && (
-                              <span className="text-xs text-gray-500">
-                                Unlocked: {new Date(achievement.dateUnlocked).toLocaleDateString()}
-                              </span>
-                            )}
+                            
                           </div>
                         </div>
                       </div>
@@ -266,12 +379,15 @@ export default function Achievements() {
             <TabsContent value="locked">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {achievements
-                  .filter(achievement => !isAchievementEarned(achievement._id))
-                  .map(achievement => {
+                  .filter(achievement => !isAchievementEarned(achievement.achievement_id || achievement._id))
+                  .map((achievement, index) => {
                     const progress = calculateProgress(achievement);
 
                     return (
-                      <Card key={achievement._id} className="p-4 border-2 border-gray-200 hover:border-purple-200">
+                      <Card 
+                        key={`locked-achievement-${index}`} 
+                        className="p-4 border-2 border-gray-200 hover:border-purple-200"
+                      >
                         <div className="flex items-start gap-3">
                           <div className="p-3 bg-gray-100 rounded-xl">
                             {getIconForAchievement(achievement.icon)}
@@ -297,7 +413,7 @@ export default function Achievements() {
                                 +{achievement.xp_reward} XP
                               </span>
                               <span className="text-xs text-gray-500">
-                                {achievement.requirement}
+                                {achievement.requirement || `Complete ${achievement.description}`}
                               </span>
                             </div>
                           </div>
