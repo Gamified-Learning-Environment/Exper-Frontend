@@ -9,7 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '.
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from '@/contexts/auth.context';
-import { UserIcon, StarIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { UserIcon, StarIcon, PencilIcon, TrashIcon, ExternalLinkIcon } from 'lucide-react';
 
 // Quiz Question interface
 interface QuizQuestion {
@@ -42,6 +42,9 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const router = useRouter();
   const { user } = useAuth();
+
+  // State to store user information
+  const [userMap, setUserMap] = useState<Record<string, { username: string }>>({});
 
   // Filter view mode
   const [viewMode, setViewMode] = useState<'all' | 'mine' | 'community'>('all');
@@ -133,6 +136,49 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
     }
   };
 
+  // Function to fetch user data for all quiz creators
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!quizzes.length) return;
+      
+      try {
+        // Get unique user IDs from quizzes
+        const userIds = Array.from(new Set(
+          quizzes.filter(quiz => quiz.userId && quiz.userId !== user?._id)
+            .map(quiz => quiz.userId)
+        ));
+        
+        if (!userIds.length) return;
+        
+        // Create a map of promises for each user
+        const userPromises = userIds.map(async (userId) => {
+          try {
+            const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`);
+            if (!response.ok) return [userId, { username: 'Unknown User' }];
+            
+            const userData = await response.json();
+            return [userId, { 
+              username: userData.username || userData.email?.split('@')[0] || 'Unknown User' 
+            }];
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+            return [userId, { username: 'Unknown User' }];
+          }
+        });
+        
+        // Resolve all promises
+        const userEntries = await Promise.all(userPromises);
+        const newUserMap = Object.fromEntries(userEntries);
+        
+        setUserMap(newUserMap);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    }
+    
+    fetchUserData();
+  }, [quizzes, user]);
+
   // Fetch categories
   useEffect(() => {
     async function fetchCategories() {
@@ -205,6 +251,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
 
   return (
       <div className="space-y-8">
+
         {/* Category and View Mode Filter Section */}
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-md">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
@@ -340,6 +387,26 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
                           <CardDescription className="text-gray-600">
                             {quiz.description}
                           </CardDescription>
+                          
+                          {/* Show quiz creator info if not the current user's quiz */}
+                          {!isOwnQuiz && quiz.userId && userMap[quiz.userId] && (
+                            <div className="mt-4 flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <UserIcon className="h-4 w-4 text-purple-500" />
+                                <span>Created by: <span className="font-medium text-purple-700">{userMap[quiz.userId].username}</span></span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="flex items-center gap-1 text-purple-600 hover:text-purple-800"
+                                onClick={() => router.push(`/user/${quiz.userId}`)}
+                              >
+                                <span className="text-xs">View Profile</span>
+                                <ExternalLinkIcon className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+
                           {/* Additional quiz info */}
                           <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
@@ -417,65 +484,89 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quizzes
                   .filter(quiz => !user || quiz.userId !== user._id)
-                  .map((quiz) => (
-                    <Card 
-                      key={quiz._id} 
-                      className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
-                    >
-                      <CardHeader className={`bg-gradient-to-br ${gradientColors[Math.floor(Math.random() * gradientColors.length)]} text-white`}>
-                        <CardTitle className="flex items-center gap-2">
-                          <span className="text-2xl">✨</span>
-                          {quiz.title}
-                        </CardTitle>
-                        {quiz.category && (
-                          <Badge className="bg-white/20 hover:bg-white/30 transition-colors text-white">
-                            {quiz.category}
-                          </Badge>
-                        )}
-                      </CardHeader>
-                      
-                      <CardContent className="pt-6">
-                        <CardDescription className="text-gray-600">
-                          {quiz.description}
-                        </CardDescription>
-                        <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <span>📝</span> {quiz.questions?.length || 0} Questions
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span>🎯</span> {quiz.difficulty || 'Mixed'} Level
-                          </span>
-                        </div>
-                      </CardContent>
-                      
-                      <CardFooter className="bg-gray-50 flex justify-between p-4">
-                        <Button 
-                          onClick={() => handlePreview(quiz)}
-                          variant="outline"
-                          className="hover:bg-purple-50"
-                        >
-                          Preview 👀
-                        </Button>
-                        {user && (
-                          <Button
-                            onClick={() => handleClone(quiz)}
-                            variant="outline"
-                            className="border-blue-200 hover:bg-blue-50 text-blue-700"
-                          >
+                  .map((quiz) => {
+                    const isOwnQuiz = user && quiz.userId === user._id;
+
+                    return (
+                      <Card 
+                        key={quiz._id} 
+                        className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                      >
+                        <CardHeader className={`bg-gradient-to-br ${gradientColors[Math.floor(Math.random() * gradientColors.length)]} text-white`}>
+                          <CardTitle className="flex items-center gap-2">
+                            <span className="text-2xl">✨</span>
+                            {quiz.title}
+                          </CardTitle>
+                          {quiz.category && (
+                            <Badge className="bg-white/20 hover:bg-white/30 transition-colors text-white">
+                              {quiz.category}
+                            </Badge>
+                          )}
+                        </CardHeader>
+                        
+                        <CardContent className="pt-6">
+                          <CardDescription className="text-gray-600">
+                            {quiz.description}
+                          </CardDescription>
+
+                          {/* Show quiz creator info if not the current user's quiz */}
+                          {!isOwnQuiz && quiz.userId && userMap[quiz.userId] && (
+                            <div className="mt-4 flex items-center justify-between">
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <UserIcon className="h-4 w-4 text-purple-500" />
+                                <span>Created by: <span className="font-medium text-purple-700">{userMap[quiz.userId].username}</span></span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="flex items-center gap-1 text-purple-600 hover:text-purple-800"
+                                onClick={() => router.push(`/user/${quiz.userId}`)}
+                              >
+                                <span className="text-xs">View Profile</span>
+                                <ExternalLinkIcon className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
-                              📋 Clone
+                              <span>📝</span> {quiz.questions?.length || 0} Questions
                             </span>
+                            <span className="flex items-center gap-1">
+                              <span>🎯</span> {quiz.difficulty || 'Mixed'} Level
+                            </span>
+                          </div>
+                        </CardContent>
+                        
+                        <CardFooter className="bg-gray-50 flex justify-between p-4">
+                          <Button 
+                            onClick={() => handlePreview(quiz)}
+                            variant="outline"
+                            className="hover:bg-purple-50"
+                          >
+                            Preview 👀
                           </Button>
-                        )}
-                        <Button 
-                          onClick={() => router.push(`/quiz/${quiz._id}`)}
-                          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
-                        >
-                          Start Quiz 🚀
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
+                          {user && (
+                            <Button
+                              onClick={() => handleClone(quiz)}
+                              variant="outline"
+                              className="border-blue-200 hover:bg-blue-50 text-blue-700"
+                            >
+                              <span className="flex items-center gap-1">
+                                📋 Clone
+                              </span>
+                            </Button>
+                          )}
+                          <Button 
+                            onClick={() => router.push(`/quiz/${quiz._id}`)}
+                            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                          >
+                            Start Quiz 🚀
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
               </div>
             </div>
           )}
@@ -493,6 +584,29 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <p className="text-gray-600">{selectedQuiz.description}</p>
+
+                {/* Add creator info in the modal too */}
+                {user && selectedQuiz.userId && selectedQuiz.userId !== user._id && userMap[selectedQuiz.userId] && (
+                  <div className="flex items-center justify-between bg-purple-50 p-3 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-purple-500" />
+                      <span className="text-purple-700">Created by: <span className="font-medium">{userMap[selectedQuiz.userId].username}</span></span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center gap-1 border-purple-300 text-purple-700"
+                      onClick={() => {
+                        handleCloseModal();
+                        router.push(`/user/${selectedQuiz.userId}`);
+                      }}
+                    >
+                      View Profile
+                      <ExternalLinkIcon className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-purple-800">Preview Questions</h3>
                   <ul className="space-y-4">
