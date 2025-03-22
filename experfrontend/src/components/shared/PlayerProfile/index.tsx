@@ -22,20 +22,51 @@ interface PlayerStats {
   }[];
 }
 
-export default function PlayerProfile() {
+interface UserInfo {
+  _id: string;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface PlayerProfileProps {
+  userId?: string;
+}
+
+export default function PlayerProfile({ userId }: PlayerProfileProps) {
   const { user } = useAuth();
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [profileUser, setProfileUser] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Determine which user ID to use: the prop (if provided) or the current user
+  const targetUserId = userId || user?._id;
   
   useEffect(() => {
     const fetchPlayerStats = async () => {
-      if (!user?._id) return;
+      if (!targetUserId) return;
       
       try {
         setIsLoading(true);
         // Get player stats from gamification service
-        const stats = await GamificationService.getPlayerStats(user._id);
+        const stats = await GamificationService.getPlayerStats(targetUserId);
         setPlayerStats(stats);
+
+        // If viewing someone else's profile (or if explicitly provided userId), fetch their basic user info
+        if (userId && (!user || userId !== user._id)) {
+          try {
+            // Use User Management Service to get user info
+            const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`);
+            if (!response.ok) {
+              throw new Error('Failed to fetch user information');
+            }
+            const userData = await response.json();
+            setProfileUser(userData);
+          } catch (err) {
+            console.error("Error fetching user profile:", err);
+          }
+        }
       } catch (err) {
         console.error("Error fetching player stats:", err);
       } finally {
@@ -48,13 +79,18 @@ export default function PlayerProfile() {
     const intervalId = setInterval(fetchPlayerStats, 60000);
     
     return () => clearInterval(intervalId);
-  }, [user?._id]);
+  }, [targetUserId, userId, user?._id]);
+
+  // Determine which user object to display
+  // If viewing someone else's profile, use the fetched profile data
+  // Otherwise use the current logged-in user data
+  const displayUser = userId && userId !== user?._id ? profileUser : user;
   
   if (isLoading) {
     return <div className="h-48 flex items-center justify-center">Loading profile data...</div>;
   }
   
-  if (!playerStats) {
+  if (!playerStats || !targetUserId) {
     return (
       <Card className="bg-white border-2 border-purple-100">
         <CardContent className="p-6">
@@ -69,13 +105,13 @@ export default function PlayerProfile() {
       <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-6 text-white">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
-            {user?.username?.charAt(0) || user?.email?.charAt(0) || "U"}
+            {displayUser?.username?.charAt(0) || displayUser?.email?.charAt(0) || "U"}
           </div>
           <div className="flex items-center mt-1">
-            <BadgesDisplay userId={user?._id} compact={true} />
+            <BadgesDisplay userId={targetUserId} compact={true} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">{user?.username || user?.email || "Player"}</h2>
+            <h2 className="text-2xl font-bold">{displayUser?.username || displayUser?.email || "Player"}</h2>
             <div className="flex items-center gap-2">
               <Brain className="w-4 h-4" />
               <span className="text-white/90">Level {playerStats.level} Explorer</span>

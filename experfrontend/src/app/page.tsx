@@ -9,6 +9,7 @@ import { GamificationService } from '@/services/gamification.service';
 import CategoryProgress from '@/components/shared/CategoryProgress';
 import Dashboard from "@/components/shared/Dashboard";
 import Achievements from "@/components/shared/Achievements";
+import Leaderboard from "@/components/shared/Leaderboard";
 
 export default function Home() {
   const { user } = useAuth();
@@ -156,6 +157,10 @@ export default function Home() {
 
           <div className="grid grid-cols-1 gap-6">
             <CategoryProgress />
+          </div>
+
+          <div>
+            <Leaderboard />
           </div>
 
           {/* Recent Achievements Preview */}

@@ -2,6 +2,19 @@
 
 const API_URL = 'http://localhost:9091/api';
 
+export interface LeaderboardPlayer {
+  _id: string;
+  username: string;
+  email: string;
+  level: number;
+  xp: number;
+  streakDays: number;
+  quizzesCompleted: number;
+  quizzesPerfect: number;
+  totalAchievements: number;
+  profileImage?: string;
+}
+
 export class GamificationService {
     
   static async getPlayerStats(userId: string): Promise<any> {
@@ -29,6 +42,46 @@ export class GamificationService {
         totalAchievements: 0,
         categoryProgress: []
       };
+    }
+  }
+
+  static async getPlayerInfo(userId: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_URL}/player/${userId}`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response error:', response.status, errorText);
+        throw new Error(`Server error ${response.status}: ${errorText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching player info:', error);
+      return null;
+    }
+  }
+
+  static async getLeaderboard(): Promise<LeaderboardPlayer[]> {
+    try {
+      const response = await fetch(`${API_URL}/leaderboard`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch leaderboard: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error in getLeaderboard:", error);
+      throw error;
     }
   }
     

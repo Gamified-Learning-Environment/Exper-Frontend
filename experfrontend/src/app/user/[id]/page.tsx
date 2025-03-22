@@ -96,19 +96,19 @@ export default function ProfilePage() {
             
             {/* Profile, achievements, and category progress content */}
             <TabsContent value="profile" className="space-y-6">
-            <PlayerProfile />
+              <PlayerProfile targetUserId={id} />
             </TabsContent>
 
             <TabsContent value="campaigns">
-            <Campaigns />
+              <Campaigns />
             </TabsContent>
             
             <TabsContent value="achievements">
-            <Achievements />
+              <Achievements />
             </TabsContent>
             
             <TabsContent value="progress">
-            <CategoryProgress />
+              <CategoryProgress />
             </TabsContent>
         </Tabs>
         

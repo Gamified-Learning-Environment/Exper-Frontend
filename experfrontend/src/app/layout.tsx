@@ -26,15 +26,15 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
   return (
     <html lang="en">
       <body className={poppins.variable}>
-        <GamificationProvider>
-          <AuthProvider>
-            <div className="flex h-screen flex-col"> 
-              <Header />
-                  <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </AuthProvider>
-        </GamificationProvider>
+          <GamificationProvider>
+            <AuthProvider>
+              <div className="flex h-screen flex-col"> 
+                <Header />
+                    <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </AuthProvider>
+          </GamificationProvider>
       </body>
     </html>
   );
