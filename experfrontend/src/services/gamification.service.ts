@@ -82,6 +82,22 @@ export class GamificationService {
       throw error;
     }
   }
+
+  // Get user badges
+  static async getUserBadges(userId: string) {
+    try {
+      const response = await fetch(`${API_URL}/player/${userId}/badges`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch badges');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching user badges:', error);
+      return [];
+    }
+  }
     
   static async updateStreak(userId: string, category?: string): Promise<any> {
     try {

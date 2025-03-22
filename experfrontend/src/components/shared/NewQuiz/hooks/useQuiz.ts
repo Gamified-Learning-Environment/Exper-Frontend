@@ -6,8 +6,9 @@ import { Quiz, QuestionAttempt, ProgressData } from '../types'; // Importing the
 import { useAuth } from '@/contexts/auth.context';
 import { triggerConfetti, triggerAchievementConfetti, triggerPerfectScoreConfetti, triggerLevelUpConfetti, triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 import { GamificationService } from '@/services/gamification.service';
-import { useGamification } from '@/components/shared/GamificationNotification'; // Add this import
-import { QuestProgressManager } from '@/services/QuestProgressManager'; // Add this import
+import { useGamification } from '@/components/shared/GamificationNotification'; 
+import { QuestProgressManager } from '@/services/QuestProgressManager'; 
+import { toast } from '@/hooks/use-toast';
 
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
@@ -391,6 +392,20 @@ export const useQuiz = (quiz: Quiz ) => {
                     xp: gamificationResponse.new_xp,
                     required: (gamificationResponse.new_level + 1) * 500
                 });
+            }
+
+            // Handle awarded badges
+            if (achievementResponse?.awarded_badges?.length > 0) {
+                // Show badge notifications
+                achievementResponse.awarded_badges.forEach((badge: any) => {
+                    toast({
+                      title: `🏅 You earned the ${badge.name} badge!`,
+                      description: "Congratulations on your achievement!"
+                    });
+                });
+                
+                // Additional confetti for badges
+                triggerConfetti();
             }
             
             // Handle streak milestones

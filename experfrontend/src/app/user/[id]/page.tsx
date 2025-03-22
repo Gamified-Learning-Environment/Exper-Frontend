@@ -10,6 +10,7 @@ import CategoryProgress from "@/components/shared/CategoryProgress";
 import Campaigns from "@/components/shared/Campaigns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, ChartLine, User, Sword, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 
 // ProfilePage component
@@ -34,7 +35,6 @@ export default function ProfilePage() {
             // Fetch username from user service
             const response = await fetch(`http://localhost:8080/api/auth/users/${id}`);
             if (!response.ok) throw new Error('Failed to load user data');
-            
             const userData = await response.json();
             setUsername(userData.username || userData.email?.split('@')[0] || 'User');
           } catch (err) {
@@ -73,9 +73,9 @@ export default function ProfilePage() {
     // Render user profile page
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-3xl font-bold text-purple-900">
-        {isCurrentUser ? "Your Profile" : `${username}'s Profile`}
-      </h1>
+          <h1 className="text-3xl font-bold text-purple-900">
+            {isCurrentUser ? "Your Profile" : `${username}'s Profile`}
+          </h1>
         
         {/* Tabs for profile, achievements, and category progress */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -4,6 +4,7 @@ import { GamificationService } from '@/services/gamification.service';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Brain, Star, Flame, Trophy, BookOpen } from 'lucide-react';
+import { BadgesDisplay } from '@/components/shared/Badges/BadgesDisplay';
 
 interface PlayerStats {
   level: number;
@@ -69,6 +70,9 @@ export default function PlayerProfile() {
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
             {user?.username?.charAt(0) || user?.email?.charAt(0) || "U"}
+          </div>
+          <div className="flex items-center mt-1">
+            <BadgesDisplay userId={user?._id} compact={true} />
           </div>
           <div>
             <h2 className="text-2xl font-bold">{user?.username || user?.email || "Player"}</h2>
