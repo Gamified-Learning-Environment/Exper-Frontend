@@ -28,6 +28,7 @@ interface UserInfo {
   email?: string;
   firstName?: string;
   lastName?: string;
+  imageUrl?: string;
 }
 
 interface PlayerProfileProps {
@@ -38,6 +39,8 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
   const { user } = useAuth();
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [profileUser, setProfileUser] = useState<UserInfo | null>(null);
+  const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
+  const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Determine which user ID to use: the prop (if provided) or the current user
@@ -49,12 +52,16 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
       
       try {
         setIsLoading(true);
+        setImageError(false);
+        setProfileImage(undefined); // Reset profile image state
+
         // Get player stats from gamification service
         const stats = await GamificationService.getPlayerStats(targetUserId);
         setPlayerStats(stats);
 
-        // If viewing someone else's profile (or if explicitly provided userId), fetch their basic user info
-        if (userId && (!user || userId !== user._id)) {
+        // Handle different cases for fetching user profile image
+        if (userId && userId !== user?._id) {
+          // Case 1: Viewing someone else's profile
           try {
             // Use User Management Service to get user info
             const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`);
@@ -62,9 +69,41 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
               throw new Error('Failed to fetch user information');
             }
             const userData = await response.json();
+            console.log("Fetched other user data:", userData);
+            
             setProfileUser(userData);
+            
+            // Set profile image if available
+            if (userData && userData.imageUrl) {
+              console.log("Setting other user image URL:", userData.imageUrl);
+              setProfileImage(userData.imageUrl);
+            }
           } catch (err) {
             console.error("Error fetching user profile:", err);
+          }
+        } else if (user) {
+          // Case 2: Viewing your own profile
+          console.log("Using current user data:", user);
+          
+          // If viewing your own profile, use data from auth context
+          if (user.imageUrl) {
+            console.log("Setting own image URL:", user.imageUrl);
+            setProfileImage(user.imageUrl);
+          } else {
+            // Extra fallback - fetch your own user data if imageUrl is missing
+            try {
+              const response = await fetch(`http://localhost:8080/api/auth/users/${user._id}`);
+              if (response.ok) {
+                const userData = await response.json();
+                console.log("Fetched own user data:", userData);
+                if (userData.imageUrl) {
+                  console.log("Setting own image URL from API:", userData.imageUrl);
+                  setProfileImage(userData.imageUrl);
+                }
+              }
+            } catch (err) {
+              console.error("Error fetching own user profile:", err);
+            }
           }
         }
       } catch (err) {
@@ -99,13 +138,31 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
       </Card>
     );
   }
+
+  // Get the image URL from either the profile image state or displayUser
+  const imageUrl = profileImage || displayUser?.imageUrl;
+  console.log("Using image URL:", imageUrl);
   
   return (
     <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 overflow-hidden">
       <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-6 text-white">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
-            {displayUser?.username?.charAt(0) || displayUser?.email?.charAt(0) || "U"}
+        <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-white/30">
+            {!imageError && imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={displayUser?.username || "User profile"}
+                className="h-full w-full object-cover"
+                onError={() => {
+                  console.error("Image failed to load:", imageUrl);
+                  setImageError(true);
+                }}
+              />
+            ) : (
+              <div className="h-full w-full bg-white/20 flex items-center justify-center text-2xl font-bold">
+                {displayUser?.username?.charAt(0) || displayUser?.email?.charAt(0) || "U"}
+              </div>
+            )}
           </div>
           <div className="flex items-center mt-1">
             <BadgesDisplay userId={targetUserId} compact={true} />
