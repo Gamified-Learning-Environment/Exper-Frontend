@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProfileBadge } from './ProfileBadge';
 import { GamificationService } from '@/services/gamification.service';
+import { CustomizationService } from '@/services/customization.service';
 import { useAuth } from '@/contexts/auth.context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,7 @@ export function BadgesDisplay({ userId, compact = false }: BadgesDisplayProps) {
   const [badges, setBadges] = useState<BadgeType[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedBadgeIds, setSelectedBadgeIds] = useState<string[]>([]);
   const { user } = useAuth();
   
   const displayUserId = userId || user?._id;
@@ -35,8 +37,14 @@ export function BadgesDisplay({ userId, compact = false }: BadgesDisplayProps) {
       
       try {
         setIsLoading(true);
+                
+        // Fetch all badges
         const userBadges = await GamificationService.getUserBadges(displayUserId);
         setBadges(userBadges);
+
+        // Fetch customization to get selected badges
+        const customization = await CustomizationService.getUserCustomization(displayUserId);
+        setSelectedBadgeIds(customization.displayBadges || []);
         
         const uniqueCategories = Array.from(
           new Set<string>(userBadges.map((badge: BadgeType) => badge.category))
@@ -52,9 +60,12 @@ export function BadgesDisplay({ userId, compact = false }: BadgesDisplayProps) {
     fetchBadges();
   }, [displayUserId]);
 
-  // Discord-like compact display for profile headers
+  // Discord-like compact display for profile headers - shows selected badges only
   if (compact) {
-    const earnedBadges = badges.filter(badge => badge.earned);
+    // Filter badges that are both earned AND selected for display
+    const displayBadges = badges.filter(badge => 
+      badge.earned && selectedBadgeIds.includes(badge.badge_id)
+    );
     
     if (isLoading) {
       return (
@@ -66,13 +77,9 @@ export function BadgesDisplay({ userId, compact = false }: BadgesDisplayProps) {
       );
     }
     
-    if (earnedBadges.length === 0) {
-      return null; // Don't show anything if no badges earned
-    }
-    
     return (
       <div className="flex gap-1 items-center">
-        {earnedBadges.slice(0, 5).map(badge => (
+        {displayBadges.slice(0, 5).map(badge => (
           <ProfileBadge
             key={badge.badge_id}
             name={badge.name}
@@ -82,9 +89,9 @@ export function BadgesDisplay({ userId, compact = false }: BadgesDisplayProps) {
             rarity={badge.rarity}
           />
         ))}
-        {earnedBadges.length > 5 && (
+        {displayBadges.length > 5 && (
           <div className="text-xs text-gray-500 ml-1">
-            +{earnedBadges.length - 5}
+            +{displayBadges.length - 5}
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createContext, useContext, ReactNode } from 'react';
 import AchievementPopup from '../AchievementPopup';
+import BadgePopup from '../Badges/BadgePopup';
 
 // Notification props for different types of notifications
 interface NotificationProps {
@@ -21,22 +22,32 @@ interface AchievementPopupProps {
   xp_reward: number;
 }
 
+interface BadgePopupProps {
+  name: string;
+  description: string;
+  icon: string;
+  rarity: string;
+}
+
 // Context for showing notifications and achievements
 interface GamificationContextProps {
   showNotification: (notification: NotificationProps) => void;
   showAchievement: (achievement: AchievementPopupProps) => void;
+  showBadge: (badge: BadgePopupProps) => void;
 }
 
 // Gamification context
 export const GamificationContext = createContext<GamificationContextProps>({
   showNotification: () => {},
   showAchievement: () => {},
+  showBadge: () => {},
 });
 
 // Gamification provider for showing notifications and achievements
 export function GamificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const [achievements, setAchievements] = useState<AchievementPopupProps[]>([]);
+  const [badges, setBadges] = useState<BadgePopupProps[]>([]);
   
   // Handle normal notifications
   const showNotification = (notification: NotificationProps) => {
@@ -48,6 +59,18 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     console.log('GamificationProvider: Showing achievement popup:', achievement);
     setAchievements(prev => [...prev, achievement]);
   };
+
+  const showBadge = (badge: BadgePopupProps) => {
+    console.log('GamificationProvider: Showing badge popup:', badge);
+    setBadges(prev => [...prev, badge]);
+
+    // Create notification for badge
+    showNotification({
+      message: `${badge.name} Badge Unlocked!`,
+      icon: badge.icon,
+      type: 'badge',
+    });
+  }
   
   // Remove notifications after 5 seconds
   useEffect(() => {
@@ -61,7 +84,7 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   }, [notifications]);
   
   return (
-    <GamificationContext.Provider value={{ showNotification, showAchievement }}>
+    <GamificationContext.Provider value={{ showNotification, showAchievement, showBadge }}>
       {children} 
 
       {/* Regular notifications */}
@@ -95,6 +118,22 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
             key={index}
             achievement={achievement}
             onClose={() => setAchievements(prev => prev.filter((_, i) => i !== index))}
+          />
+        ))}
+      </AnimatePresence>
+
+      {/* Badge popups */}
+      <AnimatePresence>
+        {badges.map((badge, index) => (
+          <BadgePopup
+            key={`badge-${index}`}
+            badge={{
+              name: badge.name,
+              description: badge.description,
+              icon: badge.icon,
+              rarity: badge.rarity
+            }}
+            onClose={() => setBadges(prev => prev.filter((_, i) => i !== index))}
           />
         ))}
       </AnimatePresence>

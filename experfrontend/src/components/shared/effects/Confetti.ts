@@ -40,6 +40,17 @@ export const triggerAchievementConfetti = () => {
   }());
 };
 
+export const triggerBadgeConfetti = () => {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 0.6, x: 0.8 },
+    colors: ['#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'],
+    shapes: ['circle', 'square'],
+    ticks: 200
+  });
+};
+
 // Perfect score - school of stars
 export const triggerPerfectScoreConfetti = () => {
   const defaults = { 

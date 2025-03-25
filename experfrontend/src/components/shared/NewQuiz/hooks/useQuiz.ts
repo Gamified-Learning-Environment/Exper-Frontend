@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react'; // React hooks
 import { Quiz, QuestionAttempt, ProgressData } from '../types'; // Importing the Quiz and ProgressData interfaces from the types file
 import { useAuth } from '@/contexts/auth.context';
-import { triggerConfetti, triggerAchievementConfetti, triggerPerfectScoreConfetti, triggerLevelUpConfetti, triggerStreakConfetti } from '@/components/shared/effects/Confetti';
+import { triggerConfetti, triggerAchievementConfetti, triggerBadgeConfetti, triggerPerfectScoreConfetti, triggerLevelUpConfetti, triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 import { GamificationService } from '@/services/gamification.service';
 import { useGamification } from '@/components/shared/GamificationNotification'; 
 import { QuestProgressManager } from '@/services/QuestProgressManager'; 
@@ -30,7 +30,7 @@ export const useQuiz = (quiz: Quiz ) => {
     const [achievements, setAchievements] = useState<{ title: string; description: string; icon: string }[]>([]);
     const [streakDays, setStreakDays] = useState(7);
     const [currentAchievement, setCurrentAchievement] = useState<{ title: string; description: string; icon: string; xp_reward?: number } | null>(null);
-    const { showAchievement } = useGamification();
+    const { showAchievement, showBadge } = useGamification();
 
     // Load from localStorage after mount if available
     useEffect(() => {
@@ -396,16 +396,13 @@ export const useQuiz = (quiz: Quiz ) => {
 
             // Handle awarded badges
             if (achievementResponse?.awarded_badges?.length > 0) {
-                // Show badge notifications
-                achievementResponse.awarded_badges.forEach((badge: any) => {
-                    toast({
-                      title: `🏅 You earned the ${badge.name} badge!`,
-                      description: "Congratulations on your achievement!"
-                    });
+                // Show badge notifications with proper timing
+                achievementResponse.awarded_badges.forEach((badge: any, index: number) => {
+                    setTimeout(() => {
+                        showBadge(badge);
+                        triggerBadgeConfetti();
+                    }, 500 + (index * 2500)); // Delay showing badges to avoid overwhelming the user
                 });
-                
-                // Additional confetti for badges
-                triggerConfetti();
             }
             
             // Handle streak milestones
