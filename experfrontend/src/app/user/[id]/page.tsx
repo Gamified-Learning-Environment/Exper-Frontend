@@ -13,7 +13,6 @@ import { Trophy, ChartLine, User, Sword, Users, Paintbrush } from 'lucide-react'
 import ProfileCustomization from "@/components/shared/ProfileCustomization";
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-
 // ProfilePage component
 export default function ProfilePage() {
     const { id } = useParams();
@@ -23,6 +22,8 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isCurrentUser, setIsCurrentUser] = useState(false);
+
+    const userId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : undefined;
 
     useEffect(() => {
         async function fetchUserData() {
@@ -110,7 +111,7 @@ export default function ProfilePage() {
             </TabsContent>
             
             <TabsContent value="achievements">
-              <Achievements />
+              <Achievements userId={userId} />
             </TabsContent>
             
             <TabsContent value="progress">

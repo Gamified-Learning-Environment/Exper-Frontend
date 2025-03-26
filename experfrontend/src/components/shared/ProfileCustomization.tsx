@@ -12,10 +12,11 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Brain, Flame, BookOpen, Trophy } from 'lucide-react';
 import { CustomizationService, UserCustomization } from '@/services/customization.service';
 import { GamificationService } from '@/services/gamification.service';
 import BadgeSelector from './Badges/BadgeSelector';
+import { useCustomization } from '@/contexts/customization.context';
 
 // Profile badge interface
 interface Badge {
@@ -49,6 +50,8 @@ export default function ProfileCustomization({ userId }: ProfileCustomizationPro
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const { triggerRefresh } = useCustomization(); // Custom hook to trigger refresh of profile page on changes saved
   
   // Theme customization settings
   const [theme, setTheme] = useState<ThemeCustomization>({
@@ -223,6 +226,9 @@ export default function ProfileCustomization({ userId }: ProfileCustomizationPro
       
       // Call API to save customization
       await CustomizationService.saveUserCustomization(userId, customizationData);
+
+      // Trigger refresh for other components
+      triggerRefresh();
       
       setNotification({
         type: 'success',
@@ -470,95 +476,180 @@ export default function ProfileCustomization({ userId }: ProfileCustomizationPro
         {/* Preview Section */}
         <div className="mt-8 mb-8">
           <h3 className="text-lg font-medium mb-4">Preview</h3>
-          <div 
-            className="p-5 border transition-all"
+          <div className="border overflow-hidden rounded-lg transition-all"
             style={{ 
-              backgroundColor: `${theme.primaryColor}10`, // 10% opacity
               borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
-                           theme.cardStyle === 'sharp' ? '0' : '0.5rem',
+                          theme.cardStyle === 'sharp' ? '0' : '0.5rem',
               borderColor: theme.primaryColor,
               backgroundImage: theme.backgroundPattern && theme.backgroundPattern !== 'none' ? 
                 backgroundPatterns.find(p => p.id === theme.backgroundPattern)?.value : 'none',
-              backgroundSize: theme.backgroundPattern === 'waves' ? '100px 20px' : '20px 20px'
+              backgroundSize: theme.backgroundPattern === 'waves' ? '100px 20px' : '20px 20px',
+              fontFamily: fontStyles.find(f => f.id === theme.fontStyle)?.value || 'inherit'
             }}
           >
-            <div className="flex flex-wrap gap-2 mb-4">
-              {Object.values(badgesByCategory)
-                .flat()
-                .filter(badge => selectedBadges.includes(badge.id))
-                .map(badge => (
-                  <Badge 
-                    key={badge.id}
-                    style={{ 
-                      backgroundColor: theme.primaryColor,
-                      color: 'white'
-                    }}
-                  >
-                    <span className="mr-2">{badge.icon}</span>
-                    {badge.name}
-                  </Badge>
-                ))
-              }
-            </div>
-            
-            <div 
-              className="bg-white p-4 rounded flex items-center gap-4"
+            {/* Gradient Header - Matches PlayerProfile implementation */}
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-6 text-white"
               style={{ 
-                fontFamily: fontStyles.find(f => f.id === theme.fontStyle)?.value || 'inherit',
-                borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
-                             theme.cardStyle === 'sharp' ? '0' : '0.5rem',
-              }}
-            >
-              <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-xl">😎</span>
-              </div>
-              <div>
-                <div className="font-bold text-lg">Your Username</div>
-                <div className="text-sm text-gray-500">Level 15 Explorer</div>
-              </div>
-            </div>
-            
-            {theme.showLevel && (
-              <div 
-                className="mt-4 bg-white bg-opacity-70 rounded p-3"
-                style={{ 
-                  fontFamily: fontStyles.find(f => f.id === theme.fontStyle)?.value || 'inherit',
-                  borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
-                               theme.cardStyle === 'sharp' ? '0' : '0.5rem',
-                }}
-              >
-                <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full transition-all"
-                    style={{ width: '65%', backgroundColor: theme.primaryColor }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs mt-1 text-gray-600">
-                  <span>2750/3000 XP</span>
-                  <span>Next Level: 16</span>
-                </div>
-              </div>
-            )}
-            
-            {theme.showStreaks && (
-              <div 
-                className="mt-3 p-3 rounded"
-                style={{ 
-                  backgroundColor: `${theme.accentColor}30`,
-                  fontFamily: fontStyles.find(f => f.id === theme.fontStyle)?.value || 'inherit',
-                  borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
-                               theme.cardStyle === 'sharp' ? '0' : '0.5rem',
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🔥</span>
-                  <div className="text-sm">
-                    <span className="font-bold">7 Day Streak!</span>
-                    <div className="text-xs opacity-75">Keep it going!</div>
+                backgroundImage: `linear-gradient(to right, ${theme.primaryColor}, ${theme.accentColor})` 
+              }}>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-white/30">
+                  <div className="h-full w-full bg-white/20 flex items-center justify-center text-2xl font-bold">
+                    U
                   </div>
                 </div>
+                <div>
+                  <h2 className="text-2xl font-bold"
+                    style={{ fontFamily: fontStyles.find(f => f.id === theme.fontStyle)?.value || 'inherit' }}>
+                    Your Username
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4" />
+                    <span className="text-white/90">Level 15 Explorer</span>
+                  </div>
+                </div>
+                <div className="ml-auto flex items-center mt-1">
+                  {selectedBadges.slice(0, 5).map(badgeId => {
+                    const badge = Object.values(badgesByCategory).flat().find(b => b.id === badgeId);
+                    if (!badge) return null;
+                    return (
+                      <div key={badge.id} className="w-7 h-7 rounded-full flex items-center justify-center bg-white/20 mx-0.5">
+                        <span className="text-sm">{badge.icon}</span>
+                      </div>
+                    );
+                  })}
+                  {selectedBadges.length > 5 && (
+                    <div className="text-xs text-white/80 ml-1">+{selectedBadges.length - 5}</div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
+            
+            <div className="bg-white p-6 space-y-6">
+              {/* Level Progress - Only shown if enabled */}
+              {theme.showLevel && (
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-semibold" style={{ color: theme.primaryColor }}>Level 15</span>
+                    <span className="font-semibold" style={{ color: theme.primaryColor }}>Level 16</span>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full transition-all"
+                      style={{ 
+                        width: '65%', 
+                        background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.accentColor})`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-sm" style={{ color: `${theme.primaryColor}99` }}>
+                    <span>2750 XP</span>
+                    <span>3000 XP</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Stats Overview - Only show streak if enabled */}
+              <div className="grid grid-cols-2 gap-4">
+                {theme.showStreaks && (
+                  <div className="bg-white rounded-lg p-4 border flex items-center gap-3"
+                    style={{ 
+                      borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
+                                  theme.cardStyle === 'sharp' ? '0' : '0.5rem',
+                      borderColor: `${theme.primaryColor}30`
+                    }}>
+                    <div className="p-2 rounded-full" style={{ backgroundColor: `${theme.primaryColor}15` }}>
+                      <Flame className="w-5 h-5" style={{ color: theme.primaryColor }} />
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Current Streak</div>
+                      <div className="font-bold text-lg">7 Days</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Quizzes card */}
+                <div className="bg-white rounded-lg p-4 border flex items-center gap-3"
+                  style={{ 
+                    borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
+                                theme.cardStyle === 'sharp' ? '0' : '0.5rem',
+                    borderColor: `${theme.primaryColor}30`
+                  }}>
+                  <div className="p-2 rounded-full" style={{ backgroundColor: `${theme.primaryColor}15` }}>
+                    <BookOpen className="w-5 h-5" style={{ color: theme.primaryColor }} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Quizzes</div>
+                    <div className="font-bold text-lg">47</div>
+                  </div>
+                </div>
+                  
+                {/* Perfect scores card */}
+                <div className="bg-white rounded-lg p-4 border flex items-center gap-3"
+                  style={{ 
+                    borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
+                                theme.cardStyle === 'sharp' ? '0' : '0.5rem',
+                    borderColor: `${theme.primaryColor}30`
+                  }}>
+                  <div className="p-2 rounded-full" style={{ backgroundColor: `${theme.primaryColor}15` }}>
+                    <Trophy className="w-5 h-5" style={{ color: theme.primaryColor }} />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Perfect Scores</div>
+                    <div className="font-bold text-lg">12</div>
+                  </div>
+                </div>
+                
+                {/* If showAchievements is true, show category mastery section */}
+                {theme.showAchievements && (
+                  <div className="col-span-2 bg-white rounded-xl shadow-sm p-4 mt-2 border"
+                    style={{ 
+                      borderRadius: theme.cardStyle === 'rounded' ? '1rem' : 
+                                  theme.cardStyle === 'sharp' ? '0' : '0.5rem',
+                      borderColor: `${theme.primaryColor}30`
+                    }}>
+                    <h3 className="text-xl font-bold mb-4" style={{ color: theme.primaryColor }}>Category Mastery</h3>
+                    
+                    <div className="space-y-3">
+                      {/* Sample category */}
+                      <div className="p-3 rounded-lg" 
+                        style={{ 
+                          borderRadius: theme.cardStyle === 'rounded' ? '0.75rem' : 
+                                  theme.cardStyle === 'sharp' ? '0' : '0.5rem',
+                          backgroundColor: `${theme.primaryColor}10`
+                        }}>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">📚</span>
+                            <div>
+                              <h4 className="font-bold" style={{ color: theme.primaryColor }}>Computer Science</h4>
+                              <span className="text-sm" style={{ color: `${theme.primaryColor}99` }}>Level 3</span>
+                            </div>
+                          </div>
+                          <span className="px-2 py-1 rounded-full text-sm font-medium" 
+                            style={{ 
+                              backgroundColor: `${theme.primaryColor}20`,
+                              color: theme.primaryColor
+                            }}>
+                            450 / 600 XP
+                          </span>
+                        </div>
+                        
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full"
+                            style={{ 
+                              width: '75%',
+                              background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.accentColor})`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         

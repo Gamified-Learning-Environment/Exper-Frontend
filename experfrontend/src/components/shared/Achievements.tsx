@@ -27,9 +27,17 @@ interface Achievement {
   };
 }
 
+interface AchievementsProps {
+  userId?: string; // Optional, will fallback to logged-in user if not provided
+}
+
 // Achievements component
-export default function Achievements() {
+export default function Achievements({userId}: AchievementsProps) {
     const { user } = useAuth(); // Get the user from the auth context
+
+    // Use provided userId or fallback to the authenticated user's ID
+    const targetUserId = userId || user?._id;
+
     const [playerStats, setPlayerStats] = useState<any>(null);
     const [achievements, setAchievements] = useState<Achievement[]>([]); // State to store all achievements
     const [userAchievements, setUserAchievements] = useState<Achievement[]>([]); // State to store user's earned achievements
@@ -38,11 +46,11 @@ export default function Achievements() {
 
     useEffect(() => {
         const fetchAchievements = async () => {
-            if (!user?._id) return;
+            if (!targetUserId) return;
 
             try {
                 setIsLoading(true);
-                console.log("Fetching achievements for user:", user._id);
+                console.log("Fetching achievements for user:", targetUserId);
 
                 // Get all achievements from gamification service
                 const allAchievements = await GamificationService.getAchievements();
@@ -50,7 +58,7 @@ export default function Achievements() {
                 setAchievements(allAchievements);
 
                 // Get user's earned achievements
-                const earnedAchievementIds = await GamificationService.getUserAchievements(user._id);
+                const earnedAchievementIds = await GamificationService.getUserAchievements(targetUserId);
                 console.log("User earned achievement IDs:", earnedAchievementIds);
                 // Map IDs to full achievement objects
                 let earnedAchievements;
@@ -70,7 +78,7 @@ export default function Achievements() {
                 setUserAchievements(earnedAchievements);
 
                 // Get player stats for accurate progress calculation
-                const stats = await GamificationService.getPlayerStats(user._id);
+                const stats = await GamificationService.getPlayerStats(targetUserId);
                 //console.log("Player stats:", stats);
                 setPlayerStats(stats);
 
@@ -83,7 +91,7 @@ export default function Achievements() {
         };
 
         fetchAchievements();
-    }, [user?._id]);
+    }, [targetUserId]);
 
     // Helper function to render the appopriate icon
     const getIconForAchievement = (iconName: string) => {

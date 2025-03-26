@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Brain, Star, Flame, Trophy, BookOpen } from 'lucide-react';
 import { BadgesDisplay } from '@/components/shared/Badges/BadgesDisplay';
+import { useCustomization } from '@/contexts/customization.context';
 
 interface PlayerStats {
   level: number;
@@ -45,6 +46,8 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userCustomization, setUserCustomization] = useState<UserCustomization | null>(null);
+
+  const { lastUpdated } = useCustomization();
 
   // Determine which user ID to use: the prop (if provided) or the current user
   const targetUserId = userId || user?._id;
@@ -136,7 +139,7 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
     }
     
     fetchCustomization();
-  }, [userId]);
+  }, [userId, lastUpdated]);
 
   // Determine which user object to display
   // If viewing someone else's profile, use the fetched profile data
