@@ -58,11 +58,6 @@ export function QuestCard({
         
         if (completedObjectives > 0 && !quest.completed) {
           // Show completion animation
-          toast({
-            title: "Objective Completed!",
-            description: `You've completed an objective in the quest "${quest.title}"`,
-            variant: "success",
-          });
         }
     }, [quest.objectives]);
     

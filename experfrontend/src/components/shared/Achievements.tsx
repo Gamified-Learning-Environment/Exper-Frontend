@@ -69,7 +69,7 @@ export default function Achievements({userId}: AchievementsProps) {
                     earnedAchievements = earnedAchievementIds;
                 } else {
                     // Map IDs to full achievement objects
-                    earnedAchievements = allAchievements.filter(achievement => 
+                    earnedAchievements = allAchievements.filter((achievement: Achievement) => 
                         earnedAchievementIds.includes(achievement.achievement_id)
                     );
                 }
@@ -122,11 +122,26 @@ export default function Achievements({userId}: AchievementsProps) {
       }
       
       // Handle if userAchievements contains strings (achievement_ids)
-      userAchievements.forEach(id => ids.add(id));
+      userAchievements.forEach(achievement => {
+        if (typeof achievement === 'string') {
+          // Also add the corresponding _id values from achievements array
+          achievements.forEach(a => {
+            if (a.achievement_id && userAchievements.some(ua => 
+                (typeof ua === 'string' && ua === a.achievement_id) || 
+                (ua.achievement_id === a.achievement_id)
+            )) {
+              ids.add(a._id);
+            }
+          });
+        }
+      });
       
       // Also add the corresponding _id values from achievements array
       achievements.forEach(a => {
-        if (userAchievements.includes(a.achievement_id)) {
+        if (a.achievement_id && userAchievements.some(ua => 
+            (typeof ua === 'string' && ua === a.achievement_id) || 
+            (typeof ua === 'object' && ua.achievement_id === a.achievement_id)
+        )) {
           ids.add(a._id);
         }
       });

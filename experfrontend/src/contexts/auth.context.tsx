@@ -21,6 +21,7 @@ interface AuthContextType {
   logout: () => void; 
   // isAuthenticated boolean to check user is authenticated
   isAuthenticated: boolean;
+  //isLoading: boolean; // isLoading boolean to check if user data is being loaded
 }
 
 // Create AuthContext to manage user authentication

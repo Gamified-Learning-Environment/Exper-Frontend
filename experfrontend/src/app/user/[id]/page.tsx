@@ -42,12 +42,11 @@ export default function ProfilePage() {
           } catch (err) {
             console.error("Error fetching user data:", err);
             setError("User not found");
-          } finally {
-            setIsLoading(false);
           }
         }
         
         fetchUserData();
+        setIsLoading(false);
     }, [id, user]);
 
     if (!user) { // If user is not logged in, show loading spinner

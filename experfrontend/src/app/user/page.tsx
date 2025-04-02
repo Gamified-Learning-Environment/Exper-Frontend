@@ -7,13 +7,13 @@ import { useAuth } from '@/contexts/auth.context';
 
 export default function ProfileRedirect() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   
   useEffect(() => {
-    if (!isLoading && user?._id) {
+    if (user?._id) {
       router.push(`/user/${user._id}`);
     }
-  }, [user, isLoading, router]);
+  }, [user, router]);
   
   return (
     <div className="min-h-[50vh] flex items-center justify-center">

@@ -65,7 +65,7 @@ const BoxPlot = ({ results }: BoxPlotProps) => {
 
         // Add box
         svg.append('rect')
-            .attr('x', xScale('Score Distribution'))
+            .attr('x', xScale('Score Distribution')!)
             .attr('y', yScale(stats.q3))
             .attr('height', yScale(stats.q1) - yScale(stats.q3))
             .attr('width', boxWidth)
@@ -75,7 +75,7 @@ const BoxPlot = ({ results }: BoxPlotProps) => {
 
         // Add median line
         svg.append('line')
-            .attr('x1', xScale('Score Distribution'))
+            .attr('x1', xScale('Score Distribution')!)
             .attr('x2', xScale('Score Distribution')! + boxWidth)
             .attr('y1', yScale(stats.median))
             .attr('y2', yScale(stats.median))

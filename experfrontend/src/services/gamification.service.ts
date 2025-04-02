@@ -3,6 +3,8 @@
 const API_URL = 'http://localhost:9091/api';
 
 export interface LeaderboardPlayer {
+  user_id(user_id: any): Promise<void>;
+  imageUrl: undefined;
   _id: string;
   username: string;
   email: string;

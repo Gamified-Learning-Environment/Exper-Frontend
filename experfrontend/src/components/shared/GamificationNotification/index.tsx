@@ -64,12 +64,12 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
     console.log('GamificationProvider: Showing badge popup:', badge);
     setBadges(prev => [...prev, badge]);
 
-    // Create notification for badge
-    showNotification({
-      message: `${badge.name} Badge Unlocked!`,
-      icon: badge.icon,
-      type: 'badge',
-    });
+    // Create alternative simple toast notification
+    //showNotification({
+      //message: `${badge.name} Badge Unlocked!`,
+      //icon: badge.icon,
+      //type: 'badge',
+    //});
   }
   
   // Remove notifications after 5 seconds

@@ -35,6 +35,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) { // Regist
     
     try { // Try to register user
       const userData = {
+        _id: '',
         email: formData.get('email') as string,
         password: formData.get('password') as string,
         username: formData.get('username') as string,

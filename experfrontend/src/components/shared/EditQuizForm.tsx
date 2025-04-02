@@ -64,7 +64,7 @@ export default function EditQuizForm({ quiz }: EditQuizFormProps) { // EditQuizF
         title,
         description,
         questions,
-        userId: user?.id, // Add user id to quiz data
+        userId: user?._id, // Add user id to quiz data
       };
 
       // Send PUT request to update quiz data

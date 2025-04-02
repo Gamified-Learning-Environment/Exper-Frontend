@@ -25,7 +25,7 @@ const BubbleChart = ({ data, onBubbleClick }: BubbleChartProps) => {
 
         const svgElement = chartRef.current;
         const width = svgElement.clientWidth;
-        const height = svgElement.clientHeight;
+        const height = svgElement.clientHeight || 450; // Use the container's height
 
         // Clear existing chart
         d3.select(chartRef.current).selectAll('*').remove();
@@ -110,7 +110,7 @@ const BubbleChart = ({ data, onBubbleClick }: BubbleChartProps) => {
                 return `${node.category}: ${node.count} quizzes completed`;
             });
 
-    }, [data, chartRef.current?.clientWidth]);
+    }, [data, chartRef.current?.clientWidth, chartRef.current?.clientHeight]);
 
     return (
         <svg 

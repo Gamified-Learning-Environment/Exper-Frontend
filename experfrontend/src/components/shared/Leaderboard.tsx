@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 // Define interface for player data in leaderboard
 interface LeaderboardPlayer {
   _id: string;
+  user_id: string;
   username: string;
   email: string;
   level: number;
@@ -86,16 +87,36 @@ export default function Leaderboard() {
         setIsLoading(true);
         // Fetch leaderboard data from your gamification service
         const data = await GamificationService.getLeaderboard();
-        setPlayers(data);
+        // Map the data to match the LeaderboardPlayer interface
+        const mappedData = data.map((player: any) => ({
+          _id: player._id,
+          user_id: typeof player.user_id === 'function' ? '' : player.user_id,
+          username: player.username,
+          email: player.email,
+          level: player.level,
+          xp: player.xp,
+          streakDays: player.streakDays,
+          quizzesCompleted: player.quizzesCompleted,
+          quizzesPerfect: player.quizzesPerfect,
+          totalAchievements: player.totalAchievements,
+          profileImage: player.profileImage,
+          imageUrl: player.imageUrl
+        }));
+        setPlayers(mappedData);
+
 
         // Pre-fetch user images for players without profile images
         const playersWithoutImages = data.filter(p => !p.profileImage && !p.imageUrl);
         console.log(`Found ${playersWithoutImages.length} players without images`);
         
         // Limit concurrent fetches to avoid overloading the server
-        const fetchPromises = playersWithoutImages.slice(0, 10).map(player => 
-          fetchUserImage(player.user_id)
-        );
+        const fetchPromises = playersWithoutImages.slice(0, 10).map(player => {
+          const userId = typeof player.user_id === 'function' ? '' : player.user_id;
+          if (userId && typeof userId === 'string') {
+            return fetchUserImage(userId);
+          }
+          return Promise.resolve(); // Return resolved promise for non-string values
+        });
         await Promise.allSettled(fetchPromises);
 
       } catch (err) {
@@ -402,17 +423,23 @@ export default function Leaderboard() {
                     player.totalAchievements}
                   </Badge>
                 </div>
-                
                 {/* View Profile Button */}
-                <div className="col-span-1 text-right">
+                <div className="col-span-12 flex items-center justify-end pr-2">
                   <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="p-1 h-auto hover:bg-white/50"
+                    variant="outline"
+                    className={`rounded-full p-3 transition-all hover:scale-110 hover:shadow-md ${
+                      index < 3 
+                        ? `bg-white border-2 ${
+                            index === 0 ? 'border-yellow-400 text-yellow-600' : 
+                            index === 1 ? 'border-gray-300 text-gray-500' : 
+                            'border-amber-500 text-amber-600'
+                          }` 
+                        : 'bg-white/80 border border-purple-200 text-purple-600 hover:bg-purple-50'
+                    }`}
                     onClick={() => navigateToProfile(player.user_id)}
                     aria-label={`View ${player.username}'s profile`}
                   >
-                    <ArrowUpRight className="h-4 w-4" />
+                    <ArrowUpRight className="h-6 w-6" />
                   </Button>
                 </div>
               </div>

@@ -337,71 +337,75 @@ const CategoryProgress = () => {
                     </SelectContent>
                 </Select>
             </div>
-
-            {loading && ( // Loading state
+    
+            {loading && (
                 <div className="flex justify-center items-center h-[400px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500" />
                 </div>
             )}
             
-            {error && ( // Error state
+            {error && (
                 <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-200">
                     Error: {error}
                 </div>
             )}
             
             {!loading && !error && results.length > 0 && bubbleData.length > 0 && (
-                <div className="space-y-8">
-                    {/* Bubble Chart */}
-                    <div className="bg-white rounded-xl shadow-sm p-4">
-                        <h3 className="text-lg font-semibold text-purple-800 mb-3">
-                            Category Overview
-                        </h3>
-                        <div className="w-full h-[130px]">
-                            <BubbleChart 
-                                data={bubbleData} 
-                                onBubbleClick={(category) => setSelectedCategory(category)}
-                            />
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Left side - Bubble Chart (tall) */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-xl shadow-sm p-4 h-full">
+                            <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                                Category Overview
+                            </h3>
+                            <div className="w-full h-[calc(100%-2rem)]" style={{ minHeight: "450px" }}>
+                                <BubbleChart 
+                                    data={bubbleData} 
+                                    onBubbleClick={(category) => setSelectedCategory(category)}
+                                />
+                            </div>
                         </div>
                     </div>
-
-                    {/* Progress Timeline */}
-                    <div className="bg-white rounded-xl shadow-sm p-4">
-                        <h3 className="text-lg font-semibold text-purple-800 mb-3">
-                            Progress Timeline - {selectedCategory}
-                        </h3>
-                        <div className="w-full">
-                            <svg ref={chartRef} className="w-full h-[220px]" />
-                        </div>
-                    </div>
-
-                    <div className={`grid ${chartGridCols} grid-cols-1 md:grid-cols-3 gap-6`}>
-                        
-                        {/* Performance Analysis - RadarChart */}
+                    
+                    {/* Right side - Other charts */}
+                    <div className="lg:col-span-3 space-y-6">
+                        {/* Progress Timeline */}
                         <div className="bg-white rounded-xl shadow-sm p-4">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">
-                            Performance Analysis
+                                Progress Timeline - {selectedCategory}
                             </h3>
-                            <div className='h-[220px]'>
-                            <RadarChart data={[
-                                { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
-                                { metric: "Consistency", value: calculateConsistency(results) },
-                                { metric: "Improvement", value: calculateImprovementRate(results) },
-                                { metric: "Completion", value: calculateCompletionRate(results) }
-                            ]} />
+                            <div className="w-full">
+                                <svg ref={chartRef} className="w-full h-[220px]" />
                             </div>
                         </div>
-
-                        {/* Performance Heatmap */}
-                        <div className="col-span-2 bg-white rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold text-purple-800 mb-3">
-                                Performance Heatmap
-                            </h3>
-                            <div className='h-[220px]'>
-                                <PerformanceHeatmap results={results} />
+                        
+                        {/* Performance Charts */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Performance Analysis - RadarChart */}
+                            <div className="bg-white rounded-xl shadow-sm p-4">
+                                <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                                    Performance Analysis
+                                </h3>
+                                <div className='h-[220px]'>
+                                    <RadarChart data={[
+                                        { metric: "Accuracy", value: Math.round(d3.mean(results, d => d.percentage) || 0) },
+                                        { metric: "Consistency", value: calculateConsistency(results) },
+                                        { metric: "Improvement", value: calculateImprovementRate(results) },
+                                        { metric: "Completion", value: calculateCompletionRate(results) }
+                                    ]} />
+                                </div>
+                            </div>
+    
+                            {/* Performance Heatmap */}
+                            <div className="col-span-2 bg-white rounded-xl shadow-sm p-4">
+                                <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                                    Performance Heatmap
+                                </h3>
+                                <div className='h-[220px]'>
+                                    <PerformanceHeatmap results={results} />
+                                </div>
                             </div>
                         </div>
-
                         {/* Score Distribution 
                         <div className="bg-white rounded-xl shadow-sm p-4">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">
@@ -414,7 +418,6 @@ const CategoryProgress = () => {
                                 Box plot showing score distribution with quartiles, median, and outliers
                             </div>
                         </div>
-
                         */}
                     </div>
                 </div>

@@ -8,7 +8,6 @@ import { triggerConfetti, triggerAchievementConfetti, triggerBadgeConfetti, trig
 import { GamificationService } from '@/services/gamification.service';
 import { useGamification } from '@/components/shared/GamificationNotification'; 
 import { QuestProgressManager } from '@/services/QuestProgressManager'; 
-import { toast } from '@/hooks/use-toast';
 
 export const useQuiz = (quiz: Quiz ) => {
     // State variables to keep track of current question, selected answers, show results and score
@@ -227,7 +226,7 @@ export const useQuiz = (quiz: Quiz ) => {
 
             // Validate required fields
             if (!user?._id) {
-                console.error('Missing userId:', userId + " no user ID found");
+                console.error('Missing userId:', user + " no user ID found");
                 throw new Error('No userId provided');
             }
 

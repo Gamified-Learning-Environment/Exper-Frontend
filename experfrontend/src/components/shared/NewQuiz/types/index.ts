@@ -11,6 +11,7 @@ export interface QuizQuestion { // QuizQuestion interface
 }
 
 export interface Quiz { // Quiz interface
+    _id: string;
     id: string;
     title: string;
     description: string;
