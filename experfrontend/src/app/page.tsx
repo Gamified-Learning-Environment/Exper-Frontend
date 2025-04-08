@@ -6,7 +6,7 @@ import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { GamificationService } from '@/services/gamification.service';
-import CategoryProgress from '@/components/shared/CategoryProgress';
+//import CategoryProgress from '@/components/shared/CategoryProgress';
 import Dashboard from "@/components/shared/Dashboard";
 import Achievements from "@/components/shared/Achievements";
 import Leaderboard from "@/components/shared/Leaderboard";
@@ -158,7 +158,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            <CategoryProgress />
+            {/* <CategoryProgress /> */}
           </div>
 
           <div>
