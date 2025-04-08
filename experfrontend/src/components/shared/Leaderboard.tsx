@@ -59,7 +59,8 @@ export default function Leaderboard() {
   const fetchUserImage = async (userId: string) => {
     try {
       console.log(`Fetching user image for ${userId}`);
-      const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`);
+      const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiBaseUrl}/api/auth/users/${userId}`);
       if (response.ok) {
         const userData = await response.json();
         if (userData.imageUrl) {

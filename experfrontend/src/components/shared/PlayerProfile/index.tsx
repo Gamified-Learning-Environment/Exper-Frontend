@@ -70,7 +70,8 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
           // Case 1: Viewing someone else's profile
           try {
             // Use User Management Service to get user info
-            const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`);
+            const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+            const response = await fetch(`${apiBaseUrl}/api/auth/users/${userId}`);
             if (!response.ok) {
               throw new Error('Failed to fetch user information');
             }
@@ -98,7 +99,8 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
           } else {
             // Extra fallback - fetch your own user data if imageUrl is missing
             try {
-              const response = await fetch(`http://localhost:8080/api/auth/users/${user._id}`);
+              const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+              const response = await fetch(`${apiBaseUrl}/api/auth/users/${user._id}`);
               if (response.ok) {
                 const userData = await response.json();
                 console.log("Fetched own user data:", userData);

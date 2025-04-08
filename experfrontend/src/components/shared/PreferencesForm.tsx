@@ -54,7 +54,8 @@ export default function PreferencesForm() {
           }
 
           try {
-              const response = await fetch('http://localhost:8080/api/auth/preferences', {
+            const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+              const response = await fetch(`${apiBaseUrl}/api/auth/preferences`, {
                   credentials: 'include',
                   method: 'GET',
                   headers: {
@@ -109,7 +110,8 @@ export default function PreferencesForm() {
               }
           };
 
-          const response = await fetch('http://localhost:8080/api/auth/preferences', {
+          const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+          const response = await fetch(`${apiBaseUrl}/api/auth/preferences`, {
               method: 'PUT',
               credentials: 'include',
               headers: {

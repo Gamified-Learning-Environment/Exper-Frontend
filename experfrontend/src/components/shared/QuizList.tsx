@@ -153,7 +153,8 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
         // Create a map of promises for each user
         const userPromises = userIds.map(async (userId) => {
           try {
-            const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`);
+            const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+            const response = await fetch(`${apiBaseUrl}/api/auth/users/${userId}`);
             if (!response.ok) return [userId, { username: 'Unknown User' }];
             
             const userData = await response.json();
