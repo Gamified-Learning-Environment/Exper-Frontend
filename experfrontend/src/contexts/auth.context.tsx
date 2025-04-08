@@ -102,8 +102,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export const useAuth = () => { // Custom hook to use AuthContext 
+  const context = useContext(AuthContext); // Get context value
+  // Check if context is null and throw error if used outside of AuthProvider
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

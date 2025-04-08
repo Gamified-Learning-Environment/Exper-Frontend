@@ -18,6 +18,8 @@ export default function Home() {
   const [trackedChallenges, setTrackedChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  console.log("User Service URL:", process.env.NEXT_PUBLIC_USER_SERVICE_URL);
+
   useEffect(() => {
     const fetchGamificationData = async () => {
       if (!user?._id) {
