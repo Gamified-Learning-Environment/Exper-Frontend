@@ -35,13 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verify session on mount and after login
   useEffect(() => {
-    // Safety check to ensure we're in the browser environment
-    if (typeof window === 'undefined') return;
-
     const verifySession = async () => {
       try {
         // Use environment variable or fallback to localhost
-        const response = await fetch('http://localhost:8080/api/auth/verify', {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:8080/api';
+        const response = await fetch(`${apiBaseUrl}/auth/verify`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
@@ -69,7 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    verifySession();
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      verifySession();
+    }
   }, []);
 
   // Login function to authenticate user

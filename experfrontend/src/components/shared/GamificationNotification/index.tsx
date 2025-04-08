@@ -48,6 +48,13 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
   const [achievements, setAchievements] = useState<AchievementPopupProps[]>([]);
   const [badges, setBadges] = useState<BadgePopupProps[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mount effect - safely handle client-side only code
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
   
   // Handle normal notifications
   const showNotification = (notification: NotificationProps) => {
@@ -88,55 +95,61 @@ export function GamificationProvider({ children }: { children: ReactNode }) {
       {children} 
 
       {/* Regular notifications */}
-      <div className="fixed bottom-4 right-4 z-40 space-y-2">
-        <AnimatePresence>
-          {notifications.map((notification, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.5, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.5, y: 20 }}
-              className={`
-                p-4 rounded-lg shadow-lg flex items-center gap-3 
-                ${notification.type === 'achievement' ? 'bg-yellow-50 border-2 border-yellow-500' : ''} 
-                ${notification.type === 'level' ? 'bg-purple-50 border-2 border-purple-500' : ''} 
-                ${notification.type === 'streak' ? 'bg-orange-50 border-2 border-orange-500' : ''} 
-                ${notification.type === 'badge' ? 'bg-blue-50 border-2 border-blue-500' : ''} 
-              `}
-            >
-              <div className="text-2xl">{notification.icon}</div>
-              <div className="flex-1">{notification.message}</div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+      {isMounted && (
+        <div className="fixed bottom-4 right-4 z-40 space-y-2">
+          <AnimatePresence>
+            {notifications.map((notification, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.5, y: 20 }}
+                className={`
+                  p-4 rounded-lg shadow-lg flex items-center gap-3 
+                  ${notification.type === 'achievement' ? 'bg-yellow-50 border-2 border-yellow-500' : ''} 
+                  ${notification.type === 'level' ? 'bg-purple-50 border-2 border-purple-500' : ''} 
+                  ${notification.type === 'streak' ? 'bg-orange-50 border-2 border-orange-500' : ''} 
+                  ${notification.type === 'badge' ? 'bg-blue-50 border-2 border-blue-500' : ''} 
+                `}
+              >
+                <div className="text-2xl">{notification.icon}</div>
+                <div className="flex-1">{notification.message}</div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Achievement popups */}
-      <AnimatePresence>
-        {achievements.map((achievement, index) => (
-          <AchievementPopup
-            key={index}
-            achievement={achievement}
-            onClose={() => setAchievements(prev => prev.filter((_, i) => i !== index))}
-          />
-        ))}
-      </AnimatePresence>
+      {isMounted && (
+        <AnimatePresence>
+          {achievements.map((achievement, index) => (
+            <AchievementPopup
+              key={index}
+              achievement={achievement}
+              onClose={() => setAchievements(prev => prev.filter((_, i) => i !== index))}
+            />
+          ))}
+        </AnimatePresence>
+      )}
 
       {/* Badge popups */}
-      <AnimatePresence>
-        {badges.map((badge, index) => (
-          <BadgePopup
-            key={`badge-${index}`}
-            badge={{
-              name: badge.name,
-              description: badge.description,
-              icon: badge.icon,
-              rarity: badge.rarity
-            }}
-            onClose={() => setBadges(prev => prev.filter((_, i) => i !== index))}
-          />
-        ))}
-      </AnimatePresence>
+      {isMounted && (
+        <AnimatePresence>
+          {badges.map((badge, index) => (
+            <BadgePopup
+              key={`badge-${index}`}
+              badge={{
+                name: badge.name,
+                description: badge.description,
+                icon: badge.icon,
+                rarity: badge.rarity
+              }}
+              onClose={() => setBadges(prev => prev.filter((_, i) => i !== index))}
+            />
+          ))}
+        </AnimatePresence>
+      )}
     </GamificationContext.Provider>
   );
 }
