@@ -1,6 +1,6 @@
 // Gamification service for handling player stats, experience, streaks, achievements, and challenges
 
-const API_URL = 'http://localhost:9091/api';
+const API_URL = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 'http://localhost:9091/api';
 
 export interface LeaderboardPlayer {
   user_id(user_id: any): Promise<void>;

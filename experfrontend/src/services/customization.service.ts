@@ -1,5 +1,4 @@
-const API_URL = 'http://localhost:9091/api'; // Update with your actual Gamification API URL
-
+const API_URL = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 'http://localhost:9091/api';
 export interface UserCustomization {
   theme: {
     primaryColor: string;
