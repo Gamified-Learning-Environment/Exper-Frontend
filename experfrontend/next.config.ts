@@ -6,12 +6,12 @@ const nextConfig: NextConfig = {
   output: "standalone",
   
   // Prevent static generation
-  staticPageGenerationTimeout: 0,
+  staticPageGenerationTimeout: 60,
   
   // Specify which pages should be SSR only
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', 'exper-frontend.vercel.app']
+      allowedOrigins: ['localhost:3000', 'exper-frontend.vercel.app', '*.railway.app']
     }
   },
   
