@@ -8,14 +8,15 @@ import { AuthProvider } from "@/contexts/auth.context";
 import { GamificationProvider } from '@/components/shared/GamificationNotification';
 import { CustomizationProvider } from '@/contexts/customization.context';
 
-const poppins = Poppins({ // Poppins font from Google Fonts
+// Poppins font from Google Fonts
+const poppins = Poppins({ 
   subsets: ["latin"],
   weight: ['400', '500', '600', '700'],
   variable: '--font-poppins'
 });
 
 
-export const metadata: Metadata = { // Metadata for the app
+export const metadata: Metadata = { 
   title: "Exper",
   description: "Gamified Learning Environment",
   icons: {
