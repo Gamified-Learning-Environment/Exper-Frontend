@@ -35,7 +35,9 @@ export default function ProfilePage() {
             setIsCurrentUser(user?._id === id);
             
             // Fetch username from user service
-            const response = await fetch(`http://localhost:8080/api/auth/users/${id}`);
+             // Use environment variable or fallback to localhost
+            const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+            const response = await fetch(`${apiBaseUrl}/api/auth/users/${id}`);
             if (!response.ok) throw new Error('Failed to load user data');
             const userData = await response.json();
             setUsername(userData.username || userData.email?.split('@')[0] || 'User');

@@ -26,7 +26,9 @@ export default function UserButton({ user, onSignOut }: UserButtonProps) { // Us
       if (!user?._id || profileImage) return;
       
       try {
-        const response = await fetch(`http://localhost:8080/api/auth/users/${user._id}`);
+        // Use environment variable or fallback to localhost
+        const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+        const response = await fetch(`${apiBaseUrl}/api/auth/users/${user._id}`);
         if (response.ok) {
           const userData = await response.json();
           if (userData.imageUrl) {

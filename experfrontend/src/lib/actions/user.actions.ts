@@ -12,7 +12,8 @@ interface UserData {
 // Create new user account with provided data and accessing backend user service
 export async function createUser(userData: UserData) {
   try {
-    const response = await fetch('http://localhost:8080/api/auth/register', { // fetch user data from API
+    const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+    const response = await fetch(`${apiBaseUrl}/api/auth/register`, { // fetch user data from API
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -36,7 +37,8 @@ export async function createUser(userData: UserData) {
 // Login user with provided email and password
 export async function loginUser(email: string, password: string, rememberMe: boolean) {
   try {
-    const response = await fetch('http://localhost:8080/api/auth/login', { // fetch user data from API
+    const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+    const response = await fetch(`${apiBaseUrl}/api/auth/login`, { // fetch user data from API
       method: 'POST',
       credentials: 'include', // Send cookies with request
       headers: {
@@ -68,7 +70,8 @@ export async function loginUser(email: string, password: string, rememberMe: boo
 // Logout user by removing user data from local storage / sessionStorage
 export async function logoutUser() {
   try {
-    const response = await fetch('http://localhost:8080/api/auth/logout', {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+    const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include',  // Include cookies in the request
       headers: {
