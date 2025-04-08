@@ -7,7 +7,7 @@ import { Suspense } from 'react'; // Import Suspense for lazy loading
 const NewQuizForm = dynamic(
   () => import('@/components/shared/NewQuizForm'),
   { ssr: false }
-);
+); 
 
 
 export default function CreateQuizPage() { // Create Quiz Page component
