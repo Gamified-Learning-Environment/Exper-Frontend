@@ -1,0 +1,15 @@
+{
+    "framework": "nextjs",
+    "buildCommand": "next build",
+    "devCommand": "next dev",
+    "installCommand": "npm install",
+    "outputDirectory": ".next",
+    "regions": ["iad1"],
+    "images": {
+      "sizes": [640, 750, 828, 1080, 1200, 1920],
+      "remotePatterns": []
+    },
+    "env": {
+      "NEXT_PUBLIC_FORCE_CLIENT_ONLY": "true"
+    }
+  }
