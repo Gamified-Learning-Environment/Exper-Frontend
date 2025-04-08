@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const verifySession = async () => {
       try {
         // Use environment variable or fallback to localhost
-        const apiBaseUrl = process.env.NEXT_PUBLIC_USER_API_URL || 'http://localhost:8080/api';
-        const response = await fetch(`${apiBaseUrl}/auth/verify`, {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
+        const response = await fetch(`${apiBaseUrl}/api/auth/verify`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
