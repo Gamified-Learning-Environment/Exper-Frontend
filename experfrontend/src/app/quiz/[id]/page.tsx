@@ -1,7 +1,9 @@
 import NewQuiz from '@/components/shared/NewQuiz'; // Quiz component from components/shared folder
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
 async function getQuiz(id: string) { // Fetch quiz data from API
-    const res = await fetch(`http://localhost:9090/api/quiz/${id}`, {
+    const res = await fetch(`${API_URL}/api/quiz/${id}`, {
         cache: 'no-store', // Disable caching for this request to always get the latest data - Turn off later
     }); 
 

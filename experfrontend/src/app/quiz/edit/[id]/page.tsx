@@ -1,5 +1,7 @@
 'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
 import { useEffect, useState } from 'react';
 import EditQuizForm from '@/components/shared/EditQuizForm'; // Edit Quiz Form component from components/shared folder
 
@@ -31,7 +33,7 @@ export default function EditQuizPage({ params }: { params: Promise<{ id: string 
       if (!quizId) return; // Return if quiz id is null
 
       try { // Try to fetch quiz data
-        const response = await fetch(`http://localhost:9090/api/quiz/${quizId}`); // Fetch quiz data from API
+        const response = await fetch(`${API_URL}/api/quiz/${quizId}`); // Fetch quiz data from API
         if (!response.ok) {
           throw new Error('Failed to fetch quiz');
         }

@@ -10,6 +10,9 @@ import PerformanceHeatmap from './PerformanceHeatmap';
 import RadarChart from './RadarChart';
 import BoxPlot from './BoxPlot';
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
+
 interface QuizResult {
     _id: string;
     userId: string;
@@ -139,7 +142,7 @@ const CategoryProgress = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch('http://localhost:9090/api/categories');
+                const response = await fetch(`${API_URL}/api/categories`);
                 if (!response.ok) throw new Error('Failed to fetch categories');
                 const data = await response.json();
                 setCategories(data);

@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from '@/contexts/auth.context';
 import { UserIcon, StarIcon, PencilIcon, TrashIcon, ExternalLinkIcon } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
 // Quiz Question interface
 interface QuizQuestion {
   id: string;
@@ -72,7 +74,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
 
   const handleDelete = async (quizId: string) => {
     try {
-      const response = await fetch(`http://localhost:9090/api/quiz/${quizId}`, {
+      const response = await fetch(`${API_URL}/api/quiz/${quizId}`, {
         method: 'DELETE',
       });
 
@@ -109,7 +111,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
       };
       
       // Make API call to create the cloned quiz
-      const response = await fetch('http://localhost:9090/api/quiz', {
+      const response = await fetch(`${API_URL}/api/quiz`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -184,7 +186,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch('http://localhost:9090/api/categories');
+        const response = await fetch(`${API_URL}/api/categories`);
         if (!response.ok) {
           throw new Error('Failed to fetch categories');
         }
@@ -201,7 +203,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
   useEffect(() => {
     async function fetchQuizzes() {
       try {
-        let url = 'http://localhost:9090/api/quizzes';
+        let url = `${API_URL}/api/quizzes`;
         
         // Category filter if selected
         if (selectedCategory && selectedCategory !== 'all') {

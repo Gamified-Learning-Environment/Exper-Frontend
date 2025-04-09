@@ -7,6 +7,8 @@ import { Button } from '../ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
 import { useAuth } from '@/contexts/auth.context';
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
 interface QuizQuestion { // QuizQuestion interface, defines structure of a quiz question
   id: string;
   question: string;
@@ -68,7 +70,7 @@ export default function EditQuizForm({ quiz }: EditQuizFormProps) { // EditQuizF
       };
 
       // Send PUT request to update quiz data
-      const response = await fetch(`http://localhost:9090/api/quiz/${quiz._id}`, {
+      const response = await fetch(`${API_URL}/api/quiz/${quiz._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

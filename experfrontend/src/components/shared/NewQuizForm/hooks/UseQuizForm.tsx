@@ -2,6 +2,9 @@
 
 'use client'; // use client to import modules from the client folder, helps to avoid SSR issues
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth.context';
 import { useRouter } from 'next/navigation';
@@ -173,7 +176,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
     const handleAddCategory = async () => {
         if (!newCategory) return;
         try {
-          const response = await fetch('http://localhost:9090/api/categories', {
+          const response = await fetch(`${API_URL}/api/categories`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -202,7 +205,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
           const formData = new FormData();
           formData.append('image', file);
           
-          const response = await fetch('http://localhost:9090/api/upload', {
+          const response = await fetch(`${API_URL}/api/upload`, {
             method: 'POST',
             body: formData,
           });
@@ -238,8 +241,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
 
         // Select endpoint based on chosen model
         const endpoint = aiModel === 'claude' 
-        ? 'http://localhost:9090/api/generate-quiz-claude'
-        : 'http://localhost:9090/api/generate-quiz';
+        ? `${API_URL}/api/generate-quiz-claude`
+        : `${API_URL}/api/generate-quiz`;
 
         const response = await fetch(endpoint, { // Fetch quiz from API
           method: 'POST',
@@ -366,7 +369,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
           aiModel: useAI ? aiModel : undefined
         };
   
-        const response = await fetch('http://localhost:9090/api/quiz', {
+        const response = await fetch(`${API_URL}/api/quiz`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -418,7 +421,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
     // Function to fetch categories
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:9090/api/categories');
+        const response = await fetch(`${API_URL}/api/categories`);
         if (!response.ok) {
           throw new Error('Failed to fetch categories');
         }
@@ -479,7 +482,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
     }
 
         // API validation request to validate quiz questions
-        const response = await fetch('http://localhost:9090/api/validate-quiz', {
+        const response = await fetch(`${API_URL}/api/validate-quiz`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

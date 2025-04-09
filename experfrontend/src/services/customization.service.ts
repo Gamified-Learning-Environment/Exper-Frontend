@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 'http://localhost:9091/api';
+const API_URL = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 'http://localhost:9091';
 export interface UserCustomization {
   theme: {
     primaryColor: string;
@@ -16,7 +16,7 @@ export interface UserCustomization {
 export class CustomizationService {
   static async getUserCustomization(userId: string): Promise<UserCustomization> {
     try {
-      const response = await fetch(`${API_URL}/player/${userId}/customization`);
+      const response = await fetch(`${API_URL}/api/player/${userId}/customization`);
       
       if (!response.ok) {
         // If the user doesn't have customizations yet, return defaults
@@ -36,7 +36,7 @@ export class CustomizationService {
   
   static async saveUserCustomization(userId: string, data: UserCustomization): Promise<UserCustomization> {
     try {
-      const response = await fetch(`${API_URL}/player/${userId}/customization`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/customization`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

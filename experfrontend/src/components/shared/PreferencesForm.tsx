@@ -7,6 +7,8 @@ import { Card, CardHeader, CardContent, CardFooter } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Slider } from '../ui/slider';
 
+const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
+
 interface CategoryPreference {
     difficulty: 'beginner' | 'intermediate' | 'expert';
     questionCount: number;
@@ -34,7 +36,7 @@ export default function PreferencesForm() {
   useEffect(() => {
       const fetchCategories = async () => {
           try {
-              const response = await fetch('http://localhost:9090/api/categories');
+              const response = await fetch(`${API_URL}/api/categories`);
               if (!response.ok) throw new Error('Failed to fetch categories');
               const data = await response.json();
               setCategories(data);

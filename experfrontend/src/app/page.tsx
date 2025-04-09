@@ -80,7 +80,7 @@ export default function Home() {
             </div>
             <div className="flex items-center justify-center">
               <img
-                src="/assets/images/learning.png"
+                src="assets/images/learning.png"
                 alt="Learning"
                 className="w-full max-w-md transform rounded-2xl shadow-2xl transition hover:rotate-2"
               />
