@@ -1,6 +1,6 @@
 // Gamification service for handling player stats, experience, streaks, achievements, and challenges
 
-const API_URL = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 'http://localhost:9091/api';
+const API_URL = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 'http://localhost:9091';
 
 export interface LeaderboardPlayer {
   user_id(user_id: any): Promise<void>;
@@ -21,7 +21,7 @@ export class GamificationService {
     
   static async getPlayerStats(userId: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/users/${userId}/stats`, {
+      const response = await fetch(`${API_URL}/api/users/${userId}/stats`, {
         credentials: 'include'
       });
       
@@ -49,7 +49,7 @@ export class GamificationService {
 
   static async getPlayerInfo(userId: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/player/${userId}`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}`, {
         credentials: 'include'
       });
       
@@ -67,7 +67,7 @@ export class GamificationService {
 
   static async getLeaderboard(): Promise<LeaderboardPlayer[]> {
     try {
-      const response = await fetch(`${API_URL}/leaderboard`, {
+      const response = await fetch(`${API_URL}/api/leaderboard`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export class GamificationService {
   static async addExperience(userId: string, xp: number, category?: string): Promise<any> {
     try {
       console.log(`Calling gamification service at ${API_URL}/player/${userId}/xp`);
-      const response = await fetch(`${API_URL}/player/${userId}/xp`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/xp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ xp, category }),
@@ -118,7 +118,7 @@ export class GamificationService {
 
   static async addCategoryExperience(userId: string, xpAmount: number, category: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/player/${userId}/category/${category}/xp`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/category/${category}/xp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ export class GamificationService {
   // Get user badges
   static async getUserBadges(userId: string) {
     try {
-      const response = await fetch(`${API_URL}/player/${userId}/badges`);
+      const response = await fetch(`${API_URL}/api/player/${userId}/badges`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch badges');
@@ -158,7 +158,7 @@ export class GamificationService {
     try {
       console.log(`Calling gamification service at ${API_URL}/player/${userId}/streak`);
       // Fix: Add "player" to the path
-      const response = await fetch(`${API_URL}/player/${userId}/streak`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/streak`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category }),
@@ -183,7 +183,7 @@ export class GamificationService {
   }
     
   static async getAchievements() {
-    const response = await fetch(`${API_URL}/achievements`, {
+    const response = await fetch(`${API_URL}/api/achievements`, {
       credentials: 'include'
     });
     return await response.json();
@@ -192,7 +192,7 @@ export class GamificationService {
   static async getUserAchievements(userId: string): Promise<any[]> {
     try {
       console.log(`Fetching achievements for user ${userId}`);
-      const response = await fetch(`${API_URL}/player/${userId}/achievements`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/achievements`, {
         credentials: 'include'
       });
       
@@ -214,7 +214,7 @@ export class GamificationService {
     try {
       console.log('Checking achievements with data:', data);
       
-      const response = await fetch(`${API_URL}/player/${userId}/check-achievements`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/check-achievements`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -239,7 +239,7 @@ export class GamificationService {
     try {
       console.log(`Calling gamification service at ${API_URL}/player/${userId}/achievements`);
       // Fix: Add "player" to the path
-      const response = await fetch(`${API_URL}/player/${userId}/achievements`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/achievements`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // Fix: Change achievement_Id to achievement_id
@@ -271,8 +271,8 @@ export class GamificationService {
   static async getCampaigns(userId: string): Promise<any[]> {
     try {
       const url = userId 
-          ? `${API_URL}/campaigns?user_id=${userId}`
-          : `${API_URL}/campaigns`;
+          ? `${API_URL}/api/campaigns?user_id=${userId}`
+          : `${API_URL}/api/campaigns`;
           
       const response = await fetch(url, {
           credentials: 'include'
@@ -294,7 +294,7 @@ export class GamificationService {
   
   static async getUserActiveCampaign(userId: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/users/${userId}/campaigns`, {
+      const response = await fetch(`${API_URL}/api/users/${userId}/campaigns`, {
         credentials: 'include'
       });
       
@@ -344,7 +344,7 @@ export class GamificationService {
   
   static async updateQuestProgress(userId: string, questId: string, objectiveType: string, progress: number = 1): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/users/${userId}/quests/${questId}/progress`, {
+      const response = await fetch(`${API_URL}/api/users/${userId}/quests/${questId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ objective_type: objectiveType, progress }),
@@ -364,7 +364,7 @@ export class GamificationService {
         console.log(`Activating campaign ${campaignId} for user ${userId}`);
 
         // Get the complete campaign object first to get the correct ID
-        const response1 = await fetch(`${API_URL}/campaigns/${campaignId}`, {
+        const response1 = await fetch(`${API_URL}/api/campaigns/${campaignId}`, {
           credentials: 'include'
         });
 
@@ -387,7 +387,7 @@ export class GamificationService {
         
         // Now use the proper ID for activation
         console.log(`Using campaign ID for activation: ${campaignId}`);
-        const response = await fetch(`${API_URL}/users/${userId}/campaigns/${campaignId}/activate`, {
+        const response = await fetch(`${API_URL}/api/users/${userId}/campaigns/${campaignId}/activate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
