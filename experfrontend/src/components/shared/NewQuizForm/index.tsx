@@ -197,14 +197,56 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                 </div>
   
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">PDF URL (Optional)</label>
-                  <input
-                    type="url"
-                    value={formState.pdfUrl}
-                    onChange={(e) => handlers.setPdfUrl(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    placeholder="Enter URL to a PDF document"
-                  />
+                  <label className="text-sm font-medium">PDF Document (Optional)</label>
+                  <div className="flex flex-col gap-2">
+                    {formState.pdfUrl ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 p-2 bg-purple-50 border border-purple-200 rounded-lg text-purple-800 flex items-center">
+                          <span className="text-xl mr-2">📄</span>
+                          <span className="flex-1 truncate">
+                            {typeof formState.pdfUrl === 'string' 
+                              ? formState.pdfUrl.split('/').pop() 
+                              : formState.pdfUrl.name}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handlers.setPdfUrl('')}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <input
+                          title="Upload a PDF file"
+                          type="file"
+                          accept=".pdf"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              await handlers.handlePdfUpload(file);
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="border-2 border-dashed border-purple-200 rounded-lg p-4 flex flex-col items-center justify-center gap-3 hover:border-purple-400 transition-all">
+                          <div className="p-3 rounded-full bg-purple-100">
+                            <Upload className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-purple-600">
+                              {formState.isPdfProcessing ? 'Uploading...' : 'Click or drag PDF here'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">PDF files up to 10MB</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
   
                 <Button type="button" onClick={handlers.generateQuizWithAI} disabled={formState.isGenerating} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700">

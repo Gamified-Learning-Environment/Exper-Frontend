@@ -37,7 +37,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
     const [notes, setNotes] = useState('');
     const [questionCount, setQuestionCount] = useState(5);
     const [difficulty, setDifficulty] = useState<Difficulty>('intermediate');
-    const [pdfUrl, setPdfUrl] = useState('');
+    const [pdfUrl, setPdfUrl] = useState<string | File>('');
     const [isPdfProcessing, setIsPdfProcessing] = useState(false); // pdf processing state
     const [showPreview, setShowPreview] = useState(false);
     const [validationFeedback, setValidationFeedback] = useState<ValidationFeedback | null>(null);
@@ -232,17 +232,55 @@ export const UseQuizForm = (quiz?: Quiz) => {
         }
     };
 
+    // Handler function for PDF uploading
+    const handlePdfUpload = async (file: File) => { 
+      try {
+        setIsPdfProcessing(true); // Set PDF processing state to true
+        
+        const formData = new FormData(); // Create a new FormData object
+        formData.append('pdf', file); // Append the PDF file to the FormData object
+        
+        const response = await fetch(`${API_URL}/api/upload-pdf`, { // Send the PDF to the server
+          method: 'POST',
+          body: formData,
+        });
+    
+        if (!response.ok) {
+          throw new Error('Failed to upload PDF');
+        }
+    
+        const { pdfUrl } = await response.json(); // Parse the response to get the PDF URL
+        setPdfUrl(pdfUrl); // Set the PDF URL in the state
+        
+        return pdfUrl; // Return the PDF URL for further processing
+      } catch (error) {
+        console.error('Error uploading PDF:', error);
+        setError('Failed to upload PDF');
+        return null;
+      } finally {
+        setIsPdfProcessing(false);
+      }
+    };
+
     // Function to generate quiz with AI
     const generateQuizWithAI = async () => {
       try {
         setIsGenerating(true); // Set generating state to true
-        setIsPdfProcessing(true); // Set PDF processing state to true
         setError('');
 
+        // Handle file upload if it's a File object (from local input) not a URL
+        if (pdfUrl && pdfUrl instanceof File) {
+          const uploadedUrl = await handlePdfUpload(pdfUrl);
+          if (!uploadedUrl) {
+            throw new Error('Failed to upload PDF');
+          }
+          setPdfUrl(uploadedUrl);
+        }
+
         // Select endpoint based on chosen model
-        const endpoint = aiModel === 'claude' 
-        ? `${API_URL}/api/generate-quiz-claude`
-        : `${API_URL}/api/generate-quiz`;
+        const endpoint = aiModel === 'claude' // Use Claude model if selected
+        ? `${API_URL}/api/generate-quiz-claude` // Endpoint for Claude model
+        : `${API_URL}/api/generate-quiz`; // Default to GPT model
 
         const response = await fetch(endpoint, { // Fetch quiz from API
           method: 'POST',
@@ -620,7 +658,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
             fetchCategories,
             validateQuizQuestions,
             QuestionValidation,
-            setAIModel
+            setAIModel,
+            handlePdfUpload,
             // Add more handlers here as I need
         }
     };
