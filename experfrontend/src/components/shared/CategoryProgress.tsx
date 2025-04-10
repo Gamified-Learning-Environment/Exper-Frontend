@@ -112,10 +112,12 @@ const CategoryProgress = () => {
         if (!user?._id) return;
         
         const fetchAllCategoryData = async () => {
+            const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070'; // Use environment variable or default to localhost
             try {
                 // Fetch results for all categories
                 const categoryPromises = categories.map(category =>
-                    fetch(`http://localhost:8070/api/results/category/${user._id}/${category}`)
+
+                    fetch(`${baseUrl}/api/results/category/${user._id}/${category}`)
                         .then(res => res.json())
                 );
                 
@@ -164,7 +166,8 @@ const CategoryProgress = () => {
             setLoading(true);
 
             try {
-                const response = await fetch(`http://localhost:8070/api/results/category/${user._id}/${selectedCategory}`);
+                const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070'; // Use environment variable or default to localhost
+                const response = await fetch(`${baseUrl}/api/results/category/${user._id}/${selectedCategory}`);
                 if (!response.ok) throw new Error('Failed to fetch results');
                 const data = await response.json();
                 setResults(data);

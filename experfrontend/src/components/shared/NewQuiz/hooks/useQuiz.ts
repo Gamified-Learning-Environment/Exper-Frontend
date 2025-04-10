@@ -233,7 +233,8 @@ export const useQuiz = (quiz: Quiz ) => {
             // Debug for checking result data
             console.log('Submitting result:', resultData);
 
-            const response = await fetch('http://localhost:8070/api/results', {
+            const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070'; // Use environment variable or default to localhost
+            const response = await fetch(`${baseUrl}/api/results`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

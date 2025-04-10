@@ -82,7 +82,8 @@ export default function UserStats({userId}: UserStatsProps ) {
       
             try {
                 console.log('Fetching results for user:', userId);
-                const response = await fetch(`http://localhost:8070/api/results/user/${userId}`);
+                const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070';
+                const response = await fetch(`${baseUrl}/api/results/user/${userId}`);
                 if (!response.ok) throw new Error('Failed to fetch results');
                 
                 const data = await response.json();
