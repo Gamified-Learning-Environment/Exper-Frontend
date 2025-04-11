@@ -116,7 +116,7 @@ export default function ProfilePage() {
             </TabsContent>
             
             <TabsContent value="progress">
-              <CategoryProgress />
+              <CategoryProgress userId={userId}/>
             </TabsContent>
 
             <TabsContent value="customize">

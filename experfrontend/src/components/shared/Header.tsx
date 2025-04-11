@@ -122,11 +122,11 @@ const Header = () => { // Header component
   
   return ( // return Header
     <header className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 shadow-lg">
-      <div className="wrapper flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link href="/" className="relative w-38 transform transition hover:scale-105">
-          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg -m-2"></div>
-            <div className="logo-container h-16 w-16 flex items-center justify-center">
+      <div className="wrapper flex items-center justify-between px-2 py-2 sm:px-4 sm:py-3 lg:px-8 relative">
+        {/* Logo with response sizing*/}
+        <Link href="/" className="relative transform transition hover:scale-105">
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-lg -m-1 sm:-m-2"></div>
+            <div className="logo-container h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 flex items-center justify-center">
               <ExperCompassAnim />
             </div>
         </Link>
