@@ -43,7 +43,45 @@ export default function RegisterForm({ onClose }: RegisterFormProps) { // Regist
         lastName: formData.get('lastName') as string,
         imageUrl: formData.get('imageUrl') as string || undefined, // Optional profile image URL
       };
-      await register(userData); // Call register function from useAuth hook
+      // Register the user
+      const registeredUser = await register(userData); // Call register function from auth context
+      
+      // Get the user ID from localStorage (where auth context typically stores it)
+      try {
+        // Get current user data which should be stored after registration
+        const userDataStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const currentUser = userDataStr ? JSON.parse(userDataStr) : null;
+        
+        if (currentUser && currentUser._id) {
+          // Set up the gamification service URL - ensure this matches your deployment environment
+          const gamificationUrl = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 
+                                'http://localhost:9091';
+          
+          console.log('Creating player profile for user:', currentUser._id);
+          
+          // Make request to create player profile using the user's ID and username
+          const response = await fetch(
+            `${gamificationUrl}/api/player/${currentUser._id}?username=${encodeURIComponent(userData.username)}`, 
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          if (response.ok) {
+            console.log('Player profile created successfully');
+          } else {
+            console.error('Failed to create player profile:', await response.text());
+          }
+        } else {
+          console.warn('User registration successful but no user ID available');
+        }
+      } catch (playerError) {
+        // Log error but don't block registration flow
+        console.error('Error creating player profile:', playerError);
+      }
       onClose();
       router.push('/'); // Redirect to home page after successful registration
     } catch (error) {

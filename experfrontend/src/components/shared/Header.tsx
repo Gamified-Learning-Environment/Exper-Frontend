@@ -70,7 +70,7 @@ const LevelWidget = () => {
       
       try {
         // Get player stats from gamification service
-        const stats = await GamificationService.getPlayerStats(user._id);
+        const stats = await GamificationService.getPlayerStats(user._id, user.username);
         setPlayerStats(stats);
       } catch (err) {
         console.error("Error fetching player level stats:", err);

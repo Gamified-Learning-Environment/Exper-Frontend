@@ -51,6 +51,7 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
 
   // Determine which user ID to use: the prop (if provided) or the current user
   const targetUserId = userId || user?._id;
+  const targetUsername = user?.username || "None";
   
   useEffect(() => {
     const fetchPlayerStats = async () => {
@@ -62,7 +63,7 @@ export default function PlayerProfile({ userId }: PlayerProfileProps) {
         setProfileImage(undefined); // Reset profile image state
 
         // Get player stats from gamification service
-        const stats = await GamificationService.getPlayerStats(targetUserId);
+        const stats = await GamificationService.getPlayerStats(targetUserId, targetUsername);
         setPlayerStats(stats);
 
         // Handle different cases for fetching user profile image

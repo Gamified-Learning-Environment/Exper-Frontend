@@ -31,7 +31,7 @@ export default function Home() {
         setLoading(true);
         
         // Get player stats (level, xp, streak)
-        const stats = await GamificationService.getPlayerStats(user._id);
+        const stats = await GamificationService.getPlayerStats(user._id, user.username);
         setPlayerStats(stats);
       
       } catch (err) {

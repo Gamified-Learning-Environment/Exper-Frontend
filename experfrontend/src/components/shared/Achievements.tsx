@@ -37,6 +37,7 @@ export default function Achievements({userId}: AchievementsProps) {
 
     // Use provided userId or fallback to the authenticated user's ID
     const targetUserId = userId || user?._id;
+    const targetUsername = user?.username || "None";
 
     const [playerStats, setPlayerStats] = useState<any>(null);
     const [achievements, setAchievements] = useState<Achievement[]>([]); // State to store all achievements
@@ -78,7 +79,7 @@ export default function Achievements({userId}: AchievementsProps) {
                 setUserAchievements(earnedAchievements);
 
                 // Get player stats for accurate progress calculation
-                const stats = await GamificationService.getPlayerStats(targetUserId);
+                const stats = await GamificationService.getPlayerStats(targetUserId, targetUsername);
                 //console.log("Player stats:", stats);
                 setPlayerStats(stats);
 

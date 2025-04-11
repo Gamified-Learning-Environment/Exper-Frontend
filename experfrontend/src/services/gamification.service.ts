@@ -19,9 +19,9 @@ export interface LeaderboardPlayer {
 
 export class GamificationService {
     
-  static async getPlayerStats(userId: string): Promise<any> {
+  static async getPlayerStats(userId: string, username: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/api/users/${userId}/stats`, {
+      const response = await fetch(`${API_URL}/api/users/${userId}/${username}/stats`, {
         credentials: 'include'
       });
       
@@ -47,9 +47,9 @@ export class GamificationService {
     }
   }
 
-  static async getPlayerInfo(userId: string): Promise<any> {
+  static async getPlayerInfo(userId: string, username: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/api/player/${userId}`, {
+      const response = await fetch(`${API_URL}/api/player/${userId}/${username}`, {
         credentials: 'include'
       });
       

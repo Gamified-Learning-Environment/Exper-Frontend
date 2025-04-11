@@ -233,6 +233,11 @@ export const useQuiz = (quiz: Quiz ) => {
             // Debug for checking result data
             console.log('Submitting result:', resultData);
 
+            // If category is not provided, set it to 'General'
+            if (!resultData.category) {
+                resultData.category = 'General';
+            }
+
             const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070'; // Use environment variable or default to localhost
             const response = await fetch(`${baseUrl}/api/results`, {
                 method: 'POST',
@@ -364,6 +369,7 @@ export const useQuiz = (quiz: Quiz ) => {
                         
             // Show achievement notifications with proper timing and effects
             if (achievementResponse?.awarded_achievements?.length > 0) {
+                
                 // Store achievements in state for displaying in the UI
                 const newAchievements = achievementResponse.awarded_achievements.map((item: any) => ({
                     title: item.achievement.title,
@@ -371,6 +377,8 @@ export const useQuiz = (quiz: Quiz ) => {
                     icon: item.achievement.icon,
                     xp_reward: item.achievement.xp_reward
                 }));
+
+                console.log('Awarded achievements to user: ' + userId, achievementResponse.awarded_achievements);
                 
                 setAchievements(prevAchievements => [...prevAchievements, ...newAchievements]);
                 
@@ -403,6 +411,8 @@ export const useQuiz = (quiz: Quiz ) => {
                         triggerBadgeConfetti();
                     }, 500 + (index * 2500)); // Delay showing badges to avoid overwhelming the user
                 });
+
+                console.log('Awarded badges to user: ' + userId, achievementResponse.awarded_badges);
             }
             
             // Handle streak milestones
