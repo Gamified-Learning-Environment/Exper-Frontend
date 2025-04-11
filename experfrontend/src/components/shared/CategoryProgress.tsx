@@ -23,16 +23,23 @@ interface QuizResult {
     created_at: string;
     category: string;
 }
+interface CategoryProgressProps {
+    userId?: string; // Optional, will default to current user if not provided
+}
 
-const CategoryProgress = () => {
+const CategoryProgress = ({userId }: CategoryProgressProps) => {
     const chartRef = useRef<SVGSVGElement>(null);
-    const { user } = useAuth();
+    const { user } = useAuth(); // For authorising user
     const [results, setResults] = useState<QuizResult[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [bubbleData, setBubbleData] = useState<{ category: string; count: number; }[]>([]);
+
+    // Determine which user ID to use: the prop (if provided) or the current user
+    const targetUserId = userId || user?._id;
+
 
     // State to track window width for responsiveness
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
@@ -109,7 +116,7 @@ const CategoryProgress = () => {
 
     // Process data for bubble chart
     useEffect(() => {
-        if (!user?._id) return;
+        if (!targetUserId) return;
         
         const fetchAllCategoryData = async () => {
             const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070'; // Use environment variable or default to localhost
@@ -117,7 +124,7 @@ const CategoryProgress = () => {
                 // Fetch results for all categories
                 const categoryPromises = categories.map(category =>
 
-                    fetch(`${baseUrl}/api/results/category/${user._id}/${category}`)
+                    fetch(`${baseUrl}/api/results/category/${targetUserId}/${category}`)
                         .then(res => res.json())
                 );
                 
@@ -162,12 +169,12 @@ const CategoryProgress = () => {
     // Fetch results for selected category
     useEffect(() => {
         const fetchResults = async () => {
-            if (!user?._id || !selectedCategory) return;
+            if (!targetUserId || !selectedCategory) return;
             setLoading(true);
 
             try {
                 const baseUrl = process.env.NEXT_PUBLIC_RESULTS_SERVICE_URL || 'http://localhost:8070'; // Use environment variable or default to localhost
-                const response = await fetch(`${baseUrl}/api/results/category/${user._id}/${selectedCategory}`);
+                const response = await fetch(`${baseUrl}/api/results/category/${targetUserId}/${selectedCategory}`);
                 if (!response.ok) throw new Error('Failed to fetch results');
                 const data = await response.json();
                 setResults(data);
@@ -324,7 +331,9 @@ const CategoryProgress = () => {
             {/* Header section with title and category selector */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h3 className="text-xl font-bold text-purple-800">
-                    Quiz Progress Tracker
+                    {userId && userId !== user?._id 
+                        ? "User's Quiz Progress" 
+                        : "My Quiz Progress"} Tracker
                 </h3>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                     <SelectTrigger className="w-[200px] bg-white border-2 border-purple-200 hover:border-purple-400 transition-all">
@@ -353,6 +362,18 @@ const CategoryProgress = () => {
             {error && (
                 <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-200">
                     Error: {error}
+                </div>
+            )}
+
+            {!loading && !error && (!results.length || !bubbleData.length) && (
+                <div className="bg-purple-50 rounded-xl p-8 text-center">
+                    <div className="text-5xl mb-4">📊</div>
+                    <h3 className="text-xl font-bold text-purple-800 mb-2">No Quiz Results Yet</h3>
+                    <p className="text-purple-600 max-w-md mx-auto">
+                        {userId && userId !== user?._id 
+                            ? "This user hasn't completed any quizzes in this category yet."
+                            : "You haven't completed any quizzes in this category yet. Take some quizzes to see your progress!"}
+                    </p>
                 </div>
             )}
             
