@@ -10,6 +10,8 @@ import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from '@/contexts/auth.context';
 import { UserIcon, StarIcon, PencilIcon, TrashIcon, ExternalLinkIcon } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { Input } from '../ui/input'; 
 
 const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
 
@@ -44,6 +46,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const router = useRouter();
   const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
 
   // State to store user information
   const [userMap, setUserMap] = useState<Record<string, { username: string }>>({});
@@ -136,6 +139,35 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to clone quiz');
     }
+  };
+
+  // Filter quizzes based on search term, category, and user
+  const filterQuizzes = (quiz: Quiz) => {
+    // Search term filter - check if search term is in title or description
+    const matchesSearch = !searchTerm || 
+      quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quiz.description && quiz.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    // Category filter
+    const matchesCategory = !selectedCategory || 
+      selectedCategory === 'all' || 
+      quiz.category === selectedCategory;
+    
+    // User filter based on view mode
+    let matchesUser = true;
+    if (viewMode === 'mine') {
+      matchesUser = user ? quiz.userId === user._id : false;
+    } else if (viewMode === 'community') {
+      matchesUser = user ? quiz.userId !== user._id : true;
+    } else if (viewMode === 'all' && !userOnly) {
+      // In 'all' view on the main page, apply specific section filtering later
+      matchesUser = true;
+    } else if (userOnly) {
+      // On userOnly pages, only show user's quizzes
+      matchesUser = user ? quiz.userId === user._id : false;
+    }
+    
+    return matchesSearch && matchesCategory && matchesUser;
   };
 
   // Function to fetch user data for all quiz creators
@@ -257,6 +289,87 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
 
         {/* Category and View Mode Filter Section */}
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl shadow-md">
+
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-purple-400" />
+            </div>
+            <Input
+              type="text"
+              placeholder="Search quizzes by title or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white border-2 border-purple-200 focus:border-purple-400 rounded-lg py-2 w-full placeholder:text-purple-300"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-purple-400 hover:text-purple-600"
+                aria-label="Clear search"
+              >
+                <span className="text-lg">✕</span>
+              </button>
+            )}
+          </div>
+
+          {searchTerm && ( // Search indicator
+            <div className="mb-4 flex items-center">
+              <span className="bg-purple-100 text-purple-800 text-sm font-medium px-3 py-1 rounded-full flex items-center">
+                <span>Searching for: "{searchTerm}"</span>
+                <button 
+                  onClick={() => setSearchTerm('')}
+                  className="ml-2 h-4 w-4 rounded-full bg-purple-200 flex items-center justify-center text-xs hover:bg-purple-300"
+                >
+                  ✕
+                </button>
+              </span>
+            </div>
+          )}
+
+          {/* No Results state */}
+          {quizzes.filter(filterQuizzes).length === 0 && ( // No results state
+            <div className="mt-8 py-12 flex flex-col items-center justify-center bg-purple-50 border-2 border-purple-200 rounded-xl text-center">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-bold text-purple-800 mb-2">No Quizzes Found</h3>
+              <p className="text-purple-600 mb-4 max-w-md">
+                {searchTerm 
+                  ? `No quizzes match "${searchTerm}"` 
+                  : "No quizzes match your current filters"}
+              </p>
+              <div className="flex gap-2">
+                {searchTerm && (
+                  <Button 
+                    onClick={() => setSearchTerm('')}
+                    variant="outline"
+                    className="border-purple-300 hover:bg-purple-100"
+                  >
+                    Clear Search
+                  </Button>
+                )}
+                {selectedCategory && selectedCategory !== 'all' && (
+                  <Button 
+                    onClick={() => setSelectedCategory('all')}
+                    variant="outline"
+                    className="border-purple-300 hover:bg-purple-100"
+                  >
+                    All Categories
+                  </Button>
+                )}
+                <Button 
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
+                    setViewMode('all');
+                  }}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                >
+                  Reset All Filters
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🎮</span>
@@ -345,10 +458,16 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quizzes
                   .filter(quiz => {
+                    // Base filtering with our common filter function
+                    const passesBasicFilters = filterQuizzes(quiz);
+                    
                     if (!user) return true;
                     if (viewMode === 'mine') return quiz.userId === user._id;
                     if (viewMode === 'all' && !userOnly) return quiz.userId === user._id;
-                    return (viewMode === 'all' || viewMode === 'community');
+                    if (viewMode === 'all' && !userOnly) {
+                      return passesBasicFilters && quiz.userId === user?._id;
+                    }
+                    return passesBasicFilters;
                   })
                   .map((quiz) => {
                     const isOwnQuiz = user && quiz.userId === user._id;
@@ -486,7 +605,13 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {quizzes
-                  .filter(quiz => !user || quiz.userId !== user._id)
+                  .filter(quiz => {
+                    // Base filtering with our common filter function
+                    const passesBasicFilters = filterQuizzes(quiz);
+                    
+                    // This section only shows community quizzes
+                    return passesBasicFilters && (!user || quiz.userId !== user._id);
+                  })
                   .map((quiz) => {
                     const isOwnQuiz = user && quiz.userId === user._id;
 
