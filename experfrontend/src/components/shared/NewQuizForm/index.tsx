@@ -22,7 +22,7 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
           <form onSubmit={handlers.handleSubmit}>
             <CardHeader className="space-y-4 text-center">
               <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
-                Create Your Quiz Adventure ✨ - New
+                Create Your Quiz Adventure ✨
               </h2>
               {formState.error && (
                 <div className="bg-red-100/90 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg animate-pulse">
@@ -343,6 +343,21 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                       rows={3}
                     />
                   </div>
+
+                  {/* Validation feedback - Only render when feedback exists */}
+                  {formState.validationFeedback?.feedback && 
+                    formState.validationFeedback.feedback.find(f => f.question_id === question.id) && (
+                    <div className="mt-4 border-t pt-4 border-green-100">
+                      <h5 className="text-sm font-medium text-green-700 flex items-center gap-2">
+                        <span>🔍</span> Validation Feedback
+                      </h5>
+                      <handlers.QuestionValidation 
+                        feedback={formState.validationFeedback.feedback.find(
+                          f => f.question_id === question.id
+                        )} 
+                      />
+                    </div>
+                  )}
   
   
                   {/* Image upload section */}
@@ -433,22 +448,7 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                       </div>
                       )}
                     </div>
-                  </div>
-
-                  {!formState.useAI && formState.questions.map((question, qIndex) => (
-                  <div key={question.id} className="bg-white p-4 rounded-lg border-2 border-green-200 space-y-4 transition-all hover:shadow-md">
-                    {/* Existing question fields... */}
-                    
-                    {/* Add validation feedback */}
-                    {formState.validationFeedback?.feedback && (
-                      <handlers.QuestionValidation 
-                        feedback={formState.validationFeedback.feedback.find(
-                          f => f.question_id === question.id
-                        )} 
-                      />
-                    )}
-                  </div>
-                ))}
+                  </div>                  
                 </div>
               ))}
             </div>
@@ -525,20 +525,129 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                     </div>
 
                     {/* Options */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Options</label>
-                      {question.options.map((option, oIndex) => (
-                        <div key={oIndex} className="flex gap-2">
-                          <input
-                            type="text"
-                            value={option}
-                            onChange={(e) => handlers.handleOptionChange(qIndex, oIndex, e.target.value)}
-                            className="flex-1 p-2 border-2 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400"
-                            placeholder={`Option ${oIndex + 1}`}
-                            required
-                          />
-                        </div>
-                      ))}
+                    <div className="space-y-4 mt-4">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-semibold text-green-700 flex items-center gap-2">
+                          <span className="bg-green-100 p-1 rounded-full">🎮</span> Answer Options
+                        </h5>
+                        <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-full">
+                          {question.options.length} options
+                        </span>
+                      </div>
+                      
+                      {question.options.map((option, oIndex) => {
+                        const isCorrect = question.isMultiAnswer 
+                          ? Array.isArray(question.correctAnswer) && question.correctAnswer.includes(option)
+                          : question.correctAnswer === option;
+                          
+                        const colors = [
+                          { bg: "from-red-400 to-red-500", border: "border-red-300", hover: "hover:from-red-500 hover:to-red-600", light: "bg-red-50" },
+                          { bg: "from-blue-400 to-blue-500", border: "border-blue-300", hover: "hover:from-blue-500 hover:to-blue-600", light: "bg-blue-50" },
+                          { bg: "from-yellow-400 to-yellow-500", border: "border-yellow-300", hover: "hover:from-yellow-500 hover:to-yellow-600", light: "bg-yellow-50" },
+                          { bg: "from-green-400 to-green-500", border: "border-green-300", hover: "hover:from-green-500 hover:to-green-600", light: "bg-green-50" },
+                          { bg: "from-purple-400 to-purple-500", border: "border-purple-300", hover: "hover:from-purple-500 hover:to-purple-600", light: "bg-purple-50" },
+                          { bg: "from-orange-400 to-orange-500", border: "border-orange-300", hover: "hover:from-orange-500 hover:to-orange-600", light: "bg-orange-50" },
+                        ];
+                        
+                        const color = colors[oIndex % colors.length];
+                        
+                        return (
+                          <div 
+                            key={oIndex} 
+                            className={`
+                              relative group transition-all duration-300 transform hover:-translate-y-1
+                              ${isCorrect ? 'ring-2 ring-green-400 ring-offset-2' : ''}
+                            `}
+                          >
+                            {/* Letter badge */}
+                            <div className={`
+                              absolute -left-3 top-1/2 -translate-y-1/2 w-10 h-10
+                              flex items-center justify-center rounded-full shadow-md
+                              bg-gradient-to-br ${color.bg} ${color.hover}
+                              border-2 ${color.border} text-white font-bold text-lg
+                              transition-transform group-hover:scale-110 z-10
+                            `}>
+                              {String.fromCharCode(65 + oIndex)}
+                            </div>
+                            
+                            {/* Input container */}
+                            <div className={`
+                              pl-10 rounded-xl overflow-hidden
+                              border-2 ${color.border} ${color.light}
+                              shadow-sm group-hover:shadow-md transition-all
+                              ${isCorrect ? 'bg-green-50/70 border-green-300' : ''}
+                            `}>
+                              <input
+                                type="text"
+                                value={option}
+                                onChange={(e) => handlers.handleOptionChange(qIndex, oIndex, e.target.value)}
+                                className="w-full p-3 pl-4 bg-transparent border-none focus:ring-2 focus:ring-offset-1 focus:outline-none"
+                                placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
+                                required
+                              />
+                              
+                              {/* Correct answer indicator */}
+                              {isCorrect && (
+                                <div className="absolute right-12 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 bg-white/70 px-2 py-1 rounded-full text-sm font-medium">
+                                  <span className="animate-pulse">✓</span> Correct
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Checkbox for multiple answers */}
+                            {question.isMultiAnswer && (
+                              <div 
+                                onClick={() => {
+                                  const updatedQuestions = [...formState.questions];
+                                  const currentAnswers = Array.isArray(updatedQuestions[qIndex].correctAnswer) 
+                                    ? [...updatedQuestions[qIndex].correctAnswer] 
+                                    : [];
+                                  
+                                  if (currentAnswers.includes(option)) {
+                                    updatedQuestions[qIndex].correctAnswer = currentAnswers.filter(ans => ans !== option);
+                                  } else {
+                                    updatedQuestions[qIndex].correctAnswer = [...currentAnswers, option];
+                                  }
+                                  
+                                  handlers.setQuestions(updatedQuestions);
+                                }}
+                                className={`
+                                  absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer
+                                  w-6 h-6 rounded border-2 flex items-center justify-center
+                                  transition-all duration-200
+                                  ${isCorrect 
+                                    ? 'bg-green-500 border-green-400 text-white' 
+                                    : 'bg-white border-gray-300 hover:border-green-400'}
+                                `}
+                              >
+                                {isCorrect && <span className="text-sm">✓</span>}
+                              </div>
+                            )}
+                            
+                            {/* Single answer radio button */}
+                            {!question.isMultiAnswer && (
+                              <div 
+                                onClick={() => {
+                                  const updatedQuestions = [...formState.questions];
+                                  updatedQuestions[qIndex].correctAnswer = option;
+                                  handlers.setQuestions(updatedQuestions);
+                                }}
+                                className={`
+                                  absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer
+                                  w-6 h-6 rounded-full border-2 flex items-center justify-center
+                                  ${isCorrect 
+                                    ? 'border-green-400' 
+                                    : 'border-gray-300 hover:border-green-400'}
+                                `}
+                              >
+                                {isCorrect && (
+                                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="pl-11">
@@ -552,8 +661,9 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
 
                     <div key={question.id} className="bg-white p-6 rounded-xl border-2 border-purple-200 shadow-md hover:shadow-lg transition-all">
                       
-                      {/* Add validation feedback */}
-                      {formState.validationFeedback?.feedback && (
+                      {/* Only render validation when feedback exists */}
+                      {formState.validationFeedback?.feedback && 
+                      formState.validationFeedback.feedback.find(f => f.question_id === question.id) && (
                         <handlers.QuestionValidation 
                           feedback={formState.validationFeedback.feedback.find(
                             f => f.question_id === question.id

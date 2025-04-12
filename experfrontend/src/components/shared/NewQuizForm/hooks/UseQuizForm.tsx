@@ -77,7 +77,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
             [field]: value,
             // Keep track that this was originally generated but has been modified
             isGenerated: question.isGenerated,
-            correctAnswer: question.correctAnswer 
+            //correctAnswer: question.correctAnswer 
         };
 
         setQuestions(updatedQuestions);
