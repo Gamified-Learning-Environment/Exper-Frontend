@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react'; // React hooks
-import { Quiz, QuestionAttempt, ProgressData } from '../types'; // Importing the Quiz and ProgressData interfaces from the types file
+import { Quiz, QuizQuestion, QuestionAttempt, ProgressData } from '../types'; // Importing the Quiz and ProgressData interfaces from the types file
 import { useAuth } from '@/contexts/auth.context';
 import { triggerConfetti, triggerAchievementConfetti, triggerBadgeConfetti, triggerPerfectScoreConfetti, triggerLevelUpConfetti, triggerStreakConfetti } from '@/components/shared/effects/Confetti';
 import { GamificationService } from '@/services/gamification.service';
@@ -11,30 +11,84 @@ import { QuestProgressManager } from '@/services/QuestProgressManager';
 
 export const useQuiz = (quiz: Quiz ) => {
 
+    console.log('Quiz received:', {
+        id: quiz._id,
+        useQuestionPool: quiz.useQuestionPool, 
+        questionsPerAttempt: quiz.questionsPerAttempt,
+        totalQuestions: quiz.questions.length
+    });
+
     // State variables to keep track of current question, selected answers, show results and score
 
         // Question randomisation handling
 
         // Create a reference to the original quiz to keep track of the original order
         const [quizData, setQuizData] = useState<Quiz>(() => {
-            // If randomizeQuestions is enabled, shuffle the questions
-            if (quiz.randomizeQuestions) {
-                // Create a copy of the quiz
-                const shuffledQuiz = { ...quiz };
+
+            // Check if useQuestionPool exists, default to false if missing
+            const hasQuestionPool = Boolean(quiz.useQuestionPool);
+            // Use the questionsPerAttempt or default to half the questions (minimum 1)
+            const numPerAttempt = quiz.questionsPerAttempt || Math.max(1, Math.floor(quiz.questions.length / 2));
+            const hasQuestionPoolSize = Boolean(quiz.questionsPerAttempt && quiz.questionsPerAttempt > 0);
+            const hasEnoughQuestions = quiz.questions.length > (quiz.questionsPerAttempt || 0);
+            
+            // First check if we should select from question pool
+            if (hasQuestionPool && hasQuestionPoolSize && hasEnoughQuestions) {
+                console.log('Using question pool - selecting', numPerAttempt, 'from', quiz.questions.length);
                 
-                // Shuffle the questions array using Fisher-Yates algorithm
+                // Create a copy of the quiz
+                const pooledQuiz = { ...quiz };
+                
+                // Select random questions from the pool
+                const allQuestions = [...quiz.questions];
+                const selectedQuestions: QuizQuestion[] = [];
+                
+                // Determine how many questions to select
+                const numToSelect = Math.min(numPerAttempt, allQuestions.length);         
+
+                // Randomly select questions
+                for (let i = 0; i < numToSelect; i++) {
+                    const randomIndex = Math.floor(Math.random() * allQuestions.length);
+                    selectedQuestions.push(allQuestions[randomIndex]);
+                    allQuestions.splice(randomIndex, 1); // Remove selected question
+                }
+                
+                // Update the quiz with selected questions
+                pooledQuiz.questions = selectedQuestions;
+                
+                // Apply randomization if needed (after selecting from pool)
+                if (pooledQuiz.randomizeQuestions) {
+                    // Shuffle the selected questions
+                    const shuffledQuestions = [...pooledQuiz.questions];
+                    for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
+                    }
+                    pooledQuiz.questions = shuffledQuestions;
+                }
+                
+                return pooledQuiz;
+            } else {
+                console.log('Not using question pool, reason:', {
+                    useQuestionPool: quiz.useQuestionPool,
+                    questionsPerAttempt: quiz.questionsPerAttempt,
+                    totalQuestions: quiz.questions.length,
+                    condition: quiz.questions.length > (quiz.questionsPerAttempt || 0)
+                });
+            }
+
+            // If no question pool or not enough questions, just use randomization if enabled
+            if (quiz.randomizeQuestions) {
+                const shuffledQuiz = { ...quiz };
                 const shuffledQuestions = [...shuffledQuiz.questions];
                 for (let i = shuffledQuestions.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
                 }
-                
-                // Update the quiz with shuffled questions
                 shuffledQuiz.questions = shuffledQuestions;
                 return shuffledQuiz;
             }
             
-            // If randomization is not enabled, return the original quiz
             return quiz;
         });
 

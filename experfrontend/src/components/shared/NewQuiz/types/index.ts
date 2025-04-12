@@ -21,6 +21,8 @@ export interface Quiz { // Quiz interface
     category?: string;
     aiModel?: AIModel;
     randomizeQuestions?: boolean; // Flag to randomize questions
+    useQuestionPool?: boolean;
+    questionsPerAttempt?: number;
 }
 
 export interface QuestionAttempt {

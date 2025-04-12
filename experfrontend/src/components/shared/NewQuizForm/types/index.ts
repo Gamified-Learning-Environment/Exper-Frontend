@@ -19,6 +19,8 @@ export interface Quiz { // Quiz interface
     questions: QuizQuestion[];
     difficulty: 'beginner' | 'intermediate' | 'expert';
     randomizeQuestions?: boolean; 
+    useQuestionPool?: boolean;
+    questionsPerAttempt?: number;
     aiModel?: AIModel;
 }
 

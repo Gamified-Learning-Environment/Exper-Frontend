@@ -63,6 +63,49 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                   <span>🎲</span> Randomize question order for each player
                 </label>
               </div>
+
+              <div className="flex items-center gap-2 bg-blue-100 p-3 rounded-lg border border-blue-200 mt-4">
+                <input
+                  type="checkbox"
+                  id="useQuestionPool"
+                  checked={formState.useQuestionPool}
+                  onChange={(e) => handlers.setUseQuestionPool(e.target.checked)}
+                  className="w-5 h-5 text-blue-600"
+                  title="Use question pool"
+                />
+                <label htmlFor="useQuestionPool" className="text-sm font-medium text-blue-700 flex items-center gap-2">
+                  <span>🎯</span> Use question pool (show subset of questions per attempt)
+                </label>
+              </div>
+
+              {formState.useQuestionPool && (
+                <div className="pl-7 mt-3 space-y-2">
+                  <label className="text-sm font-medium text-blue-600">Questions per attempt</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={1}
+                      max={Math.max(formState.questions.length, 20)}
+                      value={formState.questionsPerAttempt}
+                      onChange={(e) => handlers.setQuestionsPerAttempt(parseInt(e.target.value))}
+                      className="flex-1"
+                      title="Range of Questions per attempt"
+                    />
+                    <input
+                      type="number"
+                      value={formState.questionsPerAttempt}
+                      onChange={(e) => handlers.setQuestionsPerAttempt(parseInt(e.target.value))}
+                      className="w-16 p-2 border-2 rounded-lg text-center"
+                      min={1}
+                      max={formState.questions.length}
+                      title="Number Questions per attempt"
+                    />
+                  </div>
+                  <p className="text-xs text-blue-500">
+                    {formState.questionsPerAttempt} of {formState.questions.length} questions will be randomly selected each time
+                  </p>
+                </div>
+              )}
   
               <div className="space-y-2">
                 <label htmlFor="description" className="text-sm font-medium text-blue-500 flex items-center gap-2">

@@ -31,6 +31,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
     }]);
     const [questionImages, setQuestionImages] = useState<{ [key: string]: File }>({});
     const [randomizeQuestions, setRandomizeQuestions] = useState(false);
+    const [useQuestionPool, setUseQuestionPool] = useState(false);
+    const [questionsPerAttempt, setQuestionsPerAttempt] = useState(5);
 
     // AI state
     const [useAI, setUseAI] = useState(false);
@@ -399,6 +401,11 @@ export const UseQuizForm = (quiz?: Quiz) => {
                 : (Array.isArray(q.correctAnswer) ? q.correctAnswer[0] : q.correctAnswer)
         }));
 
+        console.log('Submitting quiz with pool data:', {
+          useQuestionPool,
+          questionsPerAttempt: useQuestionPool ? questionsPerAttempt : undefined
+        });
+
         const quizData = {
           title,
           description,
@@ -406,7 +413,9 @@ export const UseQuizForm = (quiz?: Quiz) => {
           category: selectedCategory,
           userId: user?._id, // user ID to connect quiz to its creator
           randomizeQuestions,
-          aiModel: useAI ? aiModel : undefined
+          aiModel: useAI ? aiModel : undefined,
+          useQuestionPool,
+          questionsPerAttempt: useQuestionPool ? questionsPerAttempt : undefined
         };
   
         const response = await fetch(`${API_URL}/api/quiz`, {
@@ -628,6 +637,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
           isPdfProcessing,
           aiModel,
           randomizeQuestions,
+          useQuestionPool,
+          questionsPerAttempt,
         },
         handlers: { // Form handlers object containing all the handler functions
             setTitle,
@@ -664,6 +675,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
             setAIModel,
             handlePdfUpload,
             setRandomizeQuestions,
+            setUseQuestionPool,
+            setQuestionsPerAttempt,
             // Add more handlers here as I need
         }
     };
