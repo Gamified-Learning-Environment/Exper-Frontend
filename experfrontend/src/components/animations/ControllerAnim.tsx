@@ -1,9 +1,9 @@
 "use client";
 
-import * as animationData from "../../../public/animations/ExperCompass.json";
+import * as animationData from "../../../public/animations/ControllerAnim.json";
 import { useLottie } from "lottie-react";
 
-const ExperCompassAnim = () => {
+const ControllerAnim = () => {
   const defaultOptions = {
     animationData: animationData,
     loop: true,
@@ -20,4 +20,4 @@ const ExperCompassAnim = () => {
   );
 };
 
-export default ExperCompassAnim;
+export default ControllerAnim;

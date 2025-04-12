@@ -2,20 +2,22 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Star, Target, Flame, Brain } from 'lucide-react';
+import { BookOpen, Target, Trophy, Zap, Award, BookCheck, Medal, Star, ExternalLink, Flame, Brain } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth.context';
+import { useRouter } from 'next/navigation';
 import { GamificationService } from '@/services/gamification.service';
-//import CategoryProgress from '@/components/shared/CategoryProgress';
 import Dashboard from "@/components/shared/Dashboard";
 import Achievements from "@/components/shared/Achievements";
 import Leaderboard from "@/components/shared/Leaderboard";
+import { Button } from "@/components/ui/button";
+import RotatingChallenges from "@/components/shared/RotatingChallenges";
+
+
 
 export default function Home() {
   const { user } = useAuth();
   const [playerStats, setPlayerStats] = useState<any>(null);
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [trackedChallenges, setTrackedChallenges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   console.log("User Service URL:", process.env.NEXT_PUBLIC_USER_SERVICE_URL);
@@ -92,75 +94,22 @@ export default function Home() {
       {/* Gamification Preview Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            
-            {/* Current Streak Card */}
-            <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <div className="p-3 bg-red-100 rounded-xl">
-                  <Flame className="w-8 h-8 text-red-500" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-red-700">Current Streak</h3>
-                  <p className="text-sm text-red-600">
-                    {loading ? "Loading..." : `${currentStreak} Days! 🔥`}
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent>
-              <Progress 
-                  value={loading ? 0 : streakProgress} 
-                  className="h-2 mb-2" 
-                />
-                <p className="text-sm text-red-600">
-                  {loading 
-                    ? "Loading streak data..." 
-                    : daysToMilestone > 0
-                      ? `${daysToMilestone} days until next reward!`
-                      : "You've hit a streak milestone! Claim your reward!"}
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Level Progress Card */}
-            <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <Brain className="w-8 h-8 text-purple-500" />
-                </div>
-                <div>
-                <h3 className="text-xl font-bold text-purple-700">
-                    {loading ? "Level" : `Level ${level}`}
-                  </h3>
-                  <p className="text-sm text-purple-600">
-                    {loading ? "Loading..." : `${currentXP} / ${requiredXP} XP`}
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent>
-              <Progress 
-                  value={loading ? 0 : levelProgress} 
-                  className="h-2 mb-2" 
-                />
-                <p className="text-sm text-purple-600">
-                  {loading 
-                    ? "Loading level data..." 
-                    : levelProgress >= 90
-                      ? `Almost at Level ${level + 1}!`
-                      : `${requiredXP - currentXP} XP needed for Level ${level + 1}`}
-                </p>
-              </CardContent>
-            </Card>
+          <div className="col-span-1 md:col-span-3">
+            <RotatingChallenges userId={user?._id} username={user?.username} />
           </div>
+        </div>
+      </section>
 
+      <section className="py-12">
+        <div className="container mx-auto px-4">
           <div>
             <Dashboard />
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 gap-6">
-            {/* <CategoryProgress /> */}
-          </div>
-
+      <section className="py-12">
+        <div className="container mx-auto px-4">
           <div>
             <Leaderboard />
           </div>

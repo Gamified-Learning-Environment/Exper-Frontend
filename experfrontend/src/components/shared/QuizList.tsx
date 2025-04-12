@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/auth.context';
 import { UserIcon, StarIcon, PencilIcon, TrashIcon, ExternalLinkIcon } from 'lucide-react';
 import { Search } from 'lucide-react';
 import { Input } from '../ui/input'; 
+import ControllerAnim from '../animations/ControllerAnim';
+import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL || 'http://localhost:9090';
 
@@ -372,7 +374,9 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
 
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🎮</span>
+              <div className="logo-container h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 flex items-center justify-center">
+                <ControllerAnim />
+              </div>
               <h2 className="text-xl font-bold text-purple-800">
                 {selectedCategory ? selectedCategory : 'All Categories'}
               </h2>
