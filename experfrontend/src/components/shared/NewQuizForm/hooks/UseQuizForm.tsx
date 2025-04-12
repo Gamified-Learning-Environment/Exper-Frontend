@@ -30,6 +30,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
         isMultiAnswer: false
     }]);
     const [questionImages, setQuestionImages] = useState<{ [key: string]: File }>({});
+    const [randomizeQuestions, setRandomizeQuestions] = useState(false);
 
     // AI state
     const [useAI, setUseAI] = useState(false);
@@ -404,6 +405,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
           questions: processedQuestions,
           category: selectedCategory,
           userId: user?._id, // user ID to connect quiz to its creator
+          randomizeQuestions,
           aiModel: useAI ? aiModel : undefined
         };
   
@@ -624,7 +626,8 @@ export const UseQuizForm = (quiz?: Quiz) => {
           error,
           imageLoading,
           isPdfProcessing,
-          aiModel
+          aiModel,
+          randomizeQuestions,
         },
         handlers: { // Form handlers object containing all the handler functions
             setTitle,
@@ -660,6 +663,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
             QuestionValidation,
             setAIModel,
             handlePdfUpload,
+            setRandomizeQuestions,
             // Add more handlers here as I need
         }
     };

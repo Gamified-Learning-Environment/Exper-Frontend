@@ -49,6 +49,20 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                 required
               />
               </div>
+
+              <div className="flex items-center gap-2 bg-blue-100 p-3 rounded-lg border border-blue-200">
+                <input
+                  type="checkbox"
+                  id="randomizeQuestions"
+                  checked={formState.randomizeQuestions}
+                  onChange={(e) => handlers.setRandomizeQuestions(e.target.checked)}
+                  className="w-5 h-5 text-blue-600"
+                  title="Randomize question order"
+                />
+                <label htmlFor="randomizeQuestions" className="text-sm font-medium text-blue-700 flex items-center gap-2">
+                  <span>🎲</span> Randomize question order for each player
+                </label>
+              </div>
   
               <div className="space-y-2">
                 <label htmlFor="description" className="text-sm font-medium text-blue-500 flex items-center gap-2">
@@ -112,6 +126,7 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                     type="checkbox"
                     checked={formState.useAI}
                     onChange={() => handlers.setUseAI(!formState.useAI)} // Toggle AI use on/off
+                    disabled={formState.showPreview && formState.questions.length > 0}
                     className="w-5 h-5 text-purple-600"
                     title="Use AI to Generate Quiz"
                     placeholder="Use AI to Generate Quiz"
@@ -120,6 +135,14 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                 </div>
               </div>
             </div>
+
+            {formState.showPreview && (
+              <div className="absolute right-3 top-3">
+                <span className="text-xs font-medium bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                  AI mode locked
+                </span>
+              </div>
+            )}
   
             {/* AI form fields */}
             {formState.useAI && (

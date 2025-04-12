@@ -20,6 +20,7 @@ export interface Quiz { // Quiz interface
     userId? : string;
     category?: string;
     aiModel?: AIModel;
+    randomizeQuestions?: boolean; // Flag to randomize questions
 }
 
 export interface QuestionAttempt {

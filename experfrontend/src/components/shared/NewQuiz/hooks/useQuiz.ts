@@ -10,13 +10,39 @@ import { useGamification } from '@/components/shared/GamificationNotification';
 import { QuestProgressManager } from '@/services/QuestProgressManager'; 
 
 export const useQuiz = (quiz: Quiz ) => {
+
     // State variables to keep track of current question, selected answers, show results and score
+
+        // Question randomisation handling
+
+        // Create a reference to the original quiz to keep track of the original order
+        const [quizData, setQuizData] = useState<Quiz>(() => {
+            // If randomizeQuestions is enabled, shuffle the questions
+            if (quiz.randomizeQuestions) {
+                // Create a copy of the quiz
+                const shuffledQuiz = { ...quiz };
+                
+                // Shuffle the questions array using Fisher-Yates algorithm
+                const shuffledQuestions = [...shuffledQuiz.questions];
+                for (let i = shuffledQuestions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledQuestions[i], shuffledQuestions[j]] = [shuffledQuestions[j], shuffledQuestions[i]];
+                }
+                
+                // Update the quiz with shuffled questions
+                shuffledQuiz.questions = shuffledQuestions;
+                return shuffledQuiz;
+            }
+            
+            // If randomization is not enabled, return the original quiz
+            return quiz;
+        });
 
     // Initialized with default values
     const { user } = useAuth();
 
     const [currentQuestion, setCurrentQuestion] = useState<number>(0); 
-    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>(new Array(quiz.questions.length).fill(''));
+    const [selectedAnswers, setSelectedAnswers] = useState<(string | string[])[]>(new Array(quizData.questions.length).fill(''));
     const [showResults, setShowResults] = useState<boolean>(false);
     const [score, setScore] = useState<number>(0);
     const [questionAttempts, setQuestionAttempts] = useState<QuestionAttempt[]>([]);
@@ -33,27 +59,27 @@ export const useQuiz = (quiz: Quiz ) => {
 
     // Load from localStorage after mount if available
     useEffect(() => {
-        const storedQuestion = getStorageValue(`quiz_${quiz.id}_current`, 0);
-        const storedAnswers = getStorageValue(`quiz_${quiz.id}_answers`, []);
-        const storedResults = getStorageValue(`quiz_${quiz.id}_results`, false);
-        const storedScore = getStorageValue(`quiz_${quiz.id}_score`, 0);
+        const storedQuestion = getStorageValue(`quiz_${quizData.id}_current`, 0);
+        const storedAnswers = getStorageValue(`quiz_${quizData.id}_answers`, []);
+        const storedResults = getStorageValue(`quiz_${quizData.id}_results`, false);
+        const storedScore = getStorageValue(`quiz_${quizData.id}_score`, 0);
 
         // Set state with stored values
         setCurrentQuestion(storedQuestion);
         setSelectedAnswers(storedAnswers);
         setShowResults(storedResults);
         setScore(storedScore);
-    }, [quiz.id]);
+    }, [quizData.id]);
 
     // Save state to localStorage whenever it changes
     useEffect(() => {
     if (typeof window !== 'undefined') { // Check if window is defined
-        localStorage.setItem(`quiz_${quiz.id}_current`, JSON.stringify(currentQuestion));
-        localStorage.setItem(`quiz_${quiz.id}_answers`, JSON.stringify(selectedAnswers));
-        localStorage.setItem(`quiz_${quiz.id}_results`, JSON.stringify(showResults));
-        localStorage.setItem(`quiz_${quiz.id}_score`, JSON.stringify(score));
+        localStorage.setItem(`quiz_${quizData.id}_current`, JSON.stringify(currentQuestion));
+        localStorage.setItem(`quiz_${quizData.id}_answers`, JSON.stringify(selectedAnswers));
+        localStorage.setItem(`quiz_${quizData.id}_results`, JSON.stringify(showResults));
+        localStorage.setItem(`quiz_${quizData.id}_score`, JSON.stringify(score));
     }
-    }, [quiz.id, currentQuestion, selectedAnswers, showResults, score]);
+    }, [quizData.id, currentQuestion, selectedAnswers, showResults, score]);
 
     // Handlers for navigation, answer selecting and quiz completion
 
@@ -66,16 +92,16 @@ export const useQuiz = (quiz: Quiz ) => {
         setQuestionAttempts([]);
         setQuestionTracker(new Set());
         // Clear localStorage for this quiz
-        localStorage.removeItem(`quiz_${quiz.id}_current`);
-        localStorage.removeItem(`quiz_${quiz.id}_answers`);
-        localStorage.removeItem(`quiz_${quiz.id}_results`);
-        localStorage.removeItem(`quiz_${quiz.id}_score`);
+        localStorage.removeItem(`quiz_${quizData.id}_current`);
+        localStorage.removeItem(`quiz_${quizData.id}_answers`);
+        localStorage.removeItem(`quiz_${quizData.id}_results`);
+        localStorage.removeItem(`quiz_${quizData.id}_score`);
     };
 
     // handle answer selection, update selectedAnswers state
     const handleAnswer = (questionIndex: number, answer: string) => {
         const newAnswers = [...selectedAnswers];
-        const question = quiz.questions[questionIndex];
+        const question = quizData.questions[questionIndex];
         
         if (question.isMultiAnswer) {
             // Handle multiple answer questions
@@ -115,7 +141,7 @@ export const useQuiz = (quiz: Quiz ) => {
 
         setStartTime(Date.now()); // Reset timer for next question
 
-        if (currentQuestion < quiz.questions.length - 1) {
+        if (currentQuestion < quizData.questions.length - 1) {
             setCurrentQuestion(currentQuestion + 1);
         } else {
             await calculateResults();
@@ -130,7 +156,7 @@ export const useQuiz = (quiz: Quiz ) => {
     };
 
     const isAnswerCorrect = (questionIndex: number) => {
-        const question = quiz.questions[questionIndex];
+        const question = quizData.questions[questionIndex];
         const selectedAnswer = selectedAnswers[questionIndex];
       
         if (question.isMultiAnswer) {
@@ -148,10 +174,10 @@ export const useQuiz = (quiz: Quiz ) => {
 
     // calculate score and show results
     const calculateResults = async () => {
-        console.log(quiz._id);
+        console.log(quizData._id);
         let newScore = 0; // initialize score
         // loop through questions and compare selected answers with correct answers
-        quiz.questions.forEach((question, index) => {
+        quizData.questions.forEach((question, index) => {
             const selectedAnswer = selectedAnswers[index];
 
             if (question.isMultiAnswer) {
@@ -173,21 +199,21 @@ export const useQuiz = (quiz: Quiz ) => {
 
         // Calculate experience gained based on score and difficulty
         const baseXP = 100;
-        const difficultyMultiplier = quiz.difficulty === 'expert' ? 2.5 : 
-                                    quiz.difficulty === 'intermediate' ? 1.5 : 1;
-        const accuracyBonus = (newScore / quiz.questions.length) * 50;
+        const difficultyMultiplier = quizData.difficulty === 'expert' ? 2.5 : 
+                                    quizData.difficulty === 'intermediate' ? 1.5 : 1;
+        const accuracyBonus = (newScore / quizData.questions.length) * 50;
         const xpGained = Math.round((baseXP + accuracyBonus) * difficultyMultiplier);
         
         // Check for achievements
         const newAchievements = [];
-        if (newScore === quiz.questions.length) {
+        if (newScore === quizData.questions.length) {
             newAchievements.push({
                 title: "Perfect Score!",
                 description: "Answer all questions correctly",
                 icon: "🏆"
             });
         }
-        if (newScore >= quiz.questions.length * 0.8) {
+        if (newScore >= quizData.questions.length * 0.8) {
             newAchievements.push({
                 title: "Quiz Master",
                 description: "Score 80% or higher",
@@ -196,10 +222,10 @@ export const useQuiz = (quiz: Quiz ) => {
         }
 
         // Score-based confetti
-        if (newScore === quiz.questions.length) {
+        if (newScore === quizData.questions.length) {
             // Perfect score
             triggerPerfectScoreConfetti();
-        } else if (newScore >= quiz.questions.length * 0.75) {
+        } else if (newScore >= quizData.questions.length * 0.75) {
             // Good score
             triggerConfetti();
         }
@@ -214,11 +240,11 @@ export const useQuiz = (quiz: Quiz ) => {
             // Build result data object
             const resultData = {
                 userId: user?._id,
-                quizId: quiz._id, 
+                quizId: quizData._id, 
                 score: newScore,
-                totalQuestions: quiz.questions.length,
+                totalQuestions: quizData.questions.length,
                 questionAttempts: questionAttempts, 
-                category: quiz.category 
+                category: quizData.category 
             };
 
             // Add debug logging
@@ -276,16 +302,16 @@ export const useQuiz = (quiz: Quiz ) => {
 
             try {
                 // Add experience based on score and difficulty (global XP)
-                console.log('Adding experience:', xpGained, 'for category:', quiz.category);
+                console.log('Adding experience:', xpGained, 'for category:', quizData.category);
                 gamificationResponse = await GamificationService.addExperience(
                     userId, 
                     xpGained, 
-                    quiz.category
+                    quizData.category
                 );
                 console.log('Experience added successfully:', gamificationResponse);
 
                 // Add category-specific XP if category exists
-                if (quiz.category) {
+                if (quizData.category) {
                     // Calculate category XP (can be different from global XP)
                     const categoryXP = Math.round(xpGained * 1.2); // 20% bonus for specific categories
                     
@@ -293,7 +319,7 @@ export const useQuiz = (quiz: Quiz ) => {
                     const categoryResponse = await GamificationService.addCategoryExperience(
                         userId,
                         categoryXP,
-                        quiz.category
+                        quizData.category
                     );
                     
                     console.log('Category XP added successfully:', categoryResponse);
@@ -302,8 +328,8 @@ export const useQuiz = (quiz: Quiz ) => {
                     if (categoryResponse.level_up) {
                         // Show category level up notification
                         showAchievement({
-                        title: `${quiz.category} Level Up!`,
-                        description: `You reached level ${categoryResponse.new_level} in ${quiz.category}`,
+                        title: `${quizData.category} Level Up!`,
+                        description: `You reached level ${categoryResponse.new_level} in ${quizData.category}`,
                         icon: "📚",
                         xp_reward: categoryResponse.new_xp
                         });
@@ -337,10 +363,10 @@ export const useQuiz = (quiz: Quiz ) => {
             
             try {
                 // Update streak (category specific or generalised streak)
-                console.log('Updating streak for category:', quiz.category);
+                console.log('Updating streak for category:', quizData.category);
                 streakResponse = await GamificationService.updateStreak(
                     userId, 
-                    quiz.category
+                    quizData.category
                 );
                 console.log('Streak updated successfully:', streakResponse);
                 
@@ -356,11 +382,11 @@ export const useQuiz = (quiz: Quiz ) => {
             // Check for achievements based on this quiz result
             const achievementCheckData = {
                 quiz_completed: true,
-                perfect_score: newScore === quiz.questions.length,
-                score_percentage: (newScore / quiz.questions.length) * 100,
+                perfect_score: newScore === quizData.questions.length,
+                score_percentage: (newScore / quizData.questions.length) * 100,
                 completion_time: questionAttempts.reduce((total, attempt) => total + attempt.timeSpent, 0),
-                category: quiz.category,
-                difficulty: quiz.difficulty
+                category: quizData.category,
+                difficulty: quizData.difficulty
             };
             
             console.log('Checking for achievements with data:', achievementCheckData);
@@ -426,8 +452,8 @@ export const useQuiz = (quiz: Quiz ) => {
                 const progressResult = await QuestProgressManager.trackQuizCompletion(
                     userId,
                     newScore,
-                    quiz.questions.length,
-                    quiz.category
+                    quizData.questions.length,
+                    quizData.category
                   );
                   
                   if (progressResult.questCompleted) {
@@ -469,7 +495,7 @@ export const useQuiz = (quiz: Quiz ) => {
             achievements,
             streakDays,
             questionAttempts,
-            quiz,
+            quiz: quizData,
             startTime,
             questionTracker,
         },
