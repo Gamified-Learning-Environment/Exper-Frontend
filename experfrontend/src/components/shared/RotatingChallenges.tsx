@@ -21,7 +21,7 @@ function RotatingChallenges({ userId, username }: { userId?: string, username?: 
           // Fetch data in parallel
           const [quizzes, achievements, categoryData] = await Promise.all([
             fetch(`${process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL}/api/quizzes`).then(res => res.json()),
-            GamificationService.getAchievements(userId),
+            GamificationService.getAchievements(),
             fetch(`${process.env.NEXT_PUBLIC_QUIZ_SERVICE_URL}/api/categories`).then(res => res.json())
           ]);
           
