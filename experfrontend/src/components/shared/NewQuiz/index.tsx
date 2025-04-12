@@ -13,6 +13,8 @@ import { useQuiz } from './hooks/useQuiz';
 import { QuizProps, QuizProgressLineProps, ResultsBarChartProps, QuestionTypeBreakdownProps } from './types';
 import { useGamification } from '@/components/shared/GamificationNotification'; // Import the Gamification context
 import { useEffect } from 'react';
+import { QuizNavMap } from './components/QuizNavMap';
+import QuestionAnim from '@/components/animations/QuestionAnim';
 
 export default function Quiz({ quiz }: QuizProps) {
     const {
@@ -23,192 +25,247 @@ export default function Quiz({ quiz }: QuizProps) {
     // Store shuffled quiz in a variable for ease of use
     const shuffledQuiz = quizState.quiz;
 
+    // Keep track of answered questions
+    const answeredQuestions = new Set<number>();
+    quizState.selectedAnswers.forEach((answer, index) => {
+        if (answer) answeredQuestions.add(index);
+    });
+
     return (
         <Card className="mx-auto bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl border-2 border-indigo-100">
             {!quizState.showResults ? ( // Show quiz questions if results are not shown
-                <div className="space-y-6 p-6">
-                    {/* Question Header */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-3">
-                            <span className="text-2xl">❓</span>
-                            <h2 className="text-xl font-bold text-purple-800">
-                                Question {quizState.currentQuestion + 1} of {shuffledQuiz.questions.length}
-                            </h2>
-                            {shuffledQuiz.randomizeQuestions && (
+            <div className="flex flex-col lg:flex-row gap-4 p-6">
+                {/* Main Quiz Content */}
+                <div className="flex-1 space-y-6">
+                    {/* Collapsible Nav Map for mobile - visible only on small screens */}
+                    <div className="lg:hidden">
+                        <details className="bg-white/80 p-4 rounded-xl shadow-md border-2 border-indigo-100">
+                            <summary className="font-bold text-purple-800 cursor-pointer flex items-center gap-2">
+                                <span>🗺️</span> Quest Map
+                            </summary>
+                            <div className="pt-4">
+                                <QuizNavMap
+                                    totalQuestions={shuffledQuiz.questions.length}
+                                    currentQuestion={quizState.currentQuestion}
+                                    answeredQuestions={answeredQuestions}
+                                    flaggedQuestions={quizState.flaggedQuestions}
+                                    onQuestionSelect={(index) => {
+                                        handlers.setCurrentQuestion(index);
+                                    }}
+                                    onToggleFlag={(index) => {
+                                        handlers.toggleFlagQuestion(index);
+                                    }}
+                                />
+                            </div>
+                        </details>
+                    </div>
+
+
+
+
+                    <div className="space-y-6 p-6">
+                        {/* Question Header */}
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div className="flex items-center gap-3">
+                            <div className="logo-container h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 flex items-center justify-center">
+                                <QuestionAnim />
+                            </div>
+                                <h2 className="text-xl font-bold text-purple-800">
+                                    Question {quizState.currentQuestion + 1} of {shuffledQuiz.questions.length}
+                                </h2>
+                                {shuffledQuiz.randomizeQuestions && (
+                                    <span 
+                                        className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-300"
+                                        title="Questions are in random order"
+                                    >
+                                        🎲 Randomized
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                            {shuffledQuiz.useQuestionPool && (
                                 <span 
                                     className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-300"
-                                    title="Questions are in random order"
+                                    title={`${shuffledQuiz.questions.length} questions selected from a pool of ${quiz.questions.length}`}
                                 >
-                                    🎲 Randomized
+                                    🎯 Pool: {shuffledQuiz.questions.length} of {quiz.questions.length}
                                 </span>
                             )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                        {shuffledQuiz.useQuestionPool && (
-                            <span 
-                                className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-300"
-                                title={`${shuffledQuiz.questions.length} questions selected from a pool of ${quiz.questions.length}`}
-                            >
-                                🎯 Pool: {shuffledQuiz.questions.length} of {quiz.questions.length}
-                            </span>
-                        )}
-                            {shuffledQuiz.aiModel && (
-                                <span 
-                                    className={`px-3 py-1 text-xs font-medium rounded-full 
-                                    ${shuffledQuiz.aiModel === 'gpt' 
-                                        ? 'bg-green-100 text-green-700 border border-green-300' 
-                                        : 'bg-purple-100 text-purple-700 border border-purple-300'}`}
-                                    title={`Generated by ${shuffledQuiz.aiModel === 'gpt' ? 'GPT-3.5' : 'Claude AI'}`}
+                                {shuffledQuiz.aiModel && (
+                                    <span 
+                                        className={`px-3 py-1 text-xs font-medium rounded-full 
+                                        ${shuffledQuiz.aiModel === 'gpt' 
+                                            ? 'bg-green-100 text-green-700 border border-green-300' 
+                                            : 'bg-purple-100 text-purple-700 border border-purple-300'}`}
+                                        title={`Generated by ${shuffledQuiz.aiModel === 'gpt' ? 'GPT-3.5' : 'Claude AI'}`}
+                                    >
+                                        {shuffledQuiz.aiModel === 'gpt' ? '🤖 GPT-3.5' : '🧠 Claude AI'}
+                                    </span>
+                                )}
+                                <Button 
+                                    onClick={handlers.resetQuiz} 
+                                    variant="outline" 
+                                    size="sm"
+                                    className="border-2 border-purple-200 hover:bg-purple-100"
                                 >
-                                    {shuffledQuiz.aiModel === 'gpt' ? '🤖 GPT-3.5' : '🧠 Claude AI'}
-                                </span>
-                            )}
-                            <Button 
-                                onClick={handlers.resetQuiz} 
-                                variant="outline" 
-                                size="sm"
-                                className="border-2 border-purple-200 hover:bg-purple-100"
-                            >
-                                Reset Quiz 🔄
-                            </Button>
+                                    Reset Quiz 🔄
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                    
-                    {/* Progress bar */}
-                    <div className="space-y-2">    
-                        <Progress 
-                            value={(quizState.currentQuestion) / (shuffledQuiz.questions.length - 1) * 100} 
-                            className="h-3 bg-purple-100" 
-                        />
-                    </div>
+                        
+                        {/* Progress bar */}
+                        <div className="space-y-2">    
+                            <Progress 
+                                value={(quizState.currentQuestion) / (shuffledQuiz.questions.length - 1) * 100} 
+                                className="h-3 bg-purple-100" 
+                            />
+                        </div>
 
-                    {/* Question Content */}
-                    <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
-                        <p className='text-lg font-medium text-purple-900'>
-                            {shuffledQuiz.questions[quizState.currentQuestion].question}
-                        </p>
+                        {/* Question Content */}
+                        <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
+                            <p className='text-lg font-medium text-purple-900'>
+                                {shuffledQuiz.questions[quizState.currentQuestion].question}
+                            </p>
 
-                        {/* Question image */}
-                        {shuffledQuiz.questions[quizState.currentQuestion].imageUrl && (
-                            <div className="relative group my-6 max-w-[50%] mx-auto"> {/* Added max-w-[50%] and mx-auto */}
-                                <div className="overflow-hidden rounded-xl border-2 border-purple-200 shadow-md transition-all duration-300 hover:shadow-lg">
-                                    <div className="relative aspect-video bg-purple-50">
-                                        <img
-                                            src={shuffledQuiz.questions[quizState.currentQuestion].imageUrl}
-                                            alt="Question image"
-                                            className="absolute inset-0 w-full h-full object-contain p-2"
-                                        />
-                                        {/* Gradient overlay on hover */}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                    </div>
-                                    
-                                    {/* Optional image caption/zoom hint */}
-                                    <div className="absolute bottom-2 left-2 right-2 text-center text-sm text-purple-600 bg-white/90 px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <span className="flex items-center justify-center gap-2">
-                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                            </svg>
-                                            Hover to examine
-                                        </span>
+                            {/* Question image */}
+                            {shuffledQuiz.questions[quizState.currentQuestion].imageUrl && (
+                                <div className="relative group my-6 max-w-[50%] mx-auto"> {/* Added max-w-[50%] and mx-auto */}
+                                    <div className="overflow-hidden rounded-xl border-2 border-purple-200 shadow-md transition-all duration-300 hover:shadow-lg">
+                                        <div className="relative aspect-video bg-purple-50">
+                                            <img
+                                                src={shuffledQuiz.questions[quizState.currentQuestion].imageUrl}
+                                                alt="Question image"
+                                                className="absolute inset-0 w-full h-full object-contain p-2"
+                                            />
+                                            {/* Gradient overlay on hover */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        </div>
+                                        
+                                        {/* Optional image caption/zoom hint */}
+                                        <div className="absolute bottom-2 left-2 right-2 text-center text-sm text-purple-600 bg-white/90 px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            <span className="flex items-center justify-center gap-2">
+                                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                </svg>
+                                                Hover to examine
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Options */}
-                        {/* Render either radio group or checkbox group based on question type */}
-                        {shuffledQuiz.questions[quizState.currentQuestion].isMultiAnswer ? (
-                            <div className="space-y-3">
-                                {shuffledQuiz.questions[quizState.currentQuestion].options.map((option, index) => {
-                                    const currentAnswers = Array.isArray(quizState.selectedAnswers[quizState.currentQuestion])
-                                        ? quizState.selectedAnswers[quizState.currentQuestion] as string[]
-                                        : [];
-                                    
-                                    return (
-                                        <div key={index} 
-                                            className={`relative rounded-lg border-2 transition-all
-                                                ${currentAnswers.includes(option)
-                                                    ? 'border-purple-500 bg-purple-50'
-                                                    : 'border-gray-200 hover:border-purple-200 bg-white'}`}>
-                                            <label className="flex items-center p-4 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={currentAnswers.includes(option)}
-                                                    onChange={() => handlers.handleAnswer(quizState.currentQuestion, option)}
-                                                    className="w-4 h-4 rounded border-gray-300 text-purple-600 
-                                                            focus:ring-purple-500"
+                            {/* Options */}
+                            {/* Render either radio group or checkbox group based on question type */}
+                            {shuffledQuiz.questions[quizState.currentQuestion].isMultiAnswer ? (
+                                <div className="space-y-3">
+                                    {shuffledQuiz.questions[quizState.currentQuestion].options.map((option, index) => {
+                                        const currentAnswers = Array.isArray(quizState.selectedAnswers[quizState.currentQuestion])
+                                            ? quizState.selectedAnswers[quizState.currentQuestion] as string[]
+                                            : [];
+                                        
+                                        return (
+                                            <div key={index} 
+                                                className={`relative rounded-lg border-2 transition-all
+                                                    ${currentAnswers.includes(option)
+                                                        ? 'border-purple-500 bg-purple-50'
+                                                        : 'border-gray-200 hover:border-purple-200 bg-white'}`}>
+                                                <label className="flex items-center p-4 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={currentAnswers.includes(option)}
+                                                        onChange={() => handlers.handleAnswer(quizState.currentQuestion, option)}
+                                                        className="w-4 h-4 rounded border-gray-300 text-purple-600 
+                                                                focus:ring-purple-500"
+                                                    />
+                                                    <div className="flex items-center gap-3 ml-3">
+                                                        <span className={`w-6 h-6 rounded-full flex items-center 
+                                                                    justify-center text-white text-sm
+                                                            ${index === 0 ? 'bg-red-400' : 
+                                                            index === 1 ? 'bg-blue-400' : 
+                                                            index === 2 ? 'bg-yellow-400' : 'bg-green-400'}`}>
+                                                            {String.fromCharCode(65 + index)}
+                                                        </span>
+                                                        <span className="text-gray-700">{option}</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <RadioGroup
+                                    onValueChange={(value) => handlers.handleAnswer(quizState.currentQuestion, value)}
+                                    value={quizState.selectedAnswers[quizState.currentQuestion] as string}>
+
+                                    {shuffledQuiz.questions[quizState.currentQuestion].options.map((option, index) => (
+                                        <div 
+                                            key={index} 
+                                            className={`
+                                                relative overflow-hidden rounded-lg border-2 transition-all
+                                                ${quizState.selectedAnswers[quizState.currentQuestion] === option 
+                                                ? 'border-purple-500 bg-purple-50' 
+                                                : 'border-gray-200 hover:border-purple-200 bg-white'}
+                                            `}>
+                                            <label className="flex items-center p-4 cursor-pointer group">
+                                                <RadioGroupItem 
+                                                    value={option} 
+                                                    id={`option-${index}`}
+                                                    className="text-purple-600"
                                                 />
                                                 <div className="flex items-center gap-3 ml-3">
-                                                    <span className={`w-6 h-6 rounded-full flex items-center 
-                                                                justify-center text-white text-sm
+                                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
                                                         ${index === 0 ? 'bg-red-400' : 
                                                         index === 1 ? 'bg-blue-400' : 
-                                                        index === 2 ? 'bg-yellow-400' : 'bg-green-400'}`}>
-                                                        {String.fromCharCode(65 + index)}
+                                                        index === 2 ? 'bg-yellow-400' : 'bg-green-400'
+                                                        }`}
+                                                    >
+                                                        {String.fromCharCode(65 + index)} {/* Converts 0,1,2,3 to A,B,C,D */}
                                                     </span>
-                                                    <span className="text-gray-700">{option}</span>
+                                                    <span className="text-gray-700 group-hover:text-gray-900">{option}</span>
                                                 </div>
                                             </label>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <RadioGroup
-                                onValueChange={(value) => handlers.handleAnswer(quizState.currentQuestion, value)}
-                                value={quizState.selectedAnswers[quizState.currentQuestion] as string}>
+                                    ))}
+                                </RadioGroup>
+                            )}
+                        </div>
 
-                                {shuffledQuiz.questions[quizState.currentQuestion].options.map((option, index) => (
-                                    <div 
-                                        key={index} 
-                                        className={`
-                                            relative overflow-hidden rounded-lg border-2 transition-all
-                                            ${quizState.selectedAnswers[quizState.currentQuestion] === option 
-                                            ? 'border-purple-500 bg-purple-50' 
-                                            : 'border-gray-200 hover:border-purple-200 bg-white'}
-                                        `}>
-                                        <label className="flex items-center p-4 cursor-pointer group">
-                                            <RadioGroupItem 
-                                                value={option} 
-                                                id={`option-${index}`}
-                                                className="text-purple-600"
-                                            />
-                                            <div className="flex items-center gap-3 ml-3">
-                                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm
-                                                    ${index === 0 ? 'bg-red-400' : 
-                                                    index === 1 ? 'bg-blue-400' : 
-                                                    index === 2 ? 'bg-yellow-400' : 'bg-green-400'
-                                                    }`}
-                                                >
-                                                    {String.fromCharCode(65 + index)} {/* Converts 0,1,2,3 to A,B,C,D */}
-                                                </span>
-                                                <span className="text-gray-700 group-hover:text-gray-900">{option}</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                ))}
-                            </RadioGroup>
-                        )}
-                    </div>
-
-                    {/* Question navigation button */}
-                    <div className="flex justify-between gap-4 pt-4">
-                        <Button 
-                            onClick={handlers.handlePrevious}
-                            disabled={quizState.currentQuestion === 0}
-                            variant="outline"
-                            className="w-1/2 border-2 border-indigo-200 hover:bg-indigo-100"
-                        >
-                            ← Previous
-                        </Button>
-                        <Button 
-                            onClick={handlers.handleNext}
-                            className="w-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
-                        >
-                            {quizState.currentQuestion < shuffledQuiz.questions.length - 1 ? 'Next →' : 'Finish! 🎉'}
-                        </Button>
+                        {/* Question navigation button */}
+                        <div className="flex justify-between gap-4 pt-4">
+                            <Button 
+                                onClick={handlers.handlePrevious}
+                                disabled={quizState.currentQuestion === 0}
+                                variant="outline"
+                                className="w-1/2 border-2 border-indigo-200 hover:bg-indigo-100"
+                            >
+                                ← Previous
+                            </Button>
+                            <Button 
+                                onClick={handlers.handleNext}
+                                className="w-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+                            >
+                                {quizState.currentQuestion < shuffledQuiz.questions.length - 1 ? 'Next →' : 'Finish! 🎉'}
+                            </Button>
+                        </div>
                     </div>
                 </div>
+                {/* Quiz Nav Map - shown on large screens as sidebar */}
+                <div className="hidden lg:block w-72 sticky top-20 self-start">
+                    <QuizNavMap
+                        totalQuestions={shuffledQuiz.questions.length}
+                        currentQuestion={quizState.currentQuestion}
+                        answeredQuestions={answeredQuestions}
+                        flaggedQuestions={quizState.flaggedQuestions}
+                        onQuestionSelect={(index) => {
+                            // Navigate to the question
+                            handlers.setCurrentQuestion(index);
+                        }}
+                        onToggleFlag={(index) => {
+                            handlers.toggleFlagQuestion(index);
+                        }}
+                    />
+                </div>
+            </div>
             ) : ( // Show quiz results if results are shown
                 <div className="p-6 space-y-6">
                     {/* Results Header */}
