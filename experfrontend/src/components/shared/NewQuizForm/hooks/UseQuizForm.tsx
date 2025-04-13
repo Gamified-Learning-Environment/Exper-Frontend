@@ -36,7 +36,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
 
     // AI state
     const [useAI, setUseAI] = useState(false);
-    const [aiModel, setAIModel] = useState<'gpt' | 'claude'>('gpt');
+    const [aiModel, setAIModel] = useState<'gpt' | 'claude' | 'gemini'>('gpt');
     const [notes, setNotes] = useState('');
     const [questionCount, setQuestionCount] = useState(5);
     const [difficulty, setDifficulty] = useState<Difficulty>('intermediate');
