@@ -63,4 +63,4 @@ export interface QuizProps {
     quiz: Quiz;
 }
 
-export type AIModel = 'gpt' | 'claude';
+export type AIModel = 'gpt' | 'claude' | 'gemini'; // AI model type

@@ -283,7 +283,9 @@ export const UseQuizForm = (quiz?: Quiz) => {
         // Select endpoint based on chosen model
         const endpoint = aiModel === 'claude' // Use Claude model if selected
         ? `${API_URL}/api/generate-quiz-claude` // Endpoint for Claude model
-        : `${API_URL}/api/generate-quiz`; // Default to GPT model
+        : aiModel === 'gemini' // Use Gemini model if selected
+          ? `${API_URL}/api/generate-quiz-gemini` // Endpoint for Gemini model
+          : `${API_URL}/api/generate-quiz`; // Default endpoint for GPT
 
         const response = await fetch(endpoint, { // Fetch quiz from API
           method: 'POST',

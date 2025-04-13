@@ -45,5 +45,5 @@ export interface ValidationFeedback {
     difficulty_alignment: number;
 }
 
-export type AIModel = 'gpt' | 'claude';
+export type AIModel = 'gpt' | 'claude' | 'gemini';
 

@@ -216,6 +216,17 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                       >
                         Claude
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => handlers.setAIModel('gemini')}
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          formState.aiModel === 'gemini'
+                            ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        Gemini
+                      </button>
                     </div>
                 </div>
                   <label className="text-sm font-medium text-purple-500 flex items-center gap-2">Number of Questions</label>
