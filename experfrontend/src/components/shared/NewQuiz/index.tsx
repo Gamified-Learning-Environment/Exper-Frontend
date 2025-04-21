@@ -15,6 +15,7 @@ import { useGamification } from '@/components/shared/GamificationNotification'; 
 import { useEffect } from 'react';
 import { QuizNavMap } from './components/QuizNavMap';
 import QuestionAnim from '@/components/animations/QuestionAnim';
+import { TimeAccuracyChart } from './components/TimeAccuracyChart';
 
 export default function Quiz({ quiz }: QuizProps) {
     const {
@@ -358,10 +359,10 @@ export default function Quiz({ quiz }: QuizProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Question Progress */}
                         <div className="bg-white p-4 rounded-xl shadow-md">
-                            <h3 className="text-lg font-bold text-purple-800 mb-4">Question Progress</h3>
-                            <QuizProgressLine attempts={quizState.questionAttempts} />
+                            <h3 className="text-lg font-bold text-purple-800 mb-4">Time-Accuracy Analysis</h3>
+                            <TimeAccuracyChart attempts={quizState.questionAttempts} />
                             <p className="text-sm text-gray-600 mt-2 text-center">
-                            Time spent on each question (dots color indicates correct/incorrect)
+                                See how your timing affects answer accuracy
                             </p>
                         </div>
 
@@ -381,6 +382,8 @@ export default function Quiz({ quiz }: QuizProps) {
                     {/* Progress Analytics - Row 2*/}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Question Types */}
+
+                        {/* Win/loss Ratio */}
                         <div className="bg-white p-4 rounded-xl shadow-md">
                             <h3 className="text-lg font-bold text-purple-800 mb-4">
                                 Win/Loss Ratio

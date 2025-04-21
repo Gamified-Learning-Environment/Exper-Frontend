@@ -240,6 +240,11 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
                   />
                   <span className="text-sm text-gray-500">
                     {formState.questionCount} questions 
+                    {formState.questionCount > 30 && (
+                      <span className="ml-1 text-amber-600">
+                        (Generating many questions may take longer)
+                      </span>
+                    )}
                   </span>
                 </div>
   

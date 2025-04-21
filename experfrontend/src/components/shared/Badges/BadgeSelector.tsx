@@ -93,7 +93,7 @@ export default function BadgeSelector({
       <CardContent>
         <Tabs defaultValue="categories">
           <TabsList className="mb-4 w-full">
-            <TabsTrigger value="categories">By Category</TabsTrigger>
+            <TabsTrigger value="categories">By Type</TabsTrigger>
             <TabsTrigger value="earned">Earned ({earnedBadges.length})</TabsTrigger>
             <TabsTrigger value="selected">Selected ({selectedBadges.length})</TabsTrigger>
           </TabsList>
