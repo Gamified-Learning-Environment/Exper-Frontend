@@ -410,6 +410,26 @@ export const useQuiz = (quiz: Quiz ) => {
                         });
                         
                         triggerConfetti();
+
+                        // Display badge popups for any awarded badges
+                        if (categoryResponse.awarded_badges && categoryResponse.awarded_badges.length > 0) {
+                            categoryResponse.awarded_badges.forEach((badge: { 
+                                name: string; 
+                                description: string; 
+                                icon: string; 
+                                rarity: string 
+                            }, index: number) => {
+                                setTimeout(() => {
+                                    showBadge({
+                                        name: badge.name,
+                                        description: badge.description,
+                                        icon: badge.icon,
+                                        rarity: badge.rarity
+                                    });
+                                    triggerBadgeConfetti();
+                                }, 1500 + (index * 1500)); // Stagger notifications
+                            });
+                        }
                     }
                     } catch (categoryError) {
                     console.error('Error adding category XP:', categoryError);

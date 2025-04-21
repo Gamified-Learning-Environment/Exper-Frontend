@@ -19,6 +19,8 @@ interface Badge {
   earned: boolean;
   description: string;
   rarity: string;
+  level_requirement?: number;
+  category_type?: string;
 }
 
 interface BadgeSelectorProps {
@@ -155,13 +157,16 @@ export default function BadgeSelector({
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <div className="max-w-xs">
-                          <p className="font-bold">{badge.name}</p>
-                          <p className="text-xs">{badge.description}</p>
-                          <p className="text-xs mt-1 opacity-70">
-                            {isEarned ? '✅ Earned' : '🔒 Not yet earned'}
-                          </p>
-                        </div>
+                      <div className="max-w-xs">
+                        <p className="font-bold">{badge.name}</p>
+                        <p className="text-xs">{badge.description}</p>
+                        <p className="text-xs mt-1 opacity-70">
+                          {isEarned ? '✅ Earned' : 
+                            badge.level_requirement ? 
+                            `🔒 Reach level ${badge.level_requirement} in ${badge.category_type}` : 
+                            '🔒 Complete achievements to earn'}
+                        </p>
+                      </div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
