@@ -91,10 +91,11 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
       setIsModalOpen(false);
 
       // Remove the deleted quiz from the list
-      setQuizzes(quizzes.filter((quiz) => quiz.id !== quizId));
+      setQuizzes(quizzes.filter((quiz) => quiz._id !== quizId));
 
       // Refresh the page
       router.refresh();
+
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete quiz');
     }
