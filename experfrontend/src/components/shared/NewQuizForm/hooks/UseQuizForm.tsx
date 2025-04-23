@@ -522,15 +522,15 @@ export const UseQuizForm = (quiz?: Quiz) => {
           };
         });
 
-    // If there are basic validation issues, return early
-    if (basicValidation.some(v => v.issues.length > 0)) {
-      return {
-        score: 0,
-        feedback: basicValidation,
-        overall_feedback: "Please fix basic validation issues",
-        difficulty_alignment: 0
-      };
-    }
+        // If there are basic validation issues, return early
+        if (basicValidation.some(v => v.issues.length > 0)) {
+          return {
+            score: 0,
+            feedback: basicValidation,
+            overall_feedback: "Please fix basic validation issues",
+            difficulty_alignment: 0
+          };
+        }
 
         // API validation request to validate quiz questions
         const response = await fetch(`${API_URL}/api/validate-quiz`, {
@@ -543,7 +543,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
             parameters: {
               difficulty,
               includeExplanations: true
-            }
+            }    
           })
         });
 

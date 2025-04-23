@@ -806,7 +806,7 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
             }}
             className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
           >
-            Validate Questions
+            Validate
           </Button>
           <Button 
             type="submit" 
