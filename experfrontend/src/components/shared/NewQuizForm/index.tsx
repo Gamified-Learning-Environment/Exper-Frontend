@@ -771,50 +771,54 @@ export default function QuizForm({ onClose, quiz }: QuizFormProps) { // QuizForm
           </CardContent>
   
           {/* Quiz form footer */}
-          <CardFooter className="flex justify-between pt-6">
-          <div className="flex gap-2">
-            <Button 
-              type="button" 
-              onClick={handlers.handleAddQuestion} 
-              variant="outline"
-              className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border-2 border-indigo-300"
-            >
-              Add Question ✨
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handlers.setQuestions(formState.questions.slice(0, -1))}
-              variant="outline"
-              className="bg-red-100 hover:bg-red-200 text-red-700 border-2 border-red-300"
-              disabled={formState.questions.length <= 1}
-            >
-              Remove Question 🗑️
-            </Button>
-          </div>
-          <Button
-            type="button"
-            onClick={async () => {
-              try {
-                const validation = await handlers.validateQuizQuestions(
-                  formState.questions, 
-                  formState.difficulty
-                );
-                handlers.setValidationFeedback(validation);
-              } catch (error) {
-                handlers.setError('Failed to validate questions');
-              }
-            }}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
-          >
-            Validate
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={formState.loading}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
-          >
-            Submit Quiz
-          </Button>
+          <CardFooter className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:justify-between pt-6">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <Button 
+                type="button" 
+                onClick={handlers.handleAddQuestion} 
+                variant="outline"
+                className="flex-1 sm:flex-initial bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border-2 border-indigo-300"
+              >
+                <span className="hidden sm:inline">Add Question</span>
+                <span className="sm:hidden">Add</span> ✨
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handlers.setQuestions(formState.questions.slice(0, -1))}
+                variant="outline"
+                className="flex-1 sm:flex-initial bg-red-100 hover:bg-red-200 text-red-700 border-2 border-red-300"
+                disabled={formState.questions.length <= 1}
+              >
+                <span className="hidden sm:inline">Remove Question</span>
+                <span className="sm:hidden">Remove</span> 🗑️
+              </Button>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const validation = await handlers.validateQuizQuestions(
+                      formState.questions, 
+                      formState.difficulty
+                    );
+                    handlers.setValidationFeedback(validation);
+                  } catch (error) {
+                    handlers.setError('Failed to validate questions');
+                  }
+                }}
+                className="flex-1 sm:flex-initial bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700"
+              >
+                Validate
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={formState.loading}
+                className="flex-1 sm:flex-initial bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700"
+              >
+                Submit Quiz
+              </Button>
+            </div>
           </CardFooter>
           </form>
         </Card>

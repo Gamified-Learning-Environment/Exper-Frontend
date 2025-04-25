@@ -82,26 +82,28 @@ export default function ProfilePage() {
         
         {/* Tabs for profile, achievements, and category progress */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-                <User className="w-4 h-4" /> Profile
-            </TabsTrigger>
-            <TabsTrigger value="campaigns" className="flex items-center gap-2">
-                <Sword className="w-4 h-4" /> Campaigns
-            </TabsTrigger>
-            <TabsTrigger value="achievements" className="flex items-center gap-2">
-                <Trophy className="w-4 h-4" /> Achievements
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-                <ChartLine className="w-4 h-4" /> Category Progress
-            </TabsTrigger>
-            {isCurrentUser && (
-                <TabsTrigger value="customize" className="flex items-center gap-2">
-                    <Paintbrush className="w-4 h-4" /> Customize
-                </TabsTrigger>
-            )}
-            </TabsList>
-            
+          <div className="relative overflow-x-auto pb-1 scrollbar-hide">
+              <TabsList className="mb-6 w-full flex flex-nowrap min-w-fit">
+                  <TabsTrigger value="profile" className="flex items-center gap-2 whitespace-nowrap">
+                      <User className="w-4 h-4" /> <span className="hidden xs:inline">Profile</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="campaigns" className="flex items-center gap-2 whitespace-nowrap">
+                      <Sword className="w-4 h-4" /> <span className="hidden xs:inline">Campaigns</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="achievements" className="flex items-center gap-2 whitespace-nowrap">
+                      <Trophy className="w-4 h-4" /> <span className="hidden xs:inline">Achievements</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="progress" className="flex items-center gap-2 whitespace-nowrap">
+                      <ChartLine className="w-4 h-4" /> <span className="hidden xs:inline">Progress</span>
+                  </TabsTrigger>
+                  {isCurrentUser && (
+                      <TabsTrigger value="customize" className="flex items-center gap-2 whitespace-nowrap">
+                          <Paintbrush className="w-4 h-4" /> <span className="hidden xs:inline">Customize</span>
+                      </TabsTrigger>
+                  )}
+              </TabsList>
+          </div>    
+                  
             {/* Profile, achievements, and category progress content */}
             <TabsContent value="profile" className="space-y-6">
               <PlayerProfile userId={id as string} />

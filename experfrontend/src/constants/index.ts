@@ -17,6 +17,6 @@ export const headerLinks = [
     },
     {
       label: 'Try it Out',
-      route: '/quiz/672cba4a1bbfed516e746c3a',
+      route: '/quiz/67f5255dd56684abc8b1a8b4',
     },
   ]

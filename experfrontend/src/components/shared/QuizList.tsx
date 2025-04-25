@@ -401,36 +401,39 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
     
               {/* View Mode Selector */}
               {user && (
-                <div className="bg-white rounded-md border-2 border-purple-200 p-1 flex">
+                <div className="bg-white rounded-md border-2 border-purple-200 p-1 flex flex-wrap w-full sm:w-auto overflow-hidden">
                   <button
                     onClick={() => setViewMode('all')}
-                    className={`px-3 py-1 rounded-md text-sm transition-all ${
+                    className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm transition-all ${
                       viewMode === 'all' 
                         ? 'bg-purple-600 text-white' 
                         : 'hover:bg-purple-50'
                     }`}
                   >
-                    All Quizzes
+                    <span className="block sm:hidden">All</span>
+                    <span className="hidden sm:block">All Quizzes</span>
                   </button>
                   <button
                     onClick={() => setViewMode('mine')}
-                    className={`px-3 py-1 rounded-md text-sm transition-all ${
+                    className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm transition-all ${
                       viewMode === 'mine' 
                         ? 'bg-purple-600 text-white' 
                         : 'hover:bg-purple-50'
                     }`}
                   >
-                    My Quizzes
+                    <span className="block sm:hidden">Mine</span>
+                    <span className="hidden sm:block">My Quizzes</span>
                   </button>
                   <button
                     onClick={() => setViewMode('community')}
-                    className={`px-3 py-1 rounded-md text-sm transition-all ${
+                    className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm transition-all ${
                       viewMode === 'community' 
                         ? 'bg-purple-600 text-white' 
                         : 'hover:bg-purple-50'
                     }`}
                   >
-                    Community
+                    <span className="block sm:hidden">Community</span>
+                    <span className="hidden sm:block">Community</span>
                   </button>
                 </div>
               )}
