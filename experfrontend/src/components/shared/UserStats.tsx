@@ -212,7 +212,6 @@ export default function UserStats({userId}: UserStatsProps ) {
                             : 'N/A'}
                     </p>
                 </div>
-                {/* Add more stat cards */}
             </div>
         </div>
     );

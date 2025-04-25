@@ -292,7 +292,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ // Send question count, difficulty, and notes along with response format
+          body: JSON.stringify({ // Send question count, difficulty, and notes
              notes: notes, 
              pdfUrl: pdfUrl,
              parameters: {
