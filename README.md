@@ -46,7 +46,7 @@ The frontend interacts with the following backend microservices:
 
 
 ## Deployment and Running
-While you could download, compile and run each of the repositories for this Final Year Project and get a more in depth look into the code, it is also fully deployed on Railway at the following link : https://exper-frontend-production.up.railway.app
+While you could download, compile and run each of the repositories for this Final Year Project and get a more in depth look into the code, it is also fully deployed on Railway at the following link: https://exper-frontend-production.up.railway.app
 
 Alternatively, here's a QR Code: 
 
@@ -138,7 +138,7 @@ Google Gemini (optional)
       cd Exper-Frontend/experfrontend
       npm run dev
       ```
-   Visit http://localhost:3000 to access the application.w
+   Visit http://localhost:3000 to access the application.
 
 
 
