@@ -2,6 +2,9 @@
 
 Welcome to the **Frontend Repository** for the Gamified Learning Environment (GLE) project! This project aims to improve online education by combining interactive quizzes, gamification elements, and AI-powered personalization into an engaging and intuitive learning platform.
 
+## Frontend Overview
+The frontend for Exper is built primarily with Next.js. This is a modern React framework that enables server-side rendering, client-side rendering, and static site generation as needed (which will prove very useful). The hybrid approach this offers grants highly noticeable benefits to performance and enhance the user's experience. Furthermore, Next.js integrates well with various UI components that allow for the development of the system's gamification. Please see the project dissertation for greater details.
+
 ## 🌟 Project Objectives
 - Develope a **personalized learning platform** designed to engage students.
 - Provide an **intuitive, responsive frontend** that enhances the user experience.
