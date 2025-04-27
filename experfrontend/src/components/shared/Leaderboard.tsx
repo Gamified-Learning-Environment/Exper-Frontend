@@ -86,7 +86,7 @@ export default function Leaderboard() {
     async function fetchLeaderboard() {
       try {
         setIsLoading(true);
-        // Fetch leaderboard data from your gamification service
+        // Fetch leaderboard data from gamification service
         const data = await GamificationService.getLeaderboard();
         // Map the data to match the LeaderboardPlayer interface
         const mappedData = data.map((player: any) => ({

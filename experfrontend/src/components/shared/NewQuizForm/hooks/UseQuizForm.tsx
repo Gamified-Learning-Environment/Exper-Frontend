@@ -640,7 +640,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
           aiModel,
           randomizeQuestions,
           useQuestionPool,
-          questionsPerAttempt,
+          questionsPerAttempt
         },
         handlers: { // Form handlers object containing all the handler functions
             setTitle,
@@ -678,8 +678,7 @@ export const UseQuizForm = (quiz?: Quiz) => {
             handlePdfUpload,
             setRandomizeQuestions,
             setUseQuestionPool,
-            setQuestionsPerAttempt,
-            // Add more handlers here as I need
+            setQuestionsPerAttempt
         }
     };
 };

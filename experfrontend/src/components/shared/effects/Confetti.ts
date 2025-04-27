@@ -1,3 +1,4 @@
+// Imported Confetti library for creating various confetti effects for different events
 import confetti from 'canvas-confetti';
 
 // Basic celebration - short burst

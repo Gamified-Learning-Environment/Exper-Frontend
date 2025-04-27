@@ -1,4 +1,3 @@
-// src/components/shared/Quiz/components/QuizProgressLine.tsx
 import { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import { QuizProgressLineProps, QuestionAttempt } from '@/components/shared/NewQuiz/types';

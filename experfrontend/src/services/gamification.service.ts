@@ -19,6 +19,7 @@ export interface LeaderboardPlayer {
 
 export class GamificationService {
     
+  // Get player stats
   static async getPlayerStats(userId: string, username: string): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/api/users/${userId}/${username}/stats`, {
@@ -47,6 +48,7 @@ export class GamificationService {
     }
   }
 
+  // Get player info
   static async getPlayerInfo(userId: string, username: string): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/api/player/${userId}/${username}`, {
@@ -65,6 +67,7 @@ export class GamificationService {
     }
   }
 
+  // Get leaderboard data
   static async getLeaderboard(): Promise<LeaderboardPlayer[]> {
     try {
       const response = await fetch(`${API_URL}/api/leaderboard`, {
@@ -87,6 +90,7 @@ export class GamificationService {
     }
   }
     
+  // Add experience to a user
   static async addExperience(userId: string, xp: number, category?: string): Promise<any> {
     try {
       console.log(`Calling gamification service at ${API_URL}/player/${userId}/xp`);
@@ -116,6 +120,7 @@ export class GamificationService {
     }
   }
 
+  // Add experience to a specific category
   static async addCategoryExperience(userId: string, xpAmount: number, category: string): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/api/player/${userId}/category/${category}/xp`, {
@@ -154,10 +159,10 @@ export class GamificationService {
     }
   }
     
+  // Update user streak
   static async updateStreak(userId: string, category?: string): Promise<any> {
     try {
       console.log(`Calling gamification service at ${API_URL}/player/${userId}/streak`);
-      // Fix: Add "player" to the path
       const response = await fetch(`${API_URL}/api/player/${userId}/streak`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,6 +187,7 @@ export class GamificationService {
     }
   }
     
+  // Get all achievements
   static async getAchievements() {
     const response = await fetch(`${API_URL}/api/achievements`, {
       credentials: 'include'
@@ -210,6 +216,7 @@ export class GamificationService {
     }
   }
 
+  // Check if user has unlocked any achievements
   static async checkAchievements(userId: string, data: any): Promise<any> {
     try {
       console.log('Checking achievements with data:', data);
@@ -235,14 +242,13 @@ export class GamificationService {
     }
   }
     
+  // Award an achievement to a user
   static async awardAchievement(userId: string, achievementId: string): Promise<any> {
     try {
       console.log(`Calling gamification service at ${API_URL}/player/${userId}/achievements`);
-      // Fix: Add "player" to the path
       const response = await fetch(`${API_URL}/api/player/${userId}/achievements`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Fix: Change achievement_Id to achievement_id
         body: JSON.stringify({ achievement_id: achievementId }),
         credentials: 'include'
       });
@@ -267,7 +273,7 @@ export class GamificationService {
       };
     }
   }
-
+// Get all campaigns
   static async getCampaigns(userId: string): Promise<any[]> {
     try {
       const url = userId 
@@ -292,6 +298,7 @@ export class GamificationService {
     }
   }
   
+  // Get user active campaign
   static async getUserActiveCampaign(userId: string): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/api/users/${userId}/campaigns`, {
@@ -342,6 +349,7 @@ export class GamificationService {
     }
   }
   
+  // Update quest progress for a user
   static async updateQuestProgress(userId: string, questId: string, objectiveType: string, progress: number = 1): Promise<any> {
     try {
       const response = await fetch(`${API_URL}/api/users/${userId}/quests/${questId}/progress`, {
@@ -359,6 +367,7 @@ export class GamificationService {
     }
   }
 
+  // Activate a campaign for a user
   static async activateCampaign(userId: string, campaignId: string): Promise<any> {
     try {
         console.log(`Activating campaign ${campaignId} for user ${userId}`);

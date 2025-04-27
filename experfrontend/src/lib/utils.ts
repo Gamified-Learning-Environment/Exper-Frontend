@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Add your tailwind plugins to the config
+// Add tailwind plugins to the config
 // Export as a separate object if needed
 export const tailwindConfig = {
   plugins: [

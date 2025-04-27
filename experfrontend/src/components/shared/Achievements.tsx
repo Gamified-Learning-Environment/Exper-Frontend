@@ -180,8 +180,7 @@ export default function Achievements({userId}: AchievementsProps) {
       });
     }, [userAchievements, achievements]);
 
-    useEffect(() => {
-      // Add this after setting userAchievements
+    useEffect(() => { // Debugging user achievements format
       if (userAchievements && userAchievements.length > 0) {
         console.log("User achievement format check:", {
           isArray: Array.isArray(userAchievements),

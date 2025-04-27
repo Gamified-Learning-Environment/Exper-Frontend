@@ -21,8 +21,8 @@ export interface Quiz { // Quiz interface
     category?: string;
     aiModel?: AIModel;
     randomizeQuestions?: boolean; // Flag to randomize questions
-    useQuestionPool?: boolean;
-    questionsPerAttempt?: number;
+    useQuestionPool?: boolean; // Flag to use question pool
+    questionsPerAttempt?: number; // Number of questions per attempt
 }
 
 export interface QuestionAttempt {
@@ -55,8 +55,8 @@ export interface QuestionTypeBreakdownProps {
 export interface WinLossRatioChartProps {
     score: number;
     totalQuestions: number;
-    winThreshold?: number;
-    lossThreshold?: number;
+    winThreshold?: number; // Optional thresholds for win
+    lossThreshold?: number; // Optional thresholds for loss
 }
 
 export interface QuizProps {

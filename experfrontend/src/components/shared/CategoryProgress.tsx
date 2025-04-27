@@ -107,7 +107,7 @@ const CategoryProgress = ({userId }: CategoryProgressProps) => {
             sum + result.totalQuestions, 0
         );
         
-        // Assuming a target of 100 questions per category
+        // Target of 100 questions per category
         const targetQuestions = 100;
         
         // Convert to percentage, cap at 100
@@ -379,7 +379,7 @@ const CategoryProgress = ({userId }: CategoryProgressProps) => {
             
             {!loading && !error && results.length > 0 && bubbleData.length > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* Left side - Bubble Chart (tall) */}
+                    {/* Left side - Bubble Chart */}
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-xl shadow-sm p-4 h-full">
                             <h3 className="text-lg font-semibold text-purple-800 mb-3">

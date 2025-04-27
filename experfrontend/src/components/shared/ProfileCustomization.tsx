@@ -29,7 +29,6 @@ interface Badge {
     rarity: string;
   }
 
-// Enhanced theme customization interface with more options
 interface ThemeCustomization {
   primaryColor: string;
   accentColor: string;

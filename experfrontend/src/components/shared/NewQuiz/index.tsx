@@ -139,7 +139,7 @@ export default function Quiz({ quiz }: QuizProps) {
 
                             {/* Question image */}
                             {shuffledQuiz.questions[quizState.currentQuestion].imageUrl && (
-                                <div className="relative group my-6 max-w-[50%] mx-auto"> {/* Added max-w-[50%] and mx-auto */}
+                                <div className="relative group my-6 max-w-[50%] mx-auto"> 
                                     <div className="overflow-hidden rounded-xl border-2 border-purple-200 shadow-md transition-all duration-300 hover:shadow-lg">
                                         <div className="relative aspect-video bg-purple-50">
                                             <img
@@ -151,7 +151,7 @@ export default function Quiz({ quiz }: QuizProps) {
                                             <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                         </div>
                                         
-                                        {/* Optional image caption/zoom hint */}
+                                        {/* Image caption/zoom hint */}
                                         <div className="absolute bottom-2 left-2 right-2 text-center text-sm text-purple-600 bg-white/90 px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                             <span className="flex items-center justify-center gap-2">
                                                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">

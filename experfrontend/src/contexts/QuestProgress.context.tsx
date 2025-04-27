@@ -14,8 +14,6 @@ export function QuestProgressProvider({ children }: { children: ReactNode }) {
 
   const showQuestNotification = (progress: QuestProgressResult) => {
     setLastProgress(progress);
-    // You could add additional notification logic here
-    // like triggering a toast or animation
   };
 
   return (

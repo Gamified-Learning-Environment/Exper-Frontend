@@ -11,7 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface Badge {
+interface Badge { // Badge interface to define the structure of a badge object
   id: string;
   name: string;
   icon: string;
@@ -60,7 +60,7 @@ export default function BadgeSelector({
   const toggleBadge = (badgeId: string) => {
     if (!earnedBadges.includes(badgeId)) return; // Can't select unearned badges
     
-    if (selectedBadges.includes(badgeId)) {
+    if (selectedBadges.includes(badgeId)) { // If badge is already selected, remove it
       onChange(selectedBadges.filter(id => id !== badgeId));
     } else {
       if (selectedBadges.length >= maxBadges) {

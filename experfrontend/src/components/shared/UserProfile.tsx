@@ -15,7 +15,7 @@ interface Achievement {
 }
 
 export default function UserProfile() {
-  // Mock user data - replace with real data later
+  // Mock user data - was used in earlier iterations
   const [userData] = useState({
     username: "Shane Walsh",
     level: 15,

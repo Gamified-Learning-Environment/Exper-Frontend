@@ -53,7 +53,7 @@ export default function RegisterForm({ onClose }: RegisterFormProps) { // Regist
         const currentUser = userDataStr ? JSON.parse(userDataStr) : null;
         
         if (currentUser && currentUser._id) {
-          // Set up the gamification service URL - ensure this matches your deployment environment
+          // Set up the gamification service URL
           const gamificationUrl = process.env.NEXT_PUBLIC_GAMIFICATION_SERVICE_URL || 
                                 'http://localhost:9091';
           

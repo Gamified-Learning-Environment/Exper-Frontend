@@ -10,7 +10,6 @@ export enum QuestActionType {
   CREATE_AI_QUIZ = 'create_ai_quiz',
   START_STREAK = 'start_streak',
   MAINTAIN_STREAK = 'maintain_streak',
-  // Add more action types as needed
 }
 
 // Interface for action data
@@ -40,9 +39,7 @@ export interface QuestProgressResult {
 }
 
 export class QuestProgressManager {
-  /**
-   * Track an action that might progress quest objectives
-   */
+  // Track an action that might progress quest objectives
   static async trackAction(data: QuestActionData): Promise<QuestProgressResult> {
     try {
       const { userId, actionType, category, progress = 1 } = data;
@@ -129,9 +126,7 @@ export class QuestProgressManager {
     }
   }
 
-  /**
-   * Helper method specifically for tracking quiz completion
-   */
+  // Helper method specifically for tracking quiz completion
   static async trackQuizCompletion(
     userId: string, 
     score: number, 
@@ -151,9 +146,7 @@ export class QuestProgressManager {
     });
   }
 
-  /**
-   * Helper method specifically for tracking quiz creation
-   */
+  // Helper method specifically for tracking quiz creation
   static async trackQuizCreation(
     userId: string,
     isAIGenerated: boolean

@@ -21,7 +21,7 @@ export default function ProfilePage() {
     const [username, setUsername] = useState<string>("");
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isCurrentUser, setIsCurrentUser] = useState(false);
+    const [isCurrentUser, setIsCurrentUser] = useState(false); // State to check if the user is the current logged-in user
 
     const userId = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : undefined;
 
@@ -35,7 +35,7 @@ export default function ProfilePage() {
             setIsCurrentUser(user?._id === id);
             
             // Fetch username from user service
-             // Use environment variable or fallback to localhost
+            // Use environment variable or fallback to localhost
             const apiBaseUrl = process.env.NEXT_PUBLIC_USER_SERVICE_URL || 'http://localhost:8080';
             const response = await fetch(`${apiBaseUrl}/api/auth/users/${id}`);
             if (!response.ok) throw new Error('Failed to load user data');

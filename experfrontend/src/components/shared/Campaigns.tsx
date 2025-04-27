@@ -145,9 +145,7 @@ export default function Campaigns() {
     const startQuest = async (questId: string) => {
       if (!user?._id || !activeCampaign) return;
       
-      try {
-        // If the quest is the current quest, you can use this to track 
-        // a "start_quest" action if needed
+      try { // Check if the quest is already completed or locked
         if (activeCampaign.quests[activeCampaign.currentQuestIndex].id === questId) {
           await QuestProgressManager.trackAction({
             userId: user._id,

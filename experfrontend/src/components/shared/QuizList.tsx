@@ -708,7 +708,6 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
           )}
         </div>
     
-        {/* Preview Modal (unchanged) */}
         {/* Preview Modal */}
         {isModalOpen && selectedQuiz && (
           <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
@@ -721,7 +720,7 @@ export default function QuizList({ userOnly= false }: {userOnly?: boolean}) { //
               <div className="space-y-4 mt-4">
                 <p className="text-gray-600">{selectedQuiz.description}</p>
 
-                {/* Add creator info in the modal too */}
+                {/* Creator info in the modal */}
                 {user && selectedQuiz.userId && selectedQuiz.userId !== user._id && userMap[selectedQuiz.userId] && (
                   <div className="flex items-center justify-between bg-purple-50 p-3 rounded-lg border border-purple-200">
                     <div className="flex items-center gap-2">

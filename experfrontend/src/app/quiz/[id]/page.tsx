@@ -13,7 +13,7 @@ async function getQuiz(id: string) { // Fetch quiz data from API
     return res.json();
 }
 
-export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) { // QuizPage component taking in id as a parameter
+export default async function QuizPage({ params }: { params: Promise<{ id: string }> }) { // QuizPage component, taking in id as a parameter
     try { // Try to fetch quiz data
         const { id } = await params;
         const quiz = await getQuiz(id);

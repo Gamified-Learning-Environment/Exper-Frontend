@@ -19,10 +19,8 @@ export const useQuiz = (quiz: Quiz ) => {
 
     // State variables to keep track of current question, selected answers, show results and score
 
-        // Question randomisation handling
-
-        // Create a reference to the original quiz to keep track of the original order
-        const [quizData, setQuizData] = useState<Quiz>(quiz);
+    // Create a reference to the original quiz to keep track of the original order
+    const [quizData, setQuizData] = useState<Quiz>(quiz);
 
     // Initialized with default values
     const { user } = useAuth();
@@ -593,7 +591,7 @@ export const useQuiz = (quiz: Quiz ) => {
             quiz: quizData,
             startTime,
             questionTracker,
-            flaggedQuestions,
+            flaggedQuestions
         },
         handlers: { // Quiz handlers object containing all the handler functions
             setCurrentQuestion,
@@ -614,10 +612,7 @@ export const useQuiz = (quiz: Quiz ) => {
             calculateResults,
             isAnswerCorrect,
             getStorageValue,
-            toggleFlagQuestion,
-            
-
-            // Add more handlers here as I need
+            toggleFlagQuestion
         }
     };
 };
